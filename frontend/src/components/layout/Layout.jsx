@@ -1,14 +1,12 @@
 import React, { useState, useRef, useCallback, memo, lazy, Suspense, useEffect } from "react";
-
-// Lazy load komponen yang tidak critical untuk initial load
 const GoogleMapsSearchbar = lazy(() => import("@components/common/GoogleMapsSearchbar"));
 const MapboxMap = lazy(() => import("@/components/MapboxMap"));
 const FloatingLegend = lazy(() => import("@components/common/FloatingLegend"));
 const FloodRunningBar = lazy(() => import("@/components/common/FloodRunningBar"));
 const StationDetail = lazy(() => import("@components/sensors/StationDetail"));
 const DetailPanel = lazy(() => import("@components/sensors/DetailPanel"));
-const AutoSwitchToggle = lazy(() => import("@components/common/AutoSwitchToggle"));
 const FilterPanel = lazy(() => import("@components/common/FilterPanel"));
+const AutoSwitchToggle = lazy(() => import("@components/devices/AutoSwitchToggle"));
 const Layout = ({ children }) => {
     const [tickerData, setTickerData] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
@@ -215,12 +213,6 @@ const Layout = ({ children }) => {
                 <FilterPanel
                     isOpen={isFilterOpen}
                     onOpen={() => setIsFilterOpen(true)}
-                    onClose={() => setIsFilterOpen(false)}
-                    title="Filter"
-                    tickerData={tickerData}
-                    handleStationChange={handleStationChange}
-                    currentStationIndex={currentStationIndex}
-                    handleAutoSwitchToggle={handleAutoSwitchToggle}
                 />
             </Suspense>
         </div>

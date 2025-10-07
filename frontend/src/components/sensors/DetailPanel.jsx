@@ -501,13 +501,13 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                                                 </div>
                                             }
                                         >
-                                            <MonitoringChart
+                                            {/* <MonitoringChart
                                                 actualData={chartHistory || []}
                                                 width={640}
                                                 height={320}
                                                 className="w-full"
                                                 canvasId="monitoring-chart-detail"
-                                            />
+                                            /> */}
                                         </Suspense>
                                     )}
                                 </div>

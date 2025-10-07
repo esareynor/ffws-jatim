@@ -5,7 +5,7 @@ const GoogleMapsSearchbar = lazy(() => import("@components/common/GoogleMapsSear
 const MapboxMap = lazy(() => import("@/components/devices/MapboxMap"));
 const FloatingLegend = lazy(() => import("@components/common/FloatingLegend"));
 const FloodRunningBar = lazy(() => import("@/components/common/FloodRunningBar"));
-const StationDetail = lazy(() => import("@components/sensors/StationDetail"));
+const StationDetail = lazy(() => import("@/components/StationDetail"));
 const DetailPanel = lazy(() => import("@components/sensors/DetailPanel"));
 const AutoSwitchToggle = lazy(() => import("@components/devices/AutoSwitchToggle"));
 const FilterPanel = lazy(() => import("@/components/FilterPanel"));

@@ -5,10 +5,11 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { fetchDevices } from "../../services/devices";
 
-// Lazy imports - path relatif dari src/components/devices/
+// Lazy imports
 const MapTooltip = lazy(() => import("./maptooltip"));
-const FilterPanel = lazy(() => import("../FilterPanel.jsx"));      // ✅ Satu folder ke atas
-const VectorTilesAPI = lazy(() => import("../VectorTilesAPI.jsx")); // ✅ Satu folder ke atas
+const FilterPanel = lazy(() => import("../FilterPanel.jsx"));
+const VectorTilesAPI = lazy(() => import("../VectorTilesAPI.jsx"));
+const StationDetail = lazy(() => import("@/components/StationDetail.jsx"));
 
 const MapboxMap = ({ tickerData }) => {
     const mapContainer = useRef(null);
@@ -22,6 +23,7 @@ const MapboxMap = ({ tickerData }) => {
     });
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [selectedMarker, setSelectedMarker] = useState(null);
+    // const [selectedStation, setSelectedStation] = useState(null); // 👈 Comment sementara
     const [activeLayers, setActiveLayers] = useState({
         rivers: false,
         'flood-risk': false,
@@ -211,13 +213,18 @@ const MapboxMap = ({ tickerData }) => {
         console.log("Auto-switch toggled:", isEnabled);
     };
 
+    // 💡 SEMENTARA: Hanya log, tidak buka panel detail
     const handleShowDetail = (station) => {
         setTooltip(prev => ({ ...prev, visible: false }));
+        console.log("✅ Lihat Detail diklik:", station.name);
+        // setSelectedStation(station); // 👈 Uncomment nanti setelah pastikan StationDetail exist
     };
 
     const handleCloseTooltip = () => {
         setTooltip(prev => ({ ...prev, visible: false }));
     };
+
+    // const handleCloseDetail = () => { setSelectedStation(null); }; // 👈 Comment sementara
 
     return (
         <div className="w-full h-screen overflow-hidden relative z-0">
@@ -242,7 +249,7 @@ const MapboxMap = ({ tickerData }) => {
                     activeLayers={activeLayers}
                     onLayerToggle={handleLayerToggle}
                     tickerData={tickerData}
-                   handleStationChange={() => {}}
+                    handleStationChange={() => {}}
                     currentStationIndex={0}
                     handleAutoSwitchToggle={handleAutoSwitchToggle}
                 />
@@ -258,6 +265,15 @@ const MapboxMap = ({ tickerData }) => {
                     onClose={handleCloseTooltip}
                 />
             </Suspense>
+
+            {/* ⚠️ SEMENTARA COMMENT OUT UNTUK HINDARI ERROR 500 */}
+            {/* <Suspense fallback={null}>
+                <StationDetail
+                    selectedStation={selectedStation}
+                    onClose={handleCloseDetail}
+                    tickerData={tickerData}
+                />
+            </Suspense> */}
         </div>
     );
 };

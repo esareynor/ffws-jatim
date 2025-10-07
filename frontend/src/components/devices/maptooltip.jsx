@@ -1,10 +1,89 @@
+// src/components/devices/MapTooltip.jsx
+
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 
+const injectPopupStyles = () => {
+  if (document.getElementById('map-tooltip-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'map-tooltip-styles';
+  style.textContent = `
+    .mapboxgl-popup-content {
+      padding: 0 !important;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .map-tooltip-content {
+      padding: 12px;
+      width: 240px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    .tooltip-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .tooltip-header h3 {
+      font-size: 14px;
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 160px;
+    }
+    .tooltip-close-btn {
+      background: none !important;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+      color: #9CA3AF;
+      cursor: pointer;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: auto;
+      height: auto;
+    }
+    .tooltip-close-btn:hover {
+      color: #4B5563;
+    }
+    .tooltip-level {
+      margin-bottom: 10px;
+    }
+    .tooltip-info {
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+    }
+    .tooltip-detail-btn {
+      width: 100%;
+      background-color: #3B82F6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .tooltip-detail-btn:hover {
+      background-color: #2563EB;
+    }
+  `;
+  document.head.appendChild(style);
+};
+
 const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClose }) => {
   const popupRef = useRef(null);
-  
+
   useEffect(() => {
+    injectPopupStyles();
+
     if (!map || !isVisible || !station || !coordinates) {
       if (popupRef.current) {
         popupRef.current.remove();
@@ -12,12 +91,11 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
       }
       return;
     }
-    
-    // Hapus popup yang ada sebelumnya
+
     if (popupRef.current) {
       popupRef.current.remove();
     }
-    
+
     const getStatusColor = (status) => {
       switch (status) {
         case 'safe': return 'bg-green-500';
@@ -26,7 +104,7 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
         default: return 'bg-gray-500';
       }
     };
-    
+
     const getStatusText = (status) => {
       switch (status) {
         case 'safe': return 'Aman';
@@ -35,8 +113,7 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
         default: return 'Tidak Diketahui';
       }
     };
-    
-    // Buat konten popup
+
     const popupContent = document.createElement('div');
     popupContent.className = 'map-tooltip-content';
     popupContent.innerHTML = `
@@ -77,129 +154,48 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
         Lihat Detail
       </button>
     `;
-    
-    // Tambahkan style untuk popup
-    const style = document.createElement('style');
-    style.textContent = `
-      .mapboxgl-popup-content {
-        padding: 0;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      }
-      
-      .map-tooltip-content {
-        padding: 12px;
-        width: 240px;
-      }
-      
-      .tooltip-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-      }
-      
-      .tooltip-header h3 {
-        font-size: 14px;
-        margin: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 160px;
-      }
-      
-      .tooltip-close-btn {
-        background: none !important;
-        border: none !important;
-        outline: none !important;
-        box-shadow: none !important;
-        color: #9CA3AF;
-        cursor: pointer;
-        padding: 0;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: auto;
-        height: auto;
-        font-weight: bold;
-      }
-      
-      .tooltip-close-btn svg {
-        stroke-width: 3;
-        font-weight: bold;
-      }
-      
-      .tooltip-close-btn:hover {
-        color: #4B5563;
-        background: none !important;
-        border: none !important;
-        outline: none !important;
-        box-shadow: none !important;
-      }
-      
-      .tooltip-close-btn:focus {
-        outline: none !important;
-        border: none !important;
-        box-shadow: none !important;
-      }
-      
-      .tooltip-level {
-        margin-bottom: 10px;
-      }
-      
-      .tooltip-info {
-        margin-bottom: 12px;
-        padding-bottom: 10px;
-      }
-      
-      .tooltip-detail-btn {
-        width: 100%;
-        background-color: #3B82F6;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        padding: 8px;
-        font-size: 13px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: background-color 0.2s;
-      }
-      
-      .tooltip-detail-btn:hover {
-        background-color: #2563EB;
-      }
-    `;
-    document.head.appendChild(style);
-    
-    // Buat popup
+
     popupRef.current = new mapboxgl.Popup({
       closeButton: false,
       closeOnClick: false,
-      offset: [0, -30] // Offset untuk menempatkan popup di atas marker
+      offset: [0, -30]
     })
       .setLngLat(coordinates)
       .setDOMContent(popupContent)
       .addTo(map);
-    
-    // Event listener untuk tombol detail
-    const detailBtn = popupContent.querySelector('.tooltip-detail-btn');
-    if (detailBtn) {
-      detailBtn.addEventListener('click', () => {
-        onShowDetail(station);
-      });
-    }
-    
-    // Event listener untuk tombol close
-    const closeBtn = popupContent.querySelector('.tooltip-close-btn');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => {
+
+    // 👇 Gunakan requestAnimationFrame untuk pastikan DOM ready
+    requestAnimationFrame(() => {
+      const detailBtn = popupContent.querySelector('.tooltip-detail-btn');
+      const closeBtn = popupContent.querySelector('.tooltip-close-btn');
+
+      const handleDetailClick = () => {
         onClose();
-      });
-    }
-    
+        onShowDetail(station);
+      };
+
+      const handleCloseClick = () => {
+        onClose();
+      };
+
+      if (detailBtn) {
+        detailBtn.addEventListener('click', handleDetailClick);
+      }
+      if (closeBtn) {
+        closeBtn.addEventListener('click', handleCloseClick);
+      }
+
+      // Cleanup event listeners
+      return () => {
+        if (detailBtn) {
+          detailBtn.removeEventListener('click', handleDetailClick);
+        }
+        if (closeBtn) {
+          closeBtn.removeEventListener('click', handleCloseClick);
+        }
+      };
+    });
+
     return () => {
       if (popupRef.current) {
         popupRef.current.remove();
@@ -207,8 +203,8 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
       }
     };
   }, [map, isVisible, station, coordinates, onShowDetail, onClose]);
-  
-  return null; // Komponen ini tidak merender apa-apa secara langsung
+
+  return null;
 };
 
 export default MapTooltip;

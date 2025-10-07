@@ -1,6 +1,8 @@
+// src/components/StationDetail.jsx
+
 import React, { useState, useEffect } from "react";
-import SidebarTemplate from "@components/layout/SidebarTemplate";
-import { getStatusColor, getStatusBgColor, getStatusText } from "@/utils/statusUtils";
+import SidebarTemplate from "./layout/SidebarTemplate"; // ✅ Path relatif ke layout
+import { getStatusColor, getStatusBgColor, getStatusText } from "../utils/statusUtils"; // ✅ Path relatif ke utils
 
 const StationDetail = ({
     selectedStation,

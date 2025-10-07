@@ -1,16 +1,16 @@
 import React, { useMemo } from "react";
-import {
-    AreaChart,
-    Area,
-    Line,
-    XAxis,
-    YAxis,
-    ResponsiveContainer,
-    Tooltip,
-    CartesianGrid,
-    ReferenceLine,
-    Legend,
-} from "recharts";
+// import {
+//     AreaChart,
+//     Area,
+//     Line,
+//     XAxis,
+//     YAxis,
+//     ResponsiveContainer,
+//     Tooltip,
+//     CartesianGrid,
+//     ReferenceLine,
+//     Legend,
+// } from "recharts";
 
 /*Komponen untuk menampilkan perkembangan air sungai aktual*/
 const RiverDevelopmentChart = ({ stationData, chartHistory = [], width = 560, height = 220, className = "w-full" }) => {
@@ -83,12 +83,12 @@ const RiverDevelopmentChart = ({ stationData, chartHistory = [], width = 560, he
             { x: 11, levee: 0.2 }, // Dasar sungai
             { x: 12, levee: 0.2 }, // Dasar sungai
             { x: 13, levee: 0.2 }, // Dasar sungai
-            { x: 14, levee: 0.2}, // Dasar sungai
+            { x: 14, levee: 0.2 }, // Dasar sungai
             { x: 15, levee: 0.4 }, // Dasar sungai
             { x: 16, levee: 0.8 }, // Sisi miring landai
             { x: 17, levee: 1 }, // Sisi miring landai
             { x: 18, levee: 2 }, // Sisi miring landai
-            { x: 19, levee: 2.5}, // Sisi miring landai
+            { x: 19, levee: 2.5 }, // Sisi miring landai
             { x: 20, levee: 3.2 }, // Mulai miring landai
             { x: 21, levee: 3.5 }, // Puncak kanan
             { x: 22, levee: 3.5 }, // Puncak kanan
@@ -113,13 +113,11 @@ const RiverDevelopmentChart = ({ stationData, chartHistory = [], width = 560, he
     const CustomTooltip = ({ active, payload, label }) => {
         if (active && payload && payload.length) {
             const waterLevel = stationData.value || 0.2;
-            const leveePayload = payload.find(p => p.name === "Bingkai Tanggul");
+            const leveePayload = payload.find((p) => p.name === "Bingkai Tanggul");
             const leveeValue = leveePayload ? leveePayload.value : null;
             return (
                 <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-                    <p className="text-sm font-medium text-gray-700">
-                        Level Air: {waterLevel.toFixed(2)}m
-                    </p>
+                    <p className="text-sm font-medium text-gray-700">Level Air: {waterLevel.toFixed(2)}m</p>
                     {leveeValue !== null && (
                         <p className="text-sm text-gray-600">Tinggi Tanggul: {leveeValue.toFixed(2)}m</p>
                     )}

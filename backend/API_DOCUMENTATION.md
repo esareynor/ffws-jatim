@@ -4,6 +4,21 @@
 
 Sistem authentication menggunakan Laravel Sanctum untuk API token-based authentication.
 
+### Token Expiration
+
+Token API memiliki waktu expiration yang dapat dikonfigurasi:
+- **Default**: 60 menit (1 jam)
+- **Konfigurasi**: Set `SANCTUM_EXPIRATION` di file `.env` (dalam menit)
+- **Unlimited Token**: Set `SANCTUM_EXPIRATION=null` untuk token yang tidak expired
+
+Setiap response authentication (login, register, refresh) akan mengembalikan:
+- `expires_in`: Durasi token dalam detik
+- `expires_at`: Timestamp ISO 8601 kapan token akan expired
+
+### Auto Refresh Token
+
+Gunakan endpoint `/api/auth/refresh` untuk mendapatkan token baru tanpa perlu login ulang. Token lama akan otomatis di-revoke.
+
 ## Base URL
 ```
 http://localhost:8000/api
@@ -57,7 +72,9 @@ POST /api/auth/register
             "created_at": "2024-01-01T00:00:00.000000Z"
         },
         "token": "1|abc123...",
-        "token_type": "Bearer"
+        "token_type": "Bearer",
+        "expires_in": 3600,
+        "expires_at": "2024-01-01T01:00:00+00:00"
     },
     "errors": null,
     "status_code": 201
@@ -91,7 +108,9 @@ POST /api/auth/login
             "status": "active"
         },
         "token": "2|def456...",
-        "token_type": "Bearer"
+        "token_type": "Bearer",
+        "expires_in": 3600,
+        "expires_at": "2024-01-01T01:00:00+00:00"
     },
     "errors": null,
     "status_code": 200
@@ -129,14 +148,31 @@ POST /api/auth/refresh
 Authorization: Bearer {token}
 ```
 
+**Deskripsi:**
+Endpoint ini digunakan untuk mendapatkan token baru tanpa perlu login ulang. Token lama akan otomatis di-revoke dan diganti dengan token baru.
+
+**Use Case:**
+- Token hampir expired
+- Implementasi auto-refresh di frontend
+- Perpanjang sesi user tanpa mengganggu aktivitas
+
 **Response:**
 ```json
 {
     "success": true,
     "message": "Token refreshed successfully",
     "data": {
+        "user": {
+            "id": 1,
+            "name": "John Doe",
+            "email": "john@example.com",
+            "role": "user",
+            "status": "active"
+        },
         "token": "3|ghi789...",
-        "token_type": "Bearer"
+        "token_type": "Bearer",
+        "expires_in": 3600,
+        "expires_at": "2024-01-01T02:00:00+00:00"
     },
     "errors": null,
     "status_code": 200
@@ -274,10 +310,22 @@ DELETE /api/users/{id}
 Authorization: Bearer {token}
 ```
 
+<<<<<<< HEAD
+=======
+### 3. Device Management Endpoints
+
+#### Get Devices for Map Display
+```http
+GET /api/devices/map
+Authorization: Bearer {token}
+```
+
+>>>>>>> 7b2333888e9762563c50562f89445a296288e501
 **Response:**
 ```json
 {
     "success": true,
+<<<<<<< HEAD
     "message": "User deleted successfully",
     "data": null,
     "errors": null,
@@ -288,6 +336,46 @@ Authorization: Bearer {token}
 ### 3. Device Management Endpoints
 
 #### Get Device by ID
+=======
+    "message": "Devices data retrieved successfully",
+    "data": [
+        {
+            "id": 1,
+            "name": "Stasiun Monitoring Dhompo",
+            "code": "DHM001",
+            "latitude": -7.1234,
+            "longitude": 112.5678,
+            "elevation_m": 150.5,
+            "status": "warning",
+            "river_basin": {
+                "id": 1,
+                "name": "DAS Brantas",
+                "code": "BRT001"
+            },
+            "sensors": [
+                {
+                    "sensor_id": 1,
+                    "sensor_code": "DHM001_WL",
+                    "parameter": "water_level",
+                    "unit": "meter",
+                    "value": 2.5,
+                    "received_at": "2024-01-01T12:00:00.000000Z",
+                    "status": "warning",
+                    "thresholds": {
+                        "safe": 2.0,
+                        "warning": 2.5,
+                        "danger": 3.0
+                    }
+                }
+            ],
+            "sensor_count": 2
+        }
+    ]
+}
+```
+
+#### Get Device Detail by ID
+>>>>>>> 7b2333888e9762563c50562f89445a296288e501
 ```http
 GET /api/devices/{id}
 Authorization: Bearer {token}
@@ -299,6 +387,7 @@ Authorization: Bearer {token}
     "success": true,
     "message": "Device retrieved successfully",
     "data": {
+<<<<<<< HEAD
         "name": "Device Sungai Brantas 1",
         "code": "BRT001",
         "latitude": "-7.250000",
@@ -432,6 +521,26 @@ Authorization: Bearer {token}
 ```
 
 ### 7. Test Endpoint
+=======
+        "id": 1,
+        "name": "Stasiun Monitoring Dhompo",
+        "code": "DHM001",
+        "latitude": -7.1234,
+        "longitude": 112.5678,
+        "elevation_m": 150.5,
+        "status": "active",
+        "river_basin": {
+            "id": 1,
+            "name": "DAS Brantas",
+            "code": "BRT001"
+        },
+        "sensors": [...]
+    }
+}
+```
+
+### 4. Test Endpoint
+>>>>>>> 7b2333888e9762563c50562f89445a296288e501
 
 #### API Health Check
 ```http
@@ -594,6 +703,60 @@ const getDevice = async (deviceId) => {
     throw new Error(data.message);
 };
 
+// Refresh Token
+const refreshToken = async () => {
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch('http://localhost:8000/api/auth/refresh', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        }
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+        localStorage.setItem('token', data.data.token);
+        localStorage.setItem('token_expires_at', data.data.expires_at);
+        return data.data;
+    }
+    
+    throw new Error(data.message);
+};
+
+// Auto Refresh Token (sebelum expired)
+const setupAutoRefresh = () => {
+    // Refresh token 5 menit sebelum expired
+    const checkInterval = 60000; // Cek setiap 1 menit
+    
+    setInterval(async () => {
+        const expiresAt = localStorage.getItem('token_expires_at');
+        
+        if (!expiresAt) return;
+        
+        const expiryTime = new Date(expiresAt).getTime();
+        const currentTime = new Date().getTime();
+        const timeUntilExpiry = expiryTime - currentTime;
+        
+        // Refresh jika kurang dari 5 menit sebelum expired
+        if (timeUntilExpiry < 5 * 60 * 1000 && timeUntilExpiry > 0) {
+            try {
+                await refreshToken();
+                console.log('Token refreshed successfully');
+            } catch (error) {
+                console.error('Failed to refresh token:', error);
+                // Redirect to login jika gagal
+                window.location.href = '/login';
+            }
+        }
+    }, checkInterval);
+};
+
+// Call saat aplikasi dimulai
+setupAutoRefresh();
+
 // Logout
 const logout = async () => {
     const token = localStorage.getItem('token');
@@ -610,6 +773,7 @@ const logout = async () => {
     
     if (data.success) {
         localStorage.removeItem('token');
+        localStorage.removeItem('token_expires_at');
     } else {
         throw new Error(data.message);
     }
@@ -641,11 +805,33 @@ api.interceptors.request.use((config) => {
 // Add response interceptor to handle errors globally
 api.interceptors.response.use(
     (response) => response,
-    (error) => {
-        if (error.response?.status === 401) {
-            localStorage.removeItem('token');
-            window.location.href = '/login';
+    async (error) => {
+        const originalRequest = error.config;
+        
+        // Jika 401 dan belum pernah retry
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+            
+            try {
+                // Coba refresh token
+                const refreshResponse = await api.post('/auth/refresh');
+                const newToken = refreshResponse.data.data.token;
+                
+                localStorage.setItem('token', newToken);
+                localStorage.setItem('token_expires_at', refreshResponse.data.data.expires_at);
+                
+                // Retry request dengan token baru
+                originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                return api(originalRequest);
+            } catch (refreshError) {
+                // Jika refresh gagal, redirect ke login
+                localStorage.removeItem('token');
+                localStorage.removeItem('token_expires_at');
+                window.location.href = '/login';
+                return Promise.reject(refreshError);
+            }
         }
+        
         return Promise.reject(error);
     }
 );
@@ -655,6 +841,7 @@ const login = async (email, password) => {
     const response = await api.post('/auth/login', { email, password });
     if (response.data.success) {
         localStorage.setItem('token', response.data.data.token);
+        localStorage.setItem('token_expires_at', response.data.data.expires_at);
         return response.data.data.user;
     }
     throw new Error(response.data.message);
@@ -696,15 +883,58 @@ const getDevice = async (deviceId) => {
     throw new Error(response.data.message);
 };
 
+// Refresh Token
+const refreshToken = async () => {
+    const response = await api.post('/auth/refresh');
+    if (response.data.success) {
+        localStorage.setItem('token', response.data.data.token);
+        localStorage.setItem('token_expires_at', response.data.data.expires_at);
+        return response.data.data;
+    }
+    throw new Error(response.data.message);
+};
+
+// Auto Refresh Token (sebelum expired)
+const setupAutoRefresh = () => {
+    // Refresh token 5 menit sebelum expired
+    const checkInterval = 60000; // Cek setiap 1 menit
+    
+    setInterval(async () => {
+        const expiresAt = localStorage.getItem('token_expires_at');
+        
+        if (!expiresAt) return;
+        
+        const expiryTime = new Date(expiresAt).getTime();
+        const currentTime = new Date().getTime();
+        const timeUntilExpiry = expiryTime - currentTime;
+        
+        // Refresh jika kurang dari 5 menit sebelum expired
+        if (timeUntilExpiry < 5 * 60 * 1000 && timeUntilExpiry > 0) {
+            try {
+                await refreshToken();
+                console.log('Token auto-refreshed successfully');
+            } catch (error) {
+                console.error('Failed to auto-refresh token:', error);
+            }
+        }
+    }, checkInterval);
+};
+
+// Call saat aplikasi dimulai
+setupAutoRefresh();
+
 // Logout
 const logout = async () => {
     const response = await api.post('/auth/logout');
     if (response.data.success) {
         localStorage.removeItem('token');
+        localStorage.removeItem('token_expires_at');
     } else {
         throw new Error(response.data.message);
     }
 };
+
+export { api, login, getCurrentUser, getSensors, getSensorsByDevice, getDevice, refreshToken, setupAutoRefresh, logout };
 ```
 
 ## Data Models
@@ -783,10 +1013,20 @@ const logout = async () => {
 
 1. **Token Storage**: Simpan token di localStorage atau sessionStorage dengan aman
 2. **HTTPS**: Gunakan HTTPS di production
-3. **Token Expiration**: Token tidak memiliki expiration default, pertimbangkan untuk mengatur expiration
-4. **CORS**: Konfigurasi CORS sudah diset untuk development, sesuaikan untuk production
-5. **Rate Limiting**: Implementasi rate limiting untuk mencegah abuse
-6. **Input Validation**: Semua input sudah divalidasi di backend
+3. **Token Expiration**: Token memiliki expiration 60 menit (default), gunakan auto-refresh untuk perpanjang sesi
+4. **Auto Refresh**: Implementasikan auto-refresh token untuk mencegah session timeout saat user aktif
+5. **CORS**: Konfigurasi CORS sudah diset untuk development, sesuaikan untuk production
+6. **Rate Limiting**: Implementasi rate limiting untuk mencegah abuse
+7. **Input Validation**: Semua input sudah divalidasi di backend
+8. **Token Revocation**: Token lama otomatis di-revoke saat refresh atau logout
+
+### Best Practices untuk Token Management
+
+1. **Simpan expires_at**: Simpan `expires_at` di localStorage bersama token untuk tracking
+2. **Auto Refresh**: Refresh token 5 menit sebelum expired
+3. **Interceptor**: Gunakan axios interceptor untuk auto-retry saat 401
+4. **Clear on Logout**: Hapus semua token data saat logout
+5. **Secure Storage**: Pertimbangkan httpOnly cookies untuk production
 
 ## Rate Limiting
 

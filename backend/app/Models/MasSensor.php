@@ -48,6 +48,22 @@ class MasSensor extends Model
     }
 
     /**
+     * Get the latest data for this sensor.
+     */
+    public function latestData()
+    {
+        return $this->hasOne(DataActual::class, 'mas_sensor_id')->latest('received_at');
+    }
+
+    /**
+     * Get all data for this sensor.
+     */
+    public function dataActuals()
+    {
+        return $this->hasMany(DataActual::class, 'mas_sensor_id');
+    }
+
+    /**
      * Get the parameter options.
      */
     public static function getParameterOptions(): array

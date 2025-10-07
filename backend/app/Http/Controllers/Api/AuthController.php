@@ -40,7 +40,12 @@ class AuthController extends Controller
             'status' => 'active',
         ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $tokenResult = $user->createToken('auth_token');
+        $token = $tokenResult->plainTextToken;
+        
+        // Calculate expiration time
+        $expiresIn = config('sanctum.expiration');
+        $expiresAt = $expiresIn ? now()->addMinutes($expiresIn)->toIso8601String() : null;
 
         return response()->json([
             'success' => true,
@@ -48,7 +53,9 @@ class AuthController extends Controller
             'data' => [
                 'user' => $user,
                 'token' => $token,
-                'token_type' => 'Bearer'
+                'token_type' => 'Bearer',
+                'expires_in' => $expiresIn ? $expiresIn * 60 : null, // dalam detik
+                'expires_at' => $expiresAt
             ]
         ], 201);
     }
@@ -88,7 +95,12 @@ class AuthController extends Controller
             ], 403);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $tokenResult = $user->createToken('auth_token');
+        $token = $tokenResult->plainTextToken;
+        
+        // Calculate expiration time
+        $expiresIn = config('sanctum.expiration');
+        $expiresAt = $expiresIn ? now()->addMinutes($expiresIn)->toIso8601String() : null;
 
         return response()->json([
             'success' => true,
@@ -96,7 +108,9 @@ class AuthController extends Controller
             'data' => [
                 'user' => $user,
                 'token' => $token,
-                'token_type' => 'Bearer'
+                'token_type' => 'Bearer',
+                'expires_in' => $expiresIn ? $expiresIn * 60 : null, // dalam detik
+                'expires_at' => $expiresAt
             ]
         ]);
     }
@@ -129,6 +143,9 @@ class AuthController extends Controller
 
     /**
      * Refresh token
+     * 
+     * Endpoint ini digunakan untuk mendapatkan token baru tanpa perlu login ulang.
+     * Token lama akan dihapus dan diganti dengan token baru.
      */
     public function refresh(Request $request)
     {
@@ -138,14 +155,22 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
         
         // Create new token
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $tokenResult = $user->createToken('auth_token');
+        $token = $tokenResult->plainTextToken;
+        
+        // Calculate expiration time
+        $expiresIn = config('sanctum.expiration');
+        $expiresAt = $expiresIn ? now()->addMinutes($expiresIn)->toIso8601String() : null;
 
         return response()->json([
             'success' => true,
             'message' => 'Token refreshed successfully',
             'data' => [
+                'user' => $user,
                 'token' => $token,
-                'token_type' => 'Bearer'
+                'token_type' => 'Bearer',
+                'expires_in' => $expiresIn ? $expiresIn * 60 : null, // dalam detik
+                'expires_at' => $expiresAt
             ]
         ]);
     }

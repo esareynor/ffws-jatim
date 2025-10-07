@@ -184,7 +184,7 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
                                     <span className="text-xs text-gray-500">{item.unit}</span>
                                 </div>
                                 <Suspense fallback={<div className="w-12 h-6 bg-gray-200 rounded animate-pulse"></div>}>
-                                    {/* <Chart
+                                    <Chart
                                         data={item.history}
                                         width={48}
                                         height={22}
@@ -193,7 +193,7 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
                                         status={item.status}
                                         canvasId={`chart-second-${item.id}`}
                                         className="w-12 h-6 rounded"
-                                    /> */}
+                                    />
                                 </Suspense>
                             </div>
                         ))}

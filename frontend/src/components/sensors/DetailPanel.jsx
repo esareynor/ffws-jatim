@@ -501,13 +501,12 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                                                 </div>
                                             }
                                         >
-                                            {/* <MonitoringChart
+                                            <MonitoringChart
                                                 actualData={chartHistory || []}
-                                                width={640}
+                                                predictedData={chartHistory ? chartHistory.slice(1) : []}
+                                                width="100%"
                                                 height={320}
-                                                className="w-full"
-                                                canvasId="monitoring-chart-detail"
-                                            /> */}
+                                            />
                                         </Suspense>
                                     )}
                                 </div>
@@ -523,13 +522,13 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                                     </div>
                                 }
                             >
-                                {/* <TanggulAktual
+                                <TanggulAktual
                                     stationData={stationData}
                                     chartHistory={chartHistory}
                                     width={560}
                                     height={220}
                                     className="w-full"
-                                /> */}
+                                />
                             </Suspense>
                         )}
 
@@ -542,13 +541,13 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                                     </div>
                                 }
                             >
-                                {/* <PredictionChart
+                                <PredictionChart
                                     stationData={stationData}
                                     chartHistory={chartHistory}
                                     width={560}
                                     height={220}
                                     className="w-full"
-                                /> */}
+                                />
                             </Suspense>
                         )}
                     </div>

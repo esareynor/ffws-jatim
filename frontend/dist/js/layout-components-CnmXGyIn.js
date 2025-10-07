@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["js/common-components-BNIdnCuC.js","js/react-vendor-CILUtiK9.js","js/mapbox-vendor-C_nsdMnr.js","css/mapbox-vendor-BVO_c2QR.css","js/vendor-HC16imTC.js","js/services-BvR663xD.js","js/device-components-CA_EA_AT.js","js/charts-vendor-Tn6b3eh3.js","js/MapboxMap-BLNZ3bnw.js","js/sensor-components-PLz1u0tk.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["js/common-components-BNIdnCuC.js","js/react-vendor-CILUtiK9.js","js/mapbox-vendor-C_nsdMnr.js","css/mapbox-vendor-BVO_c2QR.css","js/vendor-HC16imTC.js","js/services-BvR663xD.js","js/device-components-CA_EA_AT.js","js/charts-vendor-Tn6b3eh3.js","js/MapboxMap-BLNZ3bnw.js","js/sensor-components-DhEYpEim.js"])))=>i.map(i=>d[i]);
 import { _ as __vitePreload } from './common-components-BNIdnCuC.js';
 import { r as reactExports, j as jsxRuntimeExports } from './react-vendor-CILUtiK9.js';
 
@@ -6,8 +6,8 @@ const GoogleMapsSearchbar = reactExports.lazy(() => __vitePreload(() => import('
 const MapboxMap = reactExports.lazy(() => __vitePreload(() => import('./MapboxMap-BLNZ3bnw.js'),true              ?__vite__mapDeps([8,0,1,2,3,4,5,6,7]):void 0));
 const FloatingLegend = reactExports.lazy(() => __vitePreload(() => import('./common-components-BNIdnCuC.js').then(n => n.F),true              ?__vite__mapDeps([0,1,2,3,4,5,6,7]):void 0));
 const FloodRunningBar = reactExports.lazy(() => __vitePreload(() => import('./common-components-BNIdnCuC.js').then(n => n.a),true              ?__vite__mapDeps([0,1,2,3,4,5,6,7]):void 0));
-const StationDetail = reactExports.lazy(() => __vitePreload(() => import('./sensor-components-PLz1u0tk.js').then(n => n.S),true              ?__vite__mapDeps([9,1,2,3,4,0,5,6,7]):void 0));
-const DetailPanel = reactExports.lazy(() => __vitePreload(() => import('./sensor-components-PLz1u0tk.js').then(n => n.D),true              ?__vite__mapDeps([9,1,2,3,4,0,5,6,7]):void 0));
+const StationDetail = reactExports.lazy(() => __vitePreload(() => import('./sensor-components-DhEYpEim.js').then(n => n.S),true              ?__vite__mapDeps([9,1,2,3,4,0,5,6,7]):void 0));
+const DetailPanel = reactExports.lazy(() => __vitePreload(() => import('./sensor-components-DhEYpEim.js').then(n => n.D),true              ?__vite__mapDeps([9,1,2,3,4,0,5,6,7]):void 0));
 const FilterPanel = reactExports.lazy(() => __vitePreload(() => import('./common-components-BNIdnCuC.js').then(n => n.b),true              ?__vite__mapDeps([0,1,2,3,4,5,6,7]):void 0));
 reactExports.lazy(() => __vitePreload(() => import('./device-components-CA_EA_AT.js').then(n => n.a),true              ?__vite__mapDeps([6,1,2,3,4]):void 0));
 const Layout = ({ children }) => {

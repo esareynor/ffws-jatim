@@ -1,6 +1,6 @@
 const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["js/common-components-BNIdnCuC.js","js/react-vendor-CILUtiK9.js","js/mapbox-vendor-C_nsdMnr.js","css/mapbox-vendor-BVO_c2QR.css","js/vendor-HC16imTC.js","js/services-BvR663xD.js","js/device-components-CA_EA_AT.js","js/charts-vendor-Tn6b3eh3.js"])))=>i.map(i=>d[i]);
 import { r as reactExports, j as jsxRuntimeExports } from './react-vendor-CILUtiK9.js';
-import { S as SidebarTemplate } from './layout-components-DJ5s5Jbu.js';
+import { S as SidebarTemplate } from './layout-components-CnmXGyIn.js';
 import { _ as __vitePreload } from './common-components-BNIdnCuC.js';
 
 const getStatusColor = (status) => {
@@ -137,8 +137,8 @@ const StationDetail$1 = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.definePro
 }, Symbol.toStringTag, { value: 'Module' }));
 
 const MonitoringChart = reactExports.lazy(() => __vitePreload(() => import('./common-components-BNIdnCuC.js').then(n => n.M),true              ?__vite__mapDeps([0,1,2,3,4,5,6,7]):void 0));
-const TanggulAktual = reactExports.lazy(() => __vitePreload(() => import('./common-components-BNIdnCuC.js').then(n => n.T),true              ?__vite__mapDeps([0,1,2,3,4,5,6,7]):void 0));
-const PredictionChart = reactExports.lazy(() => __vitePreload(() => import('./common-components-BNIdnCuC.js').then(n => n.c),true              ?__vite__mapDeps([0,1,2,3,4,5,6,7]):void 0));
+reactExports.lazy(() => __vitePreload(() => import('./common-components-BNIdnCuC.js').then(n => n.T),true              ?__vite__mapDeps([0,1,2,3,4,5,6,7]):void 0));
+reactExports.lazy(() => __vitePreload(() => import('./common-components-BNIdnCuC.js').then(n => n.c),true              ?__vite__mapDeps([0,1,2,3,4,5,6,7]):void 0));
 const DETAIL_TABS = [
   { key: "sensor", label: "Sensor" },
   { key: "cuaca", label: "Cuaca" },
@@ -261,20 +261,23 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
       onClose();
     }, 300);
   }, [onClose]);
-  const handleTabClick = reactExports.useCallback((tabKey) => {
-    if (isTabChanging || activeTab === tabKey) return;
-    setIsTabChanging(true);
-    setIsDotAnimating(true);
-    setPreviousTab(activeTab);
-    setTimeout(() => {
-      setActiveTab(tabKey);
+  const handleTabClick = reactExports.useCallback(
+    (tabKey) => {
+      if (isTabChanging || activeTab === tabKey) return;
+      setIsTabChanging(true);
+      setIsDotAnimating(true);
+      setPreviousTab(activeTab);
       setTimeout(() => {
-        setIsTabChanging(false);
-        setIsDotAnimating(false);
-        setPreviousTab(null);
+        setActiveTab(tabKey);
+        setTimeout(() => {
+          setIsTabChanging(false);
+          setIsDotAnimating(false);
+          setPreviousTab(null);
+        }, 400);
       }, 400);
-    }, 400);
-  }, [isTabChanging, activeTab]);
+    },
+    [isTabChanging, activeTab]
+  );
   if (!isOpen) return null;
   if (!stationData) {
     return /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -324,8 +327,22 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                 }
               ),
               /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "text-2xl font-bold text-gray-900 tracking-tight", style: { fontFamily: "Inter, system-ui, -apple-system, sans-serif" }, children: "Detail Informasi" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-base text-gray-700 mt-1 font-semibold", style: { fontFamily: "Inter, system-ui, -apple-system, sans-serif" }, children: stationData.name })
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "h3",
+                  {
+                    className: "text-2xl font-bold text-gray-900 tracking-tight",
+                    style: { fontFamily: "Inter, system-ui, -apple-system, sans-serif" },
+                    children: "Detail Informasi"
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "p",
+                  {
+                    className: "text-base text-gray-700 mt-1 font-semibold",
+                    style: { fontFamily: "Inter, system-ui, -apple-system, sans-serif" },
+                    children: stationData.name
+                  }
+                )
               ] })
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-right", children: [
@@ -342,10 +359,17 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                   }
                 )
               ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-sm text-gray-600 font-semibold", style: { fontFamily: "Inter, system-ui, -apple-system, sans-serif" }, children: [
-                "Update ",
-                (/* @__PURE__ */ new Date()).toLocaleTimeString("id-ID")
-              ] })
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "div",
+                {
+                  className: "text-sm text-gray-600 font-semibold",
+                  style: { fontFamily: "Inter, system-ui, -apple-system, sans-serif" },
+                  children: [
+                    "Update ",
+                    (/* @__PURE__ */ new Date()).toLocaleTimeString("id-ID")
+                  ]
+                }
+              )
             ] })
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -378,12 +402,26 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
             children: [
               activeTab !== "sensor" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden", children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "px-8 pt-8 pb-6 bg-gradient-to-r from-gray-50 to-blue-50/30 border-b border-gray-100", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center justify-between mb-3", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("h3", { className: "text-2xl font-bold text-gray-900 tracking-tight", style: { fontFamily: "Inter, system-ui, -apple-system, sans-serif" }, children: [
-                    activeTab === "riwayat" && "Riwayat Data",
-                    activeTab === "cuaca" && "Cuaca",
-                    activeTab === "monitoring" && "Aktual & Prediksi"
-                  ] }) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-base text-gray-600 font-semibold", style: { fontFamily: "Inter, system-ui, -apple-system, sans-serif" }, children: stationData.location })
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center justify-between mb-3", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    "h3",
+                    {
+                      className: "text-2xl font-bold text-gray-900 tracking-tight",
+                      style: { fontFamily: "Inter, system-ui, -apple-system, sans-serif" },
+                      children: [
+                        activeTab === "riwayat" && "Riwayat Data",
+                        activeTab === "cuaca" && "Cuaca",
+                        activeTab === "monitoring" && "Aktual & Prediksi"
+                      ]
+                    }
+                  ) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "p",
+                    {
+                      className: "text-base text-gray-600 font-semibold",
+                      style: { fontFamily: "Inter, system-ui, -apple-system, sans-serif" },
+                      children: stationData.location
+                    }
+                  )
                 ] }),
                 /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "px-8 pb-8", children: [
                   activeTab === "riwayat" && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bg-gray-50 rounded-lg p-4 text-sm text-gray-600", children: "Riwayat data akan tersedia di sini." }),
@@ -499,38 +537,36 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                       ] })
                     ] })
                   ] }),
-                  activeTab === "monitoring" && /* @__PURE__ */ jsxRuntimeExports.jsx(reactExports.Suspense, { fallback: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full h-[320px] bg-gray-100 rounded-lg animate-pulse flex items-center justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-500", children: "Loading chart..." }) }), children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    MonitoringChart,
+                  activeTab === "monitoring" && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    reactExports.Suspense,
                     {
-                      actualData: chartHistory || [],
-                      width: 640,
-                      height: 320,
-                      className: "w-full",
-                      canvasId: "monitoring-chart-detail"
+                      fallback: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full h-[320px] bg-gray-100 rounded-lg animate-pulse flex items-center justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-500", children: "Loading chart..." }) }),
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        MonitoringChart,
+                        {
+                          actualData: chartHistory || [],
+                          width: 640,
+                          height: 320,
+                          className: "w-full",
+                          canvasId: "monitoring-chart-detail"
+                        }
+                      )
                     }
-                  ) })
+                  )
                 ] })
               ] }),
-              activeTab === "sensor" && /* @__PURE__ */ jsxRuntimeExports.jsx(reactExports.Suspense, { fallback: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full h-[220px] bg-gray-100 rounded-lg animate-pulse flex items-center justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-500", children: "Loading chart..." }) }), children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-                TanggulAktual,
+              activeTab === "sensor" && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                reactExports.Suspense,
                 {
-                  stationData,
-                  chartHistory,
-                  width: 560,
-                  height: 220,
-                  className: "w-full"
+                  fallback: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full h-[220px] bg-gray-100 rounded-lg animate-pulse flex items-center justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-500", children: "Loading chart..." }) })
                 }
-              ) }),
-              activeTab === "sensor" && /* @__PURE__ */ jsxRuntimeExports.jsx(reactExports.Suspense, { fallback: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full h-[220px] bg-gray-100 rounded-lg animate-pulse flex items-center justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-500", children: "Loading chart..." }) }), children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-                PredictionChart,
+              ),
+              activeTab === "sensor" && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                reactExports.Suspense,
                 {
-                  stationData,
-                  chartHistory,
-                  width: 560,
-                  height: 220,
-                  className: "w-full"
+                  fallback: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full h-[220px] bg-gray-100 rounded-lg animate-pulse flex items-center justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-500", children: "Loading chart..." }) })
                 }
-              ) })
+              )
             ]
           }
         ) })

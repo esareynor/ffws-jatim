@@ -1,113 +1,135 @@
-// VectorTilesAPI.jsx (versi AMAN)
-
+// src/components/VectorTilesAPI.jsx
 import React, { useEffect } from 'react';
 
 const VectorTilesAPI = ({ map, mapLoaded, selectedLocation, isRiverLayerActive }) => {
-    const SOURCE_ID = 'water-elevation-source';
-    const LAYER_ID = 'water-elevation-layer';
-    const RADIUS_METERS = 5000; // 5 km
+  const SOURCE_ID = 'highlighted-water-source';
+  const LAYER_ID = 'highlighted-water-layer';
 
-    const cleanupLayer = () => {
-        if (!map || typeof map.getLayer !== 'function') return;
-        try {
-            if (map.getLayer(LAYER_ID)) map.removeLayer(LAYER_ID);
-            if (map.getSource(SOURCE_ID)) map.removeSource(SOURCE_ID);
-        } catch (e) {
-            console.warn('Cleanup layer error:', e.message);
+  const cleanup = () => {
+    if (!map) return;
+    try {
+      if (map.getLayer(LAYER_ID)) map.removeLayer(LAYER_ID);
+      if (map.getSource(SOURCE_ID)) map.removeSource(SOURCE_ID);
+    } catch (e) {
+      console.warn('Cleanup error:', e.message);
+    }
+  };
+
+  useEffect(() => {
+    // Jika layer sungai tidak aktif atau belum ada lokasi terpilih, bersihkan
+    if (!isRiverLayerActive || !mapLoaded || !selectedLocation || !map) {
+      cleanup();
+      return;
+    }
+
+    const { lat, lng } = selectedLocation;
+    if (typeof lat !== 'number' || typeof lng !== 'number' || isNaN(lat) || isNaN(lng)) {
+      cleanup();
+      return;
+    }
+
+    const highlightWaterNearby = () => {
+      if (!map.isStyleLoaded()) {
+        const timeout = setTimeout(highlightWaterNearby, 200);
+        return () => clearTimeout(timeout);
+      }
+
+      cleanup();
+
+      try {
+        // Ambil semua layer di peta
+        const allLayers = map.getStyle().layers || [];
+        
+        // Cari layer yang kemungkinan besar adalah air (berdasarkan nama)
+        const waterLayerIds = allLayers
+          .filter(layer => 
+            layer.id.includes('water') || 
+            (layer.type === 'fill' && layer.source === 'mapbox-streets-v8')
+          )
+          .map(layer => layer.id);
+
+        if (waterLayerIds.length === 0) {
+          console.log('No water-related layers found in current style');
+          return;
         }
+
+        // Dapatkan koordinat marker
+        const point = map.project([lng, lat]);
+        
+        // Cari fitur air di sekitar marker (radius 300px untuk lebih banyak hasil)
+        const radiusInPixels = 300;
+        const bbox = [
+          [point.x - radiusInPixels, point.y - radiusInPixels],
+          [point.x + radiusInPixels, point.y + radiusInPixels]
+        ];
+
+        let features = [];
+        for (const layerId of waterLayerIds) {
+          const layerFeatures = map.queryRenderedFeatures(bbox, {
+            layers: [layerId]
+          });
+          features = [...features, ...layerFeatures];
+        }
+
+        // Filter hanya fitur polygon
+        const waterFeatures = features.filter(f => 
+          f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon'
+        );
+
+        if (waterFeatures.length === 0) {
+          console.log('No water features found near', [lng, lat]);
+          return;
+        }
+
+        // Tambahkan properti untuk pewarnaan
+        const processedFeatures = waterFeatures.map((f, index) => ({
+          ...f,
+          properties: {
+            ...f.properties,
+            isHighlighted: true,
+            distance: Math.random() * 100
+          }
+        }));
+
+        // Tambahkan sumber data baru
+        map.addSource(SOURCE_ID, {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: processedFeatures
+          }
+        });
+
+        // Tambahkan layer dengan warna biru tua
+        map.addLayer({
+          id: LAYER_ID,
+          type: 'fill',
+          source: SOURCE_ID,
+          paint: {
+            'fill-color': '#000080',  // Biru sangat tua
+            'fill-opacity': 0.7
+          },
+          layout: {
+            visibility: 'visible'
+          }
+        }, 'building'); // Letakkan di bawah layer building
+
+        console.log(`✅ Highlighted ${waterFeatures.length} water features near station`);
+
+      } catch (error) {
+        console.error('Error in VectorTilesAPI:', error);
+        cleanup();
+      }
     };
 
-    useEffect(() => {
-        // ✅ Hentikan jika tidak aktif atau data tidak lengkap
-        if (!isRiverLayerActive || !mapLoaded || !selectedLocation) {
-            cleanupLayer();
-            return;
-        }
+    const timer = setTimeout(highlightWaterNearby, 500);
+    return () => {
+      clearTimeout(timer);
+      cleanup();
+    };
+  }, [map, mapLoaded, isRiverLayerActive, selectedLocation]);
 
-        // ✅ Pastikan turf tersedia
-        if (typeof turf === 'undefined') {
-            console.error('Turf.js belum dimuat! Tambahkan di public/index.html');
-            return;
-        }
-
-        // ✅ Pastikan koordinat valid
-        const { lat, lng } = selectedLocation;
-        if (typeof lat !== 'number' || typeof lng !== 'number' || isNaN(lat) || isNaN(lng)) {
-            cleanupLayer();
-            return;
-        }
-
-        const processWaterFeatures = () => {
-            try {
-                if (!map?.isStyleLoaded?.()) return;
-                cleanupLayer();
-
-                const point = turf.point([lng, lat]);
-                const bufferedArea = turf.buffer(point, RADIUS_METERS / 1000, { units: 'kilometers' });
-
-                const waterLayer = map.getStyle().layers.find(
-                    layer => layer['source-layer'] === 'water' && layer.type === 'fill'
-                );
-
-                if (!waterLayer) {
-                    console.warn('Water layer not found in style');
-                    return;
-                }
-
-                const waterFeatures = map.querySourceFeatures(waterLayer.source, {
-                    sourceLayer: waterLayer['source-layer'],
-                    filter: ['any', ['==', '$type', 'Polygon'], ['==', '$type', 'MultiPolygon']],
-                });
-
-                const featuresInBuffer = [];
-                for (const feature of waterFeatures) {
-                    try {
-                        const feat = turf.feature(feature.geometry);
-                        if (turf.booleanIntersects(feat, bufferedArea)) {
-                            feature.properties.elevation = Math.random() * 15;
-                            featuresInBuffer.push(feature);
-                        }
-                    } catch (e) {
-                        // Skip invalid geometry
-                    }
-                }
-
-                if (featuresInBuffer.length > 0) {
-                    map.addSource(SOURCE_ID, {
-                        type: 'geojson',
-                        data: turf.featureCollection(featuresInBuffer),
-                    });
-
-                    map.addLayer({
-                        id: LAYER_ID,
-                        type: 'fill',
-                        source: SOURCE_ID,
-                        paint: {
-                            'fill-color': [
-                                'interpolate', ['linear'], ['get', 'elevation'],
-                                0, '#87CEEB',
-                                5, '#4682B4',
-                                10, '#191970',
-                                15, '#000033'
-                            ],
-                            'fill-opacity': 0.85
-                        }
-                    }, 'building');
-                }
-            } catch (error) {
-                console.error('Error in VectorTilesAPI:', error);
-                cleanupLayer();
-            }
-        };
-
-        const timer = setTimeout(processWaterFeatures, 600);
-        return () => {
-            clearTimeout(timer);
-            cleanupLayer();
-        };
-    }, [map, mapLoaded, isRiverLayerActive, selectedLocation]);
-
-    return null;
+  return null;
 };
 
 export default VectorTilesAPI;

@@ -8,274 +8,384 @@ import { fetchDevices } from "../../services/devices";
 // Lazy imports
 const MapTooltip = lazy(() => import("./maptooltip"));
 const FilterPanel = lazy(() => import("../FilterPanel.jsx"));
-const VectorTilesAPI = lazy(() => import("../VectorTilesAPI.jsx"));
-const StationDetail = lazy(() => import("@/components/StationDetail.jsx"));
+const StationDetail = lazy(() => import("../StationDetail.jsx"));
 
-const MapboxMap = ({ tickerData }) => {
-    const mapContainer = useRef(null);
-    const map = useRef(null);
-    const markersRef = useRef([]);
-    const [devices, setDevices] = useState([]);
-    const [tooltip, setTooltip] = useState({
-        visible: false,
-        station: null,
-        coordinates: null,
+mapboxgl.accessToken = "pk.eyJ1IjoiZGl0b2ZhdGFoaWxsYWgxIiwiYSI6ImNtZjNveGloczAwNncya3E1YzdjcTRtM3MifQ.kIf5rscGYOzvvBcZJ41u8g";
+
+const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
+  const mapContainer = useRef(null);
+  const map = useRef(null);
+  const markersRef = useRef([]);
+  const [devices, setDevices] = useState([]);
+  const [selectedStation, setSelectedStation] = useState(null);
+  const [selectedStationCoords, setSelectedStationCoords] = useState(null);
+  const [tooltip, setTooltip] = useState({ visible: false, station: null, coordinates: null });
+  const [zoomLevel, setZoomLevel] = useState(8);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [showFilterSidebar, setShowFilterSidebar] = useState(false);
+  const [autoSwitchActive, setAutoSwitchActive] = useState(false);
+  const [currentStationIndex, setCurrentStationIndex] = useState(0);
+  const [clickedCoordinates, setClickedCoordinates] = useState(null);
+  const [showCoordinatesPopup, setShowCoordinatesPopup] = useState(false);
+
+  // State untuk layer (tetap ada, tapi tidak digunakan jika tidak perlu toggle)
+  const [activeLayers, setActiveLayers] = useState({
+    rivers: false,
+    'flood-risk': false,
+    rainfall: false,
+    elevation: false,
+    administrative: false,
+  });
+
+  // === HIGHLIGHT AIR HANYA DI SEKITAR MARKER ===
+  const HIGHLIGHT_SOURCE_ID = 'highlighted-water-source';
+  const HIGHLIGHT_LAYER_ID = 'highlighted-water-layer';
+
+  const cleanupHighlight = () => {
+    if (!map.current) return;
+    try {
+      if (map.current.getLayer(HIGHLIGHT_LAYER_ID)) map.current.removeLayer(HIGHLIGHT_LAYER_ID);
+      if (map.current.getSource(HIGHLIGHT_SOURCE_ID)) map.current.removeSource(HIGHLIGHT_SOURCE_ID);
+    } catch (e) {
+      console.warn('Cleanup highlight error:', e.message);
+    }
+  };
+
+  const highlightWaterNearMarker = (lng, lat) => {
+    if (!map.current || !map.current.isStyleLoaded()) return;
+
+    cleanupHighlight();
+
+    try {
+      if (typeof lng !== 'number' || typeof lat !== 'number' || isNaN(lng) || isNaN(lat)) return;
+      if (Math.abs(lng) > 180 || Math.abs(lat) > 90) return;
+
+      const point = map.current.project([lng, lat]);
+      if (!point || isNaN(point.x) || isNaN(point.y)) return;
+
+      const radius = 50;
+      const bbox = [
+        [Math.max(0, point.x - radius), Math.max(0, point.y - radius)],
+        [point.x + radius, point.y + radius]
+      ];
+
+      const allLayers = map.current.getStyle().layers || [];
+      const waterLayerIds = allLayers
+        .filter(layer => layer.id.includes('water') && layer.type === 'fill')
+        .map(layer => layer.id);
+
+      if (waterLayerIds.length === 0) return;
+
+      let features = [];
+      for (const id of waterLayerIds) {
+        const f = map.current.queryRenderedFeatures(bbox, { layers: [id] });
+        features.push(...f);
+      }
+
+      const waterFeatures = features.filter(f =>
+        f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon'
+      );
+
+      if (waterFeatures.length === 0) return;
+
+      // ✅ Perbaikan: tambahkan "data:"
+      map.current.addSource(HIGHLIGHT_SOURCE_ID, {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: waterFeatures
+        }
+      });
+
+      map.current.addLayer({
+        id: HIGHLIGHT_LAYER_ID,
+        type: 'fill',
+        source: HIGHLIGHT_SOURCE_ID,
+        paint: {
+          'fill-color': '#003366',
+          'fill-opacity': 0.75,
+          'fill-outline-color': '#001a33',
+          'fill-outline-width': 1
+        }
+      }, 'water');
+
+    } catch (error) {
+      console.error('Highlight water error:', error);
+      cleanupHighlight();
+    }
+  };
+
+  // === SISA KODE TETAP SAMA ===
+
+  useEffect(() => {
+    const loadDevices = async () => {
+      try {
+        const devicesData = await fetchDevices();
+        setDevices(devicesData);
+      } catch (error) {
+        console.error("Failed to fetch devices:", error);
+      }
+    };
+    loadDevices();
+  }, []);
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "safe": return "#10B981";
+      case "warning": return "#F59E0B";
+      case "alert": return "#EF4444";
+      default: return "#6B7280";
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    const iconSize = 24;
+    const iconColor = "white";
+    switch (status) {
+      case "safe":
+        return `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`;
+      case "warning":
+        return `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 9V13M12 17.0195V17M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`;
+      case "alert":
+        return `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 7.25V13M12 16.75V16.76M10.29 3.86L1.82 18A2 2 0 0 0 3.55 21H20.45A2 2 0 0 0 22.18 18L13.71 3.86A2 2 0 0 0 10.29 3.86Z" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`;
+      default:
+        return `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="9" stroke="${iconColor}" stroke-width="2"/>
+        </svg>`;
+    }
+  };
+
+  const getStationCoordinates = (stationName) => {
+    if (!devices || devices.length === 0) return null;
+    const device = devices.find((d) => d.name === stationName);
+    if (device && device.latitude && device.longitude) {
+      return [parseFloat(device.longitude), parseFloat(device.latitude)];
+    }
+    return null;
+  };
+
+  const handleMarkerClick = (station, coordinates) => {
+    setSelectedStation(station);
+    setSelectedStationCoords(coordinates);
+    if (map.current) {
+      map.current.flyTo({ center: coordinates, zoom: 14 });
+    }
+    setTooltip({ visible: true, station: station, coordinates });
+    highlightWaterNearMarker(coordinates[0], coordinates[1]);
+  };
+
+  const handleShowDetail = (station) => {
+    setTooltip((prev) => ({ ...prev, visible: false }));
+    if (onStationSelect) onStationSelect(station);
+  };
+
+  const handleCloseTooltip = () => setTooltip((prev) => ({ ...prev, visible: false }));
+
+  const handleStationChange = (station, index) => {
+    if (station && station.latitude && station.longitude) {
+      const coords = [station.longitude, station.latitude];
+      setCurrentStationIndex(index);
+      setSelectedStation(station);
+      setSelectedStationCoords(coords);
+      handleMapFocus({ lat: station.latitude, lng: station.longitude, zoom: 14, stationId: station.id });
+      highlightWaterNearMarker(coords[0], coords[1]);
+    }
+  };
+
+  const handleAutoSwitchToggle = (isActive) => {
+    setAutoSwitchActive(isActive);
+  };
+
+  const handleMapFocus = (focusData) => {
+    if (!map.current) return;
+    const { lat, lng, zoom, stationId } = focusData;
+    const coords = [lng, lat];
+    setSelectedStationCoords(coords);
+    const station = tickerData.find((s) => s.id === stationId);
+    if (station) setSelectedStation(station);
+    map.current.flyTo({
+      center: coords, zoom: zoom || 14, pitch: 0, bearing: 0,
+      speed: 1.2, curve: 1.4, easing: (t) => t, essential: true
     });
-    const [isFilterOpen, setIsFilterOpen] = useState(false);
-    const [selectedMarker, setSelectedMarker] = useState(null);
-    // const [selectedStation, setSelectedStation] = useState(null); // 👈 Comment sementara
-    const [activeLayers, setActiveLayers] = useState({
-        rivers: false,
-        'flood-risk': false,
-        rainfall: false,
-        elevation: false,
-        administrative: false,
+    setTimeout(() => {
+      if (station) {
+        const coordinates = getStationCoordinates(station.name);
+        if (coordinates) {
+          setTooltip({ visible: true, station: station, coordinates: coordinates });
+          highlightWaterNearMarker(coordinates[0], coordinates[1]);
+        }
+      }
+    }, 800);
+  };
+
+  const handleMapClick = (e) => {
+    if (e.originalEvent && e.originalEvent.target && e.originalEvent.target.closest('.custom-marker')) return;
+    setClickedCoordinates(e.lngLat);
+    setShowCoordinatesPopup(true);
+  };
+
+  const handleLayerToggle = (layerId, isActive) => {
+    setActiveLayers(prev => ({ ...prev, [layerId]: isActive }));
+  };
+
+  useEffect(() => {
+    if (map.current) return;
+    if (!mapContainer.current) return;
+    try {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: "mapbox://styles/mapbox/outdoors-v12",
+        center: [112.5, -7.5],
+        zoom: 8
+      });
+      map.current.addControl(new mapboxgl.ScaleControl(), "bottom-left");
+      map.current.on("zoom", () => {
+        if (map.current) setZoomLevel(map.current.getZoom());
+      });
+      map.current.on('load', () => {
+        setMapLoaded(true);
+      });
+      map.current.on('click', handleMapClick);
+    } catch (error) {
+      console.error('Error initializing map:', error);
+    }
+    return () => {
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!map.current || !tickerData || !devices.length) return;
+    markersRef.current.forEach(marker => marker?.remove?.());
+    markersRef.current = [];
+    tickerData.forEach(station => {
+      const coordinates = getStationCoordinates(station.name);
+      if (coordinates) {
+        try {
+          const markerEl = document.createElement("div");
+          markerEl.className = "custom-marker";
+          markerEl.style.cssText = `
+            width: 24px; height: 24px; border-radius: 50%; 
+            background-color: ${getStatusColor(station.status)}; 
+            border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); 
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+          `;
+          markerEl.innerHTML = getStatusIcon(station.status);
+          if (station.status === "alert") {
+            const pulseEl = document.createElement("div");
+            pulseEl.style.cssText = `
+              position: absolute; width: 100%; height: 100%; border-radius: 50%; 
+              background-color: ${getStatusColor(station.status)}; opacity: 0.7; 
+              animation: alert-pulse 2s infinite; z-index: -1;
+            `;
+            markerEl.appendChild(pulseEl);
+          }
+          const marker = new mapboxgl.Marker(markerEl).setLngLat(coordinates).addTo(map.current);
+          markersRef.current.push(marker);
+          markerEl.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (autoSwitchActive) setAutoSwitchActive(false);
+            handleMarkerClick(station, coordinates);
+          });
+        } catch (error) {
+          console.error("Error creating marker:", error);
+        }
+      }
     });
-    const [mapLoaded, setMapLoaded] = useState(false);
+  }, [tickerData, devices, autoSwitchActive]);
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case "safe": return "#10B981";
-            case "warning": return "#F59E0B";
-            case "alert": return "#EF4444";
-            default: return "#6B7280";
-        }
-    };
-
-    const getStatusIcon = (status) => {
-        const iconSize = 27;
-        const iconColor = "white";
-        switch (status) {
-            case "safe":
-                return `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>`;
-            case "warning":
-                return `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 9V13M12 17.0195V17M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>`;
-            case "alert":
-                return `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 7.25V13M12 16.75V16.76M10.29 3.86L1.82 18A2 2 0 0 0 3.55 21H20.45A2 2 0 0 0 22.18 18L13.71 3.86A2 2 0 0 0 10.29 3.86Z" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>`;
-            default:
-                return `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="12" cy="12" r="9" stroke="${iconColor}" stroke-width="2"/>
-                </svg>`;
-        }
-    };
-
-    useEffect(() => {
-        const loadDevices = async () => {
-            try {
-                const devicesData = await fetchDevices();
-                setDevices(devicesData);
-            } catch (error) {
-                console.error("Failed to fetch devices:", error);
-            }
-        };
-        loadDevices();
-    }, []);
-
-    useEffect(() => {
-        const style = document.createElement("style");
-        style.textContent = `
-          @keyframes alert-pulse {
-            0% { transform: scale(1); opacity: 0.7; }
-            50% { transform: scale(1.5); opacity: 0.3; }
-            100% { transform: scale(1); opacity: 0.7; }
-          }`;
-        document.head.appendChild(style);
-        return () => document.head.removeChild(style);
-    }, []);
-
-    useEffect(() => {
-        if (map.current) return;
-        mapboxgl.accessToken = "pk.eyJ1IjoiZGl0b2ZhdGFoaWxsYWgxIiwiYSI6ImNtZjNveGloczAwNncya3E1YzdjcTRtM3MifQ.kIf5rscGYOzvvBcZJ41u8g";
-
-        map.current = new mapboxgl.Map({
-            container: mapContainer.current,
-            style: "mapbox://styles/mapbox/streets-v12",
-            center: [112.5, -7.5],
-            zoom: 8,
-            pitch: 45,
-            bearing: -17.6,
-            antialias: true,
-        });
-
-        map.current.on('load', () => {
-            setMapLoaded(true);
-        });
-
-        map.current.addControl(new mapboxgl.ScaleControl(), "bottom-left");
-
-        const emitUserInteraction = (source) => {
-            document.dispatchEvent(new CustomEvent("userInteraction", { detail: { source } }));
-        };
-        map.current.on("dragstart", () => emitUserInteraction("mapDrag"));
-        map.current.on("zoomstart", () => emitUserInteraction("mapZoom"));
-        map.current.on("click", () => emitUserInteraction("mapClick"));
-
-        return () => {
-            if (map.current) {
-                map.current.remove();
-                map.current = null;
-            }
-        };
-    }, []);
-
-    const getStationCoordinates = (stationName) => {
-        if (!devices || devices.length === 0) return null;
-        const name = stationName.toLowerCase();
-        const device = devices.find(d =>
-            (d.name?.toLowerCase() === name) ||
-            (d.device_name?.toLowerCase() === name) ||
-            (d.station_name?.toLowerCase() === name)
-        );
-        if (device && device.latitude && device.longitude) {
-            const lat = parseFloat(device.latitude);
-            const lng = parseFloat(device.longitude);
-            if (!isNaN(lat) && !isNaN(lng)) {
-                return [lng, lat];
-            }
-        }
-        return null;
-    };
-
-    useEffect(() => {
-        if (!map.current || !tickerData || !devices.length) return;
-
-        markersRef.current.forEach(marker => marker.remove());
-        markersRef.current = [];
-
-        tickerData.forEach((station) => {
-            const coordinates = getStationCoordinates(station.name);
-            if (coordinates) {
-                const markerEl = document.createElement("div");
-                markerEl.className = "custom-marker";
-                markerEl.style.width = "27px";
-                markerEl.style.height = "27px";
-                markerEl.style.borderRadius = "50%";
-                markerEl.style.backgroundColor = getStatusColor(station.status);
-                markerEl.style.border = "3px solid white";
-                markerEl.style.boxShadow = "0 4px 8px rgba(0,0,0,0.4)";
-                markerEl.style.cursor = "pointer";
-                markerEl.style.zIndex = "10";
-                markerEl.style.display = "flex";
-                markerEl.style.alignItems = "center";
-                markerEl.style.justifyContent = "center";
-                const iconSvg = getStatusIcon(station.status);
-                markerEl.innerHTML = iconSvg;
-
-                if (station.status === "alert") {
-                    const pulseEl = document.createElement("div");
-                    pulseEl.style.position = "absolute";
-                    pulseEl.style.width = "100%";
-                    pulseEl.style.height = "100%";
-                    pulseEl.style.borderRadius = "50%";
-                    pulseEl.style.backgroundColor = getStatusColor(station.status);
-                    pulseEl.style.opacity = "0.7";
-                    pulseEl.style.animation = "alert-pulse 2s infinite";
-                    pulseEl.style.zIndex = "-1";
-                    markerEl.appendChild(pulseEl);
-                }
-
-                markerEl.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    const fullDeviceData = devices.find(d => (d.name || d.device_name || d.station_name) === station.name);
-                    const selectedData = fullDeviceData || station;
-                    const lat = parseFloat(selectedData.latitude);
-                    const lng = parseFloat(selectedData.longitude);
-                    if (!isNaN(lat) && !isNaN(lng)) {
-                        setSelectedMarker({ lat, lng });
-                        map.current.flyTo({ center: coordinates, zoom: 14 });
-                        setTooltip({ visible: true, station: selectedData, coordinates });
-                        setIsFilterOpen(true);
-                    } else {
-                        console.warn("Koordinat tidak valid:", station.name);
-                    }
-                });
-
-                const marker = new mapboxgl.Marker(markerEl).setLngLat(coordinates).addTo(map.current);
-                markersRef.current.push(marker);
-            }
-        });
-    }, [tickerData, devices]);
-
-    const handleOpenFilter = () => setIsFilterOpen(true);
-    const handleCloseFilter = () => setIsFilterOpen(false);
-
-    const handleLayerToggle = (layerId, status) => {
-        setActiveLayers(prev => ({ ...prev, [layerId]: status }));
-    };
-
-    const handleAutoSwitchToggle = (isEnabled) => {
-        console.log("Auto-switch toggled:", isEnabled);
-    };
-
-    // 💡 SEMENTARA: Hanya log, tidak buka panel detail
-    const handleShowDetail = (station) => {
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        tooltip.visible &&
+        !event.target.closest(".custom-marker") &&
+        !event.target.closest(".mapboxgl-popup-content") &&
+        !event.target.closest(".map-tooltip")
+      ) {
         setTooltip(prev => ({ ...prev, visible: false }));
-        console.log("✅ Lihat Detail diklik:", station.name);
-        // setSelectedStation(station); // 👈 Uncomment nanti setelah pastikan StationDetail exist
+      }
     };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [tooltip.visible]);
 
-    const handleCloseTooltip = () => {
-        setTooltip(prev => ({ ...prev, visible: false }));
-    };
+  return (
+    <div className="w-full h-screen overflow-hidden relative z-0">
+      <div ref={mapContainer} className="w-full h-full relative z-0" />
+     
+      <Suspense fallback={null}>
+        <FilterPanel
+          isOpen={showFilterSidebar}
+          onOpen={() => setShowFilterSidebar(true)}
+          onClose={() => setShowFilterSidebar(false)}
+          tickerData={tickerData}
+          handleStationChange={handleStationChange}
+          currentStationIndex={currentStationIndex}
+          handleAutoSwitchToggle={handleAutoSwitchToggle}
+          onLayerToggle={handleLayerToggle}
+          activeLayers={activeLayers}
+        />
+      </Suspense>
 
-    // const handleCloseDetail = () => { setSelectedStation(null); }; // 👈 Comment sementara
+      <style>{`
+        @keyframes alert-pulse { 
+          0% { transform: scale(1); opacity: 0.7; } 
+          50% { transform: scale(1.5); opacity: 0.3; } 
+          100% { transform: scale(1); opacity: 0.7; } 
+        }
+        .mapboxgl-popup-content { 
+          border-radius: 8px; 
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+        }
+        .coordinates-popup .mapboxgl-popup-content { 
+          padding: 0; 
+        }
+      `}</style>
 
-    return (
-        <div className="w-full h-screen overflow-hidden relative z-0">
-            <div ref={mapContainer} className="w-full h-full" />
+      <Suspense fallback={null}>
+        <MapTooltip 
+          map={map.current} 
+          station={tooltip.station} 
+          isVisible={tooltip.visible} 
+          coordinates={tooltip.coordinates} 
+          onShowDetail={handleShowDetail} 
+          onClose={handleCloseTooltip} 
+        />
+      </Suspense>
 
-            {mapLoaded && (
-                <Suspense fallback={null}>
-                    <VectorTilesAPI
-                        map={map.current}
-                        mapLoaded={mapLoaded}
-                        selectedLocation={selectedMarker}
-                        isRiverLayerActive={activeLayers.rivers}
-                    />
-                </Suspense>
-            )}
+      {selectedStation && onStationSelect && (
+        <Suspense fallback={null}>
+          <StationDetail
+            selectedStation={selectedStation}
+            onClose={() => onStationSelect(null)}
+            tickerData={tickerData}
+          />
+        </Suspense>
+      )}
 
-            <Suspense fallback={null}>
-                <FilterPanel
-                    isOpen={isFilterOpen}
-                    onOpen={handleOpenFilter}
-                    onClose={handleCloseFilter}
-                    activeLayers={activeLayers}
-                    onLayerToggle={handleLayerToggle}
-                    tickerData={tickerData}
-                    handleStationChange={() => {}}
-                    currentStationIndex={0}
-                    handleAutoSwitchToggle={handleAutoSwitchToggle}
-                />
-            </Suspense>
-
-            <Suspense fallback={null}>
-                <MapTooltip
-                    map={map.current}
-                    station={tooltip.station}
-                    isVisible={tooltip.visible}
-                    coordinates={tooltip.coordinates}
-                    onShowDetail={handleShowDetail}
-                    onClose={handleCloseTooltip}
-                />
-            </Suspense>
-
-            {/* ⚠️ SEMENTARA COMMENT OUT UNTUK HINDARI ERROR 500 */}
-            {/* <Suspense fallback={null}>
-                <StationDetail
-                    selectedStation={selectedStation}
-                    onClose={handleCloseDetail}
-                    tickerData={tickerData}
-                />
-            </Suspense> */}
-        </div>
-    );
+      <div className="absolute top-4 right-4 z-[80]">
+        <button
+          onClick={() => setShowFilterSidebar(true)}
+          className="relative inline-flex items-center justify-center w-12 h-12 rounded-full bg-white hover:bg-blue-50 transition-colors shadow-md"
+          title="Buka Filter"
+          aria-label="Buka Filter"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="relative z-10 w-6 h-6 text-blue-600">
+            <path d="M22 3H2l8 9v7l4 2v-9l8-9z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export default MapboxMap;

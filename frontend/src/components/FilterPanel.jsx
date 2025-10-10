@@ -55,7 +55,7 @@ const FilterPanel = ({
   handleStationChange,
   currentStationIndex,
   handleAutoSwitchToggle,
-  onLayerToggle,
+  onLayerToggle = () => {}, // Tambahkan nilai default
   activeLayers = {}
 }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -81,8 +81,10 @@ const FilterPanel = ({
   // Fungsi ini dipanggil ketika tombol toggle layer di klik
   // Ia akan memanggil fungsi onLayerToggle yang di-pass dari parent
   const handleLayerToggle = (layerId) => {
+    const newStatus = !activeLayers[layerId];
+    console.log(`Toggling layer ${layerId} to ${newStatus}`);
+    
     if (onLayerToggle && typeof onLayerToggle === 'function') {
-      const newStatus = !activeLayers[layerId];
       onLayerToggle(layerId, newStatus);
     } else {
       console.error(`FilterPanel: onLayerToggle is not a function or is undefined`);
@@ -185,11 +187,7 @@ const FilterPanel = ({
                       <span className="text-sm font-medium text-gray-700">{layer.name}</span>
                     </div>
                     <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleLayerToggle(layer.id);
-                      }}
+                      onClick={() => handleLayerToggle(layer.id)}
                       className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                         activeLayers[layer.id] ? "bg-blue-600" : "bg-gray-300"
                       }`}

@@ -25,6 +25,21 @@ Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 });
 
+// Public device routes for map
+Route::prefix('devices')->group(function () {
+    Route::get('/map', [MasDeviceController::class, 'getDevicesForMap']);
+    Route::get('/{id}', [MasDeviceController::class, 'show']);
+});
+
+// Test route untuk memastikan API berjalan
+Route::get('/test', function () {
+    return response()->json([
+        'success' => true,
+        'message' => 'API FFWS Jawa Timur is running!',
+        'timestamp' => now()
+    ]);
+});
+
 // Protected routes (authentication required)
 Route::middleware('auth:sanctum')->group(function () {
     // Auth routes
@@ -71,7 +86,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('river-basins')->group(function () {
         Route::get('/{id}', [RiverBasinController::class, 'show']);
     });
- 
+
     // GeoJSON files - list and content
     Route::prefix('geojson-files')->group(function () {
         Route::get('/', [\App\Http\Controllers\Api\Admin\GeojsonFileController::class, 'index']);

@@ -122,6 +122,7 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
     return (
         <div
             className={`fixed top-4 z-[70] transition-all duration-300 ease-in-out left-[calc(368px+2rem)] flood-running-bar`}
+            // className={`fixed top-4 z-[70] transition-all duration-300 ease-in-out left-[calc(368px+2rem)] right-[calc(1rem+48px+1rem)] sm:right-[calc(1.5rem+48px+1rem)] flood-running-bar`}
         >
             <div className="w-full">
                 <div className="overflow-hidden bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-1.5 sm:p-2">
@@ -211,14 +212,13 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
                     }
                 }
                 
-                /* Responsive right positioning based on FilterButton size */
                 .flood-running-bar {
-                    right: calc(1.5rem + 40px + 2rem); /* Mobile: 1.5rem margin + 40px button + 2rem margin */
+                    right: calc(1.5rem + 40px + 2rem);
                 }
                 
                 @media (min-width: 640px) {
                     .flood-running-bar {
-                        right: calc(1.5rem + 40px + 2rem); /* Desktop: 1.5rem margin + 40px button + 2rem margin */
+                        right: calc(5rem); 
                     }
                 }
             `}</style>

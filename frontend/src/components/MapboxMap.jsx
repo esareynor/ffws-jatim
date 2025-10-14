@@ -397,7 +397,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
     useEffect(() => {
         if (!mapboxgl.accessToken) {
             mapboxgl.accessToken =
-                "pk.eyJ1IjoiZGl0b2ZhdGFoaWxsYWgxIiwiYSI6ImNtZjNveGloczAwNncya3E1YzdjcTRtM3MifQ.kIf5rscGYOzvvBcZJ41u8g";
+            import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
         }
         if (map.current) return;
 

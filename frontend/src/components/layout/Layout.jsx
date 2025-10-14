@@ -213,6 +213,7 @@ const Layout = ({ children }) => {
                 <FilterPanel
                     isOpen={isFilterOpen}
                     onOpen={() => setIsFilterOpen(true)}
+                    onClose={() => setIsFilterOpen(false)} // Tambahkan handler untuk menutup panel
                 />
             </Suspense>
         </div>

@@ -1,5 +1,5 @@
 const API_BASE_URL = "https://ffws-backend.rachmanesa.com/api";
-const AUTH_TOKEN = "308|P1cezEwFAWCx4qEFyQxj383SIg5odfWbdOVgkIuC4cb65699";
+const AUTH_TOKEN = "7|J0OoouIDK5Ljr1TFzaJQRMlyKjrK9jwwM4KSVenI7cb221a2";
 
 /**
  * A custom fetch wrapper that adds the authentication token to the request headers.

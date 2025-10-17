@@ -120,7 +120,95 @@ const VectorTilesAPI = ({ map, mapLoaded, isRiverLayerActive, selectedLocation }
     };
   }, [map, mapLoaded, isRiverLayerActive, selectedLocation]);
 
+  useEffect(() => {
+    if (!map || !mapLoaded || !isRiverLayerActive || !selectedLocation) return;
+
+    // Fetch GeoJSON dari public/assets
+    fetch('/assets/water_areas.geojson')
+      .then(res => res.json())
+      .then(waterAreas => {
+        // Filter fitur air di sekitar marker
+        const nearbyFeatures = waterAreas.features.filter(f =>
+          isFeatureNearLocation(f, selectedLocation, 1) // 1 km radius
+        );
+
+        // Hapus layer/source lama jika ada
+        if (map.getLayer('highlighted-water-layer')) map.removeLayer('highlighted-water-layer');
+        if (map.getSource('highlighted-water-source')) map.removeSource('highlighted-water-source');
+
+        // Tambahkan layer baru
+        map.addSource('highlighted-water-source', {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: nearbyFeatures
+          }
+        });
+
+        map.addLayer({
+          id: 'highlighted-water-layer',
+          type: 'fill',
+          source: 'highlighted-water-source',
+          paint: {
+            'fill-color': '#1e40af',
+            'fill-opacity': 0.5
+          }
+        });
+      });
+
+    return () => {
+      if (map && map.getLayer('highlighted-water-layer')) map.removeLayer('highlighted-water-layer');
+      if (map && map.getSource('highlighted-water-source')) map.removeSource('highlighted-water-source');
+    };
+  }, [map, mapLoaded, isRiverLayerActive, selectedLocation]);
+
+  useEffect(() => {
+    if (!map || !mapLoaded) return;
+
+    // Ganti sesuai tileset/source-layer Anda
+    const vectorSourceId = "mapbox-streets";
+    const sourceLayerName = "water"; // atau "waterway" jika sungai berupa garis
+    const redLayerId = "water-red-overlay";
+
+    // Hapus layer lama jika ada
+    if (map.getLayer(redLayerId)) map.removeLayer(redLayerId);
+
+    // Tambahkan layer merah transparan di atas air
+    map.addLayer({
+      id: redLayerId,
+      type: "fill", // gunakan "line" jika source-layer sungai berupa garis
+      source: vectorSourceId,
+      "source-layer": sourceLayerName,
+      paint: {
+        "fill-color": "#ff0000",
+        "fill-opacity": 0.3 // transparan
+      }
+    });
+
+    // Cleanup
+    return () => {
+      if (map.getLayer(redLayerId)) map.removeLayer(redLayerId);
+    };
+  }, [map, mapLoaded]);
+
   return null;
 };
+
+function isFeatureNearLocation(feature, location, radiusKm = 1) {
+  // Ambil centroid fitur (atau gunakan turf.js untuk akurasi)
+  const [lng, lat] = feature.geometry.type === "Polygon"
+    ? feature.geometry.coordinates[0][0]
+    : feature.geometry.coordinates[0];
+  const toRad = deg => deg * Math.PI / 180;
+  const R = 6371; // Radius bumi km
+  const dLat = toRad(lat - location.lat);
+  const dLng = toRad(lng - location.lng);
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(toRad(location.lat)) * Math.cos(toRad(lat)) *
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const d = R * c;
+  return d <= radiusKm;
+}
 
 export default VectorTilesAPI;

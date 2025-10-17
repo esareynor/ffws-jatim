@@ -1,12 +1,11 @@
 // src/components/devices/MapboxMap.jsx
 
 import React, { useEffect, useRef, useState, lazy, Suspense } from "react";
+
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { fetchDevices } from "../../services/devices";
 import VectorTilesAPI from "../VectorTilesAPI";
-
-
 // Lazy imports
 const MapTooltip = lazy(() => import("./maptooltip"));
 const FilterPanel = lazy(() => import("../FilterPanel.jsx"));
@@ -20,30 +19,23 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
   const markersRef = useRef([]);
   const [devices, setDevices] = useState([]);
   const [selectedStation, setSelectedStation] = useState(null);
-  const [selectedStationCoords, setSelectedStationCoords] = useState(null);
+  // State untuk mengontrol visibilitas layer sungai (vector tiles)
+  const [showRiverLayer, setShowRiverLayer] = useState(false);
   const [tooltip, setTooltip] = useState({ visible: false, station: null, coordinates: null });
   const [zoomLevel, setZoomLevel] = useState(8);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showFilterSidebar, setShowFilterSidebar] = useState(false);
   const [autoSwitchActive, setAutoSwitchActive] = useState(false);
   const [currentStationIndex, setCurrentStationIndex] = useState(0);
-  const [clickedCoordinates, setClickedCoordinates] = useState(null);
-  const [showCoordinatesPopup, setShowCoordinatesPopup] = useState(false);
-  const [clickedMarkerCoords, setClickedMarkerCoords] = useState(null);
+  const [selectedStationCoords, setSelectedStationCoords] = useState(null);
 
-  // State untuk layer
+  // state untuk toggle layer (fix: definisikan activeLayers agar tidak undefined)
   const [activeLayers, setActiveLayers] = useState({
     rivers: false,
     'flood-risk': false,
     rainfall: false,
     elevation: false,
     administrative: false,
-  });
-
-  const [layerVisibility, setLayerVisibility] = useState({
-    rivers: false,
-    Vector: false,
-    // ...layer lain jika ada
   });
 
   useEffect(() => {
@@ -106,7 +98,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
       map.current.flyTo({ center: coordinates, zoom: 14 });
     }
     setTooltip({ visible: true, station: station, coordinates });
-    setClickedMarkerCoords(coordinates);
+    setShowRiverLayer(true); // Tampilkan layer sungai saat marker diklik
   };
 
   const handleShowDetail = (station) => {
@@ -114,16 +106,20 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     if (onStationSelect) onStationSelect(station);
   };
 
-  const handleCloseTooltip = () => setTooltip((prev) => ({ ...prev, visible: false }));
+  const handleCloseTooltip = () => {
+    setTooltip((prev) => ({ ...prev, visible: false }));
+    setShowRiverLayer(false); // Sembunyikan layer sungai saat tooltip ditutup
+  };
 
   const handleStationChange = (station, index) => {
     if (station && station.latitude && station.longitude) {
       const coords = [station.longitude, station.latitude];
       setCurrentStationIndex(index);
       setSelectedStation(station);
-      setSelectedStationCoords(coords);
-      handleMapFocus({ lat: station.latitude, lng: station.longitude, zoom: 14, stationId: station.id });
-      setClickedMarkerCoords(coords);
+      if (map.current) {
+        map.current.flyTo({ center: coords, zoom: 14 });
+      }
+      setTooltip({ visible: true, station: station, coordinates: coords });
     }
   };
 
@@ -131,39 +127,13 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     setAutoSwitchActive(isActive);
   };
 
-  const handleMapFocus = (focusData) => {
-    if (!map.current) return;
-    const { lat, lng, zoom, stationId } = focusData;
-    const coords = [lng, lat];
-    setSelectedStationCoords(coords);
-    const station = tickerData.find((s) => s.id === stationId);
-    if (station) setSelectedStation(station);
-    map.current.flyTo({
-      center: coords, zoom: zoom || 14, pitch: 0, bearing: 0,
-      speed: 1.2, curve: 1.4, easing: (t) => t, essential: true
-    });
-    setTimeout(() => {
-      if (station) {
-        const coordinates = getStationCoordinates(station.name);
-        if (coordinates) {
-          setTooltip({ visible: true, station: station, coordinates: coordinates });
-          setClickedMarkerCoords(coordinates);
-        }
-      }
-    }, 800);
-  };
-
-  const handleMapClick = (e) => {
-    if (e.originalEvent && e.originalEvent.target && e.originalEvent.target.closest('.custom-marker')) return;
-    setClickedCoordinates(e.lngLat);
-    setShowCoordinatesPopup(true);
-  };
-
+  // handler untuk toggle layer dari FilterPanel
   const handleLayerToggle = (layerId) => {
-    setActiveLayers(prev => ({
-      ...prev,
-      [layerId]: !prev[layerId]
-    }));
+    setActiveLayers(prev => {
+      const next = { ...prev, [layerId]: !prev[layerId] };
+      console.log('activeLayers after toggle:', next);
+      return next;
+    });
   };
 
   useEffect(() => {
@@ -172,7 +142,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     try {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: "mapbox://styles/mapbox/outdoors-v12",
+        style: "mapbox://styles/mapbox/streets-v12",
         center: [112.5, -7.5],
         zoom: 8
       });
@@ -183,7 +153,6 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
       map.current.on('load', () => {
         setMapLoaded(true);
       });
-      map.current.on('click', handleMapClick);
     } catch (error) {
       console.error('Error initializing map:', error);
     }
@@ -250,23 +219,165 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     return () => document.removeEventListener("click", handleClickOutside);
   }, [tooltip.visible]);
 
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+
+    const tilesetId = "ditofatahillah1.ba8k9q11";
+    const sourceLayerName = "sungai_jatim_layer"; // pastikan ini persis sama dengan di Mapbox Studio
+    const vectorSourceId = "mapbox-rivers-vector-source";
+    const redLayerId = "water-red-overlay";
+
+    if (showRiverLayer) {
+      // Tambahkan source jika belum ada
+      if (!map.current.getSource(vectorSourceId)) {
+        try {
+          map.current.addSource(vectorSourceId, {
+            type: "vector",
+            tiles: [
+              `https://api.mapbox.com/v4/${tilesetId}/{z}/{x}/{y}.vector.pbf?access_token=${mapboxgl.accessToken}`
+            ],
+            minzoom: 0,
+            maxzoom: 14
+          });
+        } catch (e) {
+          console.error("Gagal menambah vector source:", e);
+        }
+      }
+      // Tambahkan layer jika belum ada
+      if (!map.current.getLayer(redLayerId)) {
+        try {
+          map.current.addLayer({
+            id: redLayerId,
+            type: "line", // gunakan "line" untuk sungai (bukan fill)
+            source: vectorSourceId,
+            "source-layer": sourceLayerName,
+            paint: {
+              "line-color": "#ff0000",
+              "line-width": 3,
+              "line-opacity": 0.5
+            }
+          });
+        } catch (e) {
+          console.error("Gagal menambah river layer. Cek source-layer dan tilesetId:", e);
+        }
+      }
+      // Logging untuk debug
+      if (!map.current.getSource(vectorSourceId)) {
+        console.warn("Vector source sungai tidak ditemukan!");
+      }
+      if (!map.current.getLayer(redLayerId)) {
+        console.warn("Layer sungai merah tidak berhasil ditambahkan!");
+      }
+    } else {
+      // Sembunyikan layer jika showRiverLayer = false
+      if (map.current.getLayer(redLayerId)) {
+        map.current.removeLayer(redLayerId);
+      }
+    }
+
+    // Cleanup jika unmount
+    return () => {
+      if (map.current && map.current.getLayer(redLayerId)) {
+        map.current.removeLayer(redLayerId);
+      }
+    };
+  }, [mapLoaded, showRiverLayer]);
+
+
+  // State untuk geojson air
+  const [bantulGeojson, setBantulGeojson] = useState(null);
+
+  // Fetch geojson air sekali saat mapLoaded
+  useEffect(() => {
+    if (!mapLoaded) return;
+    fetch('/72_peta_4_peta_Wilayah Sungai.json')
+      .then(res => res.json())
+      .then(setBantulGeojson)
+      .catch(e => console.error('Gagal fetch json air:', e));
+  }, [mapLoaded]);
+
+  // Layer merah mengikuti poligon air di sekitar marker
+  useEffect(() => {
+    if (!map.current || !mapLoaded || !devices.length || !bantulGeojson) return;
+
+    // Helper: hitung jarak dua titik lat/lng (haversine, dalam meter)
+    function getDistance(lat1, lng1, lat2, lng2) {
+      const R = 6371000;
+      const toRad = deg => deg * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLng = toRad(lng2 - lng1);
+      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    // Ambil marker coordinates
+    const markerCoords = devices
+      .filter(d => d.latitude && d.longitude)
+      .map(d => [parseFloat(d.longitude), parseFloat(d.latitude)]);
+
+    // Tampilkan semua poligon dari geojson sebagai layer merah
+    const redPolygonGeojson = {
+      type: "FeatureCollection",
+      features: bantulGeojson.features
+    };
+
+    // Tambahkan source hanya jika belum ada
+    if (!map.current.getSource('red-area')) {
+      map.current.addSource('red-area', {
+        type: 'geojson',
+        data: redPolygonGeojson
+      });
+    } else {
+      // update data jika source sudah ada
+      map.current.getSource('red-area').setData(redPolygonGeojson);
+    }
+
+    // Tambahkan layer hanya jika belum ada
+    if (!map.current.getLayer('red-area-fill')) {
+      try {
+        map.current.addLayer({
+          id: 'red-area-fill',
+          type: 'fill',
+          source: 'red-area',
+          paint: {
+            // Use the feature's properties.color if present, otherwise fall back to a default
+            'fill-color': ['coalesce', ['get', 'fill_color'], '#0000FF'],
+            'fill-opacity': 0.7
+          }
+        });
+      } catch (e) {
+        console.error('Gagal menambah red-area-fill layer:', e);
+      }
+    }
+
+    // Cleanup jika unmount
+    return () => {
+      if (map.current && map.current.getLayer('red-area-fill')) {
+        map.current.removeLayer('red-area-fill');
+      }
+      if (map.current && map.current.getSource('red-area')) {
+        map.current.removeSource('red-area');
+      }
+    };
+  }, [mapLoaded, devices, bantulGeojson]);
+
   return (
     <div className="w-full h-screen overflow-hidden relative z-0">
       <div ref={mapContainer} className="w-full h-full relative z-0" />
      
       <Suspense fallback={null}>
-        <FilterPanel
-          isOpen={showFilterSidebar}
-          onOpen={() => setShowFilterSidebar(true)}
-          onClose={() => setShowFilterSidebar(false)}
-          tickerData={tickerData}
-          handleStationChange={handleStationChange}
-          currentStationIndex={currentStationIndex}
-          handleAutoSwitchToggle={handleAutoSwitchToggle}
-          onLayerToggle={handleLayerToggle}
-          activeLayers={activeLayers}
-        />
-      </Suspense>
+         <FilterPanel
+           isOpen={showFilterSidebar}
+           onOpen={() => setShowFilterSidebar(true)}
+           onClose={() => setShowFilterSidebar(false)}
+           tickerData={tickerData}
+           handleStationChange={handleStationChange}
+           currentStationIndex={currentStationIndex}
+           handleAutoSwitchToggle={handleAutoSwitchToggle}
+           onLayerToggle={handleLayerToggle}
+           activeLayers={activeLayers}
+         />
+       </Suspense>
 
       <style>{`
         @keyframes alert-pulse { 
@@ -316,21 +427,6 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
           </svg>
         </button>
       </div>
-
-      {/* Hapus RiverLayer di sini, hanya VectorTilesAPI yang dirender */}
-      <VectorTilesAPI 
-        map={map.current}
-        mapLoaded={mapLoaded}
-        isRiverLayerActive={activeLayers.rivers}
-        selectedLocation={
-          selectedStation
-            ? {
-                lat: parseFloat(selectedStation.latitude),
-                lng: parseFloat(selectedStation.longitude)
-              }
-            : null
-        }
-      />
     </div>
   );
 };

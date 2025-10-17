@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -95,6 +95,10 @@ class AuthController extends Controller
             ], 403);
         }
 
+        // 🧹 Cleanup token expired secara global dan hapus semua token lama user ini
+        $this->cleanupExpiredTokensGlobally();
+        $this->cleanupAllTokensForUser($user->id);
+
         $tokenResult = $user->createToken('auth_token');
         $token = $tokenResult->plainTextToken;
         
@@ -146,6 +150,7 @@ class AuthController extends Controller
      * 
      * Endpoint ini digunakan untuk mendapatkan token baru tanpa perlu login ulang.
      * Token lama akan dihapus dan diganti dengan token baru.
+     * Juga membersihkan token expired dari database untuk menjaga performa.
      */
     public function refresh(Request $request)
     {
@@ -153,6 +158,9 @@ class AuthController extends Controller
         
         // Revoke current token
         $request->user()->currentAccessToken()->delete();
+        
+        // 🧹 Cleanup token expired secara global
+        $this->cleanupExpiredTokensGlobally();
         
         // Create new token
         $tokenResult = $user->createToken('auth_token');
@@ -173,5 +181,40 @@ class AuthController extends Controller
                 'expires_at' => $expiresAt
             ]
         ]);
+    }
+
+    /**
+     * Cleanup expired tokens secara global (semua user)
+     * Method ini akan dipanggil setiap kali ada aktivitas login/register/refresh
+     * 
+     * @return int Number of deleted tokens
+     */
+    private function cleanupExpiredTokensGlobally()
+    {
+        $deletedCount = PersonalAccessToken::where(function ($query) {
+            $query->where('expires_at', '<', now())
+                  ->orWhere(function ($subQuery) {
+                      // Token yang dibuat lebih dari 24 jam yang lalu dan tidak ada expires_at
+                      $subQuery->whereNull('expires_at')
+                               ->where('created_at', '<', now()->subDay());
+                  });
+        })->delete();
+
+        return $deletedCount;
+    }
+
+    /**
+     * Cleanup ALL tokens for specific user (untuk login/register baru)
+     * 
+     * @param int $userId
+     * @return int Number of deleted tokens
+     */
+    private function cleanupAllTokensForUser($userId)
+    {
+        $deletedCount = PersonalAccessToken::where('tokenable_id', $userId)
+            ->where('tokenable_type', 'App\\Models\\User')
+            ->delete();
+
+        return $deletedCount;
     }
 }

@@ -49,7 +49,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">SHA256 Hash</label>
                     <div class="mt-1 flex items-center gap-2">
-                        <code class="text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded break-all">
+                        <code class="text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-[#18181b] px-2 py-1 rounded break-all">
                             {{ substr($geojsonFile->sha256, 0, 16) }}...
                         </code>
                         <button type="button" 
@@ -77,7 +77,7 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Path Storage</label>
-                    <p class="mt-1 text-xs text-gray-600 dark:text-gray-400 font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                    <p class="mt-1 text-xs text-gray-600 dark:text-gray-400 font-mono bg-gray-100 dark:bg-[#18181b] px-2 py-1 rounded">
                         {{ $geojsonFile->stored_path }}
                     </p>
                 </div>
@@ -88,7 +88,7 @@
     <!-- File Preview -->
     @if(\Illuminate\Support\Facades\Storage::disk($geojsonFile->disk)->exists($geojsonFile->stored_path))
     <x-admin.card title="Preview File">
-        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+        <div class="bg-gray-50 dark:bg-[#18181b] rounded-lg p-4">
             <div class="flex items-center justify-between mb-2">
                 <h4 class="text-sm font-medium text-gray-900 dark:text-white">Konten GeoJSON</h4>
                 <div class="flex gap-2">

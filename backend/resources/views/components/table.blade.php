@@ -74,7 +74,7 @@
     
     <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead class="bg-gray-50 dark:bg-gray-800">
+            <thead class="bg-gray-50 dark:bg-[#18181b]">
                 <tr>
                     @foreach($headers as $header)
                         <th scope="col" 
@@ -101,7 +101,7 @@
                     @endforeach
                 </tr>
             </thead>
-            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody class="bg-white dark:bg-[#18181b] divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($tableRows as $row)
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                         @foreach($headers as $header)

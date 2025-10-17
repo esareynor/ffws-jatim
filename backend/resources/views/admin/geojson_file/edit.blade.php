@@ -82,7 +82,7 @@
                        name="label" 
                        value="{{ old('label', $geojsonFile->label) }}"
                        placeholder="Masukkan label untuk file ini..."
-                       class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white sm:text-sm">
+                       class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-[#18181b] dark:text-white sm:text-sm">
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                     Label untuk memudahkan identifikasi file (misal: "Kontur Sungai", "Batas Administrasi", dll)
                 </p>
@@ -92,7 +92,7 @@
             </div>
 
             @if($geojsonFile->sha256)
-            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+            <div class="bg-gray-50 dark:bg-[#18181b] rounded-lg p-4">
                 <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     File Hash (SHA256)
                 </h3>
@@ -105,7 +105,7 @@
 
             <div class="flex items-center justify-end space-x-3">
                 <a href="{{ route('admin.geojson-files.index') }}" 
-                   class="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors">
+                   class="bg-white dark:bg-[#18181b] text-gray-700 dark:text-gray-300 px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors">
                     Batal
                 </a>
                 <button type="submit" 

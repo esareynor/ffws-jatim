@@ -33,7 +33,7 @@
                 {{ $required ? 'required' : '' }}
                 {{ $disabled ? 'disabled' : '' }}
                 {{ $readonly ? 'readonly' : '' }}
-                {{ $attributes->merge(['class' => 'block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ' . ($error ? 'border-red-300' : '')]) }}
+                {{ $attributes->merge(['class' => 'block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100 ' . ($error ? 'border-red-300' : '')]) }}
             >{{ old($name, $value) }}</textarea>
             @break
             
@@ -43,7 +43,7 @@
                 id="{{ $name }}"
                 {{ $required ? 'required' : '' }}
                 {{ $disabled ? 'disabled' : '' }}
-                {{ $attributes->merge(['class' => 'block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ' . ($error ? 'border-red-300' : '')]) }}
+                {{ $attributes->merge(['class' => 'block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100 ' . ($error ? 'border-red-300' : '')]) }}
             >
                 <option value="">{{ $placeholder ?: 'Pilih opsi...' }}</option>
                 @if(!empty($options))
@@ -73,7 +73,7 @@
                     {{ old($name, $value) ? 'checked' : '' }}
                     {{ $required ? 'required' : '' }}
                     {{ $disabled ? 'disabled' : '' }}
-                    {{ $attributes->merge(['class' => 'h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800']) }}
+                    {{ $attributes->merge(['class' => 'h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-[#18181b]']) }}
                 >
                 @if($label)
                     <label for="{{ $name }}" class="ml-2 block text-sm text-gray-900 dark:text-gray-100">
@@ -96,7 +96,7 @@
                     {{ old($name) == $value ? 'checked' : '' }}
                     {{ $required ? 'required' : '' }}
                     {{ $disabled ? 'disabled' : '' }}
-                    {{ $attributes->merge(['class' => 'h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800']) }}
+                    {{ $attributes->merge(['class' => 'h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 bg-white dark:bg-[#18181b]']) }}
                 >
                 @if($label)
                     <label for="{{ $name }}" class="ml-2 block text-sm text-gray-900 dark:text-gray-100">
@@ -116,7 +116,7 @@
                 id="{{ $name }}"
                 {{ $required ? 'required' : '' }}
                 {{ $disabled ? 'disabled' : '' }}
-                {{ $attributes->merge(['class' => 'block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ' . ($error ? 'border-red-300' : '')]) }}
+                {{ $attributes->merge(['class' => 'block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100 ' . ($error ? 'border-red-300' : '')]) }}
             >
             @break
             
@@ -130,7 +130,7 @@
                 {{ $required ? 'required' : '' }}
                 {{ $disabled ? 'disabled' : '' }}
                 {{ $readonly ? 'readonly' : '' }}
-                {{ $attributes->merge(['class' => 'block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ' . ($error ? 'border-red-300' : '')]) }}
+                {{ $attributes->merge(['class' => 'block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100 ' . ($error ? 'border-red-300' : '')]) }}
             >
     @endswitch
     

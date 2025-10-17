@@ -6,4 +6,4 @@ export { default as GoogleMapsSearchbar } from "./GoogleMapsSearchbar.jsx";
 export { default as MonitoringDualLinet } from "./MonitoringDualLinet.jsx";
 export { default as TanggulAktual } from "./TanggulAktual.jsx";
 export { default as TanggulPrediksi } from "./TanggulPrediksi.jsx";
-export { default as FilterPanel } from "./FilterPanel.jsx";
+export { default as FilterPanel } from "../FilterPanel.jsx";

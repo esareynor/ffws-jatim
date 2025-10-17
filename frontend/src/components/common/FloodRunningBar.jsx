@@ -122,6 +122,7 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
     return (
         <div
             className={`fixed top-4 z-[70] transition-all duration-300 ease-in-out left-[calc(368px+2rem)] flood-running-bar`}
+            // className={`fixed top-4 z-[70] transition-all duration-300 ease-in-out left-[calc(368px+2rem)] right-[calc(1rem+48px+1rem)] sm:right-[calc(1.5rem+48px+1rem)] flood-running-bar`}
         >
             <div className="w-full">
                 <div className="overflow-hidden bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-1.5 sm:p-2">
@@ -150,9 +151,7 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
                                     <span className="text-xs font-bold text-gray-900">{formatValue(item.value)}</span>
                                     <span className="text-xs text-gray-500">{item.unit}</span>
                                 </div>
-                                <Suspense fallback={
-                                    <div className="w-12 h-6 bg-gray-200 rounded animate-pulse"></div>
-                                }>
+                                <Suspense fallback={<div className="w-12 h-6 bg-gray-200 rounded animate-pulse"></div>}>
                                     <Chart
                                         data={item.history}
                                         width={48}
@@ -185,9 +184,7 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
                                     <span className="text-xs font-bold text-gray-900">{formatValue(item.value)}</span>
                                     <span className="text-xs text-gray-500">{item.unit}</span>
                                 </div>
-                                <Suspense fallback={
-                                    <div className="w-12 h-6 bg-gray-200 rounded animate-pulse"></div>
-                                }>
+                                <Suspense fallback={<div className="w-12 h-6 bg-gray-200 rounded animate-pulse"></div>}>
                                     <Chart
                                         data={item.history}
                                         width={48}
@@ -215,14 +212,13 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
                     }
                 }
                 
-                /* Right spacing = outer margin (1rem) + FilterButton (48px) + gap (1rem) */
                 .flood-running-bar {
-                    right: calc(1rem + 48px + 1rem);
+                    right: calc(1.5rem + 40px + 2rem);
                 }
                 
                 @media (min-width: 640px) {
                     .flood-running-bar {
-                        right: calc(1rem + 48px + 1rem);
+                        right: calc(5rem); 
                     }
                 }
             `}</style>

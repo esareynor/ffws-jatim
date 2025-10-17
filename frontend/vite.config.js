@@ -20,14 +20,7 @@ export default defineConfig({
         },
         // Pre-bundle dependencies untuk loading yang lebih cepat
         optimizeDeps: {
-            include: [
-                "react", 
-                "react-dom", 
-                "react-router-dom",
-                "mapbox-gl", 
-                "recharts",
-                "shpjs"
-            ],
+            include: ["react", "react-dom", "react-router-dom", "mapbox-gl", "recharts", "shpjs"],
             // Exclude dependencies yang tidak perlu di-pre-bundle
             exclude: ["@vite/client", "@vite/env"],
         },
@@ -40,84 +33,86 @@ export default defineConfig({
             output: {
                 manualChunks: (id) => {
                     // Vendor chunks
-                    if (id.includes('node_modules')) {
+                    if (id.includes("node_modules")) {
                         // React ecosystem
-                        if (id.includes('react') || id.includes('react-dom')) {
-                            return 'react-vendor';
+                        if (id.includes("react") || id.includes("react-dom")) {
+                            return "react-vendor";
                         }
                         // Mapbox GL
-                        if (id.includes('mapbox-gl')) {
-                            return 'mapbox-vendor';
+                        if (id.includes("mapbox-gl")) {
+                            return "mapbox-vendor";
                         }
                         // Charts library
-                        if (id.includes('recharts')) {
-                            return 'charts-vendor';
+                        if (id.includes("recharts")) {
+                            return "charts-vendor";
                         }
                         // Router
-                        if (id.includes('react-router')) {
-                            return 'router-vendor';
+                        if (id.includes("react-router")) {
+                            return "router-vendor";
                         }
                         // Shapefile processing
-                        if (id.includes('shpjs')) {
-                            return 'geo-vendor';
+                        if (id.includes("shpjs")) {
+                            return "geo-vendor";
                         }
                         // Other vendor libraries
-                        return 'vendor';
+                        return "vendor";
                     }
-                    
+
                     // Application chunks berdasarkan fitur
-                    if (id.includes('src/components/common')) {
-                        return 'common-components';
+                    if (id.includes("src/components/common")) {
+                        return "common-components";
                     }
-                    if (id.includes('src/components/sensors')) {
-                        return 'sensor-components';
+                    if (id.includes("src/components/sensors")) {
+                        return "sensor-components";
                     }
-                    if (id.includes('src/components/layout')) {
-                        return 'layout-components';
+                    if (id.includes("src/components/layout")) {
+                        return "layout-components";
                     }
-                    if (id.includes('src/components/devices')) {
-                        return 'device-components';
+                    if (id.includes("src/components/devices")) {
+                        return "device-components";
                     }
-                    if (id.includes('src/services')) {
-                        return 'services';
+                    if (id.includes("src/services")) {
+                        return "services";
                     }
-                    if (id.includes('src/contexts')) {
-                        return 'contexts';
+                    if (id.includes("src/contexts")) {
+                        return "contexts";
                     }
-                    if (id.includes('src/pages')) {
-                        return 'pages';
+                    if (id.includes("src/pages")) {
+                        return "pages";
                     }
                 },
                 // Optimasi nama file chunk
                 chunkFileNames: (chunkInfo) => {
-                    const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop().replace('.jsx', '').replace('.js', '') : 'chunk';
+                    const facadeModuleId = chunkInfo.facadeModuleId
+                        ? chunkInfo.facadeModuleId.split("/").pop().replace(".jsx", "").replace(".js", "")
+                        : "chunk";
                     return `js/[name]-[hash].js`;
                 },
-                entryFileNames: 'js/[name]-[hash].js',
+                entryFileNames: "js/[name]-[hash].js",
                 assetFileNames: (assetInfo) => {
-                    const info = assetInfo.name.split('.');
+                    const info = assetInfo.name.split(".");
                     const ext = info[info.length - 1];
                     if (/\.(css)$/.test(assetInfo.name)) {
                         return `css/[name]-[hash].${ext}`;
                     }
                     return `assets/[name]-[hash].${ext}`;
-                }
+                },
             },
         },
         // Optimasi minification
-        minify: "terser",
+        minify: false,
         terserOptions: {
             compress: {
                 drop_console: true, // Remove console.log in production
                 drop_debugger: true,
-                pure_funcs: ['console.log', 'console.info', 'console.debug'],
+                pure_funcs: ["console.log", "console.info", "console.debug"],
             },
             mangle: {
                 safari10: true,
             },
         },
         // Target modern browsers untuk optimasi lebih baik
-        target: 'esnext',
+        target: "esnext",
         // Chunk size warning limit
         chunkSizeWarningLimit: 1000,
     },

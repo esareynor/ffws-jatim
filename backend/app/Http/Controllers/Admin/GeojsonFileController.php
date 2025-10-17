@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\GeojsonFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class GeojsonFileController extends Controller
 {
@@ -114,24 +116,49 @@ class GeojsonFileController extends Controller
             'label' => 'nullable|string|max:100',
         ]);
 
-        $file = $request->file('file');
-        $path = $file->store('uploads/geojson', 'public');
-        
-        // Generate SHA256 hash for file integrity
-        $sha256 = hash_file('sha256', $file->getPathname());
-        
-        $geojsonFile = GeojsonFile::create([
-            'original_name' => $file->getClientOriginalName(),
-            'stored_path' => $path,
-            'disk' => 'public',
-            'size' => $file->getSize(),
-            'mime_type' => $file->getMimeType(),
-            'sha256' => $sha256,
-            'label' => $request->input('label'),
-        ]);
+        $path = null;
+        try {
+            DB::beginTransaction();
 
-        return redirect()->route('admin.geojson-files.index')
-            ->with('success', "File {$geojsonFile->original_name} berhasil diupload");
+            $file = $request->file('file');
+            $path = $file->store('uploads/geojson', 'public');
+            
+            // Generate SHA256 hash for file integrity
+            $sha256 = hash_file('sha256', $file->getPathname());
+            
+            $geojsonFile = GeojsonFile::create([
+                'original_name' => $file->getClientOriginalName(),
+                'stored_path' => $path,
+                'disk' => 'public',
+                'size' => $file->getSize(),
+                'mime_type' => $file->getMimeType(),
+                'sha256' => $sha256,
+                'label' => $request->input('label'),
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('admin.geojson-files.index')
+                ->with('success', "File {$geojsonFile->original_name} berhasil diupload");
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            // Hapus file yang sudah tersimpan jika ada
+            if (!empty($path) && Storage::disk('public')->exists($path)) {
+                try {
+                    Storage::disk('public')->delete($path);
+                } catch (\Exception $ex) {
+                    Log::error('Gagal menghapus file yang tersisa setelah kegagalan upload: '.$ex->getMessage(), ['path' => $path]);
+                }
+            }
+
+            Log::error('Error uploading geojson file: '.$e->getMessage(), [
+                'exception' => $e,
+                'original_name' => $request->file('file') ? $request->file('file')->getClientOriginalName() : null,
+            ]);
+
+            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan saat mengupload file. Silakan coba lagi.');
+        }
     }
 
     /**
@@ -155,16 +182,21 @@ class GeojsonFileController extends Controller
      */
     public function update(Request $request, GeojsonFile $geojsonFile)
     {
-        $request->validate([
-            'label' => 'nullable|string|max:100',
-        ]);
+        try {
+            $request->validate([
+                'label' => 'nullable|string|max:100',
+            ]);
 
-        $geojsonFile->update([
-            'label' => $request->input('label'),
-        ]);
+            $geojsonFile->update([
+                'label' => $request->input('label'),
+            ]);
 
-        return redirect()->route('admin.geojson-files.index')
-            ->with('success', "File {$geojsonFile->original_name} berhasil diperbarui");
+            return redirect()->route('admin.geojson-files.index')
+                ->with('success', "File {$geojsonFile->original_name} berhasil diperbarui");
+        } catch (\Exception $e) {
+            Log::error('Error updating geojson file: '.$e->getMessage(), ['id' => $geojsonFile->id]);
+            return redirect()->back()->withInput()->with('error', 'Gagal memperbarui file. Silakan coba lagi.');
+        }
     }
 
     /**
@@ -172,16 +204,22 @@ class GeojsonFileController extends Controller
      */
     public function destroy(GeojsonFile $geojsonFile)
     {
-        // Delete file from storage
-        if (Storage::disk($geojsonFile->disk)->exists($geojsonFile->stored_path)) {
-            Storage::disk($geojsonFile->disk)->delete($geojsonFile->stored_path);
+        try {
+            // Delete file from storage
+            if (Storage::disk($geojsonFile->disk)->exists($geojsonFile->stored_path)) {
+                Storage::disk($geojsonFile->disk)->delete($geojsonFile->stored_path);
+            }
+
+            // Delete record from database
+            $geojsonFile->delete();
+
+            return redirect()->route('admin.geojson-files.index')
+                ->with('success', "File {$geojsonFile->original_name} berhasil dihapus");
+        } catch (\Exception $e) {
+            Log::error('Error deleting geojson file: '.$e->getMessage(), ['id' => $geojsonFile->id]);
+            return redirect()->route('admin.geojson-files.index')
+                ->with('error', 'Gagal menghapus file. Silakan coba lagi.');
         }
-
-        // Delete record from database
-        $geojsonFile->delete();
-
-        return redirect()->route('admin.geojson-files.index')
-            ->with('success', "File {$geojsonFile->original_name} berhasil dihapus");
     }
 
     /**
@@ -189,14 +227,20 @@ class GeojsonFileController extends Controller
      */
     public function download(GeojsonFile $geojsonFile)
     {
-        if (!Storage::disk($geojsonFile->disk)->exists($geojsonFile->stored_path)) {
-            return redirect()->route('admin.geojson-files.index')
-                ->with('error', 'File tidak ditemukan');
-        }
+        try {
+            if (!Storage::disk($geojsonFile->disk)->exists($geojsonFile->stored_path)) {
+                return redirect()->route('admin.geojson-files.index')
+                    ->with('error', 'File tidak ditemukan');
+            }
 
-        return response()->download(
-            Storage::disk($geojsonFile->disk)->path($geojsonFile->stored_path),
-            $geojsonFile->original_name
-        );
+            return response()->download(
+                Storage::disk($geojsonFile->disk)->path($geojsonFile->stored_path),
+                $geojsonFile->original_name
+            );
+        } catch (\Exception $e) {
+            Log::error('Error downloading geojson file: '.$e->getMessage(), ['id' => $geojsonFile->id]);
+            return redirect()->route('admin.geojson-files.index')
+                ->with('error', 'Gagal mengunduh file. Silakan coba lagi.');
+        }
     }
 }

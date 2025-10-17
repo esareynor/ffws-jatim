@@ -1,6 +1,4 @@
 import React, { useState, useRef, useCallback, memo, lazy, Suspense, useEffect } from "react";
-
-// Lazy load komponen yang tidak critical untuk initial load
 const GoogleMapsSearchbar = lazy(() => import("@components/common/GoogleMapsSearchbar"));
 const MapboxMap = lazy(() => import("@/components/devices/MapboxMap"));
 const FloatingLegend = lazy(() => import("@components/common/FloatingLegend"));
@@ -215,12 +213,7 @@ const Layout = ({ children }) => {
                 <FilterPanel
                     isOpen={isFilterOpen}
                     onOpen={() => setIsFilterOpen(true)}
-                    onClose={() => setIsFilterOpen(false)}
-                    title="Filter"
-                    tickerData={tickerData}
-                    handleStationChange={handleStationChange}
-                    currentStationIndex={currentStationIndex}
-                    handleAutoSwitchToggle={handleAutoSwitchToggle}
+                    onClose={() => setIsFilterOpen(false)} // Tambahkan handler untuk menutup panel
                 />
             </Suspense>
         </div>

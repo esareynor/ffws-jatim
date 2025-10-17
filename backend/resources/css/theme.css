@@ -391,7 +391,7 @@ label {
     
     .dark * {
         background-color: white !important;
-        color: black !important;
+        color: #09090b !important;
         border-color: #ccc !important;
     }
 }
@@ -400,7 +400,7 @@ label {
 @media (prefers-contrast: high) {
     .dark {
         --tw-bg-opacity: 1;
-        background-color: rgb(0 0 0 / var(--tw-bg-opacity));
+        background-color: #09090b;
         --tw-text-opacity: 1;
         color: rgb(255 255 255 / var(--tw-text-opacity));
     }

@@ -44,16 +44,16 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
         }
     }, [isOpen]);
 
-  // CSS untuk animasi - menggunakan CSS modules atau styled-components lebih baik
-  useEffect(() => {
-    const styleId = 'detail-panel-animations';
-    
-    // Cek apakah style sudah ada
-    if (document.getElementById(styleId)) return;
-    
-    const style = document.createElement("style");
-    style.id = styleId;
-    style.textContent = `
+    // CSS untuk animasi - menggunakan CSS modules atau styled-components lebih baik
+    useEffect(() => {
+        const styleId = "detail-panel-animations";
+
+        // Cek apakah style sudah ada
+        if (document.getElementById(styleId)) return;
+
+        const style = document.createElement("style");
+        style.id = styleId;
+        style.textContent = `
       @keyframes underlineSlideIn {
         0% {
           transform: translateX(-50%) scaleX(0);
@@ -125,15 +125,15 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
         animation: underlineClose 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
       }
     `;
-    document.head.appendChild(style);
-    
-    return () => {
-      const existingStyle = document.getElementById(styleId);
-      if (existingStyle) {
-        document.head.removeChild(existingStyle);
-      }
-    };
-  }, []);
+        document.head.appendChild(style);
+
+        return () => {
+            const existingStyle = document.getElementById(styleId);
+            if (existingStyle) {
+                document.head.removeChild(existingStyle);
+            }
+        };
+    }, []);
 
     // Auto close detail panel saat auto switch berjalan
     useEffect(() => {
@@ -152,25 +152,28 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
     }, [onClose]);
 
     // Handler untuk tab click dengan animasi clean - menggunakan useCallback untuk optimasi
-    const handleTabClick = useCallback((tabKey) => {
-        if (isTabChanging || activeTab === tabKey) return; // Prevent multiple clicks during transition
+    const handleTabClick = useCallback(
+        (tabKey) => {
+            if (isTabChanging || activeTab === tabKey) return; // Prevent multiple clicks during transition
 
-        setIsTabChanging(true);
-        setIsDotAnimating(true);
-        setPreviousTab(activeTab);
+            setIsTabChanging(true);
+            setIsDotAnimating(true);
+            setPreviousTab(activeTab);
 
-        // Animasi underline menutup dan muncul underline baru
-        setTimeout(() => {
-            setActiveTab(tabKey);
-            
-            // Reset animasi state setelah transisi selesai
+            // Animasi underline menutup dan muncul underline baru
             setTimeout(() => {
-                setIsTabChanging(false);
-                setIsDotAnimating(false);
-                setPreviousTab(null);
-            }, 400); // 400ms untuk animasi underline baru
-        }, 400); // 400ms delay untuk animasi underline menutup
-    }, [isTabChanging, activeTab]);
+                setActiveTab(tabKey);
+
+                // Reset animasi state setelah transisi selesai
+                setTimeout(() => {
+                    setIsTabChanging(false);
+                    setIsDotAnimating(false);
+                    setPreviousTab(null);
+                }, 400); // 400ms untuk animasi underline baru
+            }, 400); // 400ms delay untuk animasi underline menutup
+        },
+        [isTabChanging, activeTab]
+    );
 
     // Tidak render jika panel tidak dibuka atau data tidak ada
     if (!isOpen) return null;
@@ -227,10 +230,16 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                                 </svg>
                             </button>
                             <div className="min-w-0">
-                                <h3 className="text-2xl font-bold text-gray-900 tracking-tight" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
-                                    Detail Informasi 
+                                <h3
+                                    className="text-2xl font-bold text-gray-900 tracking-tight"
+                                    style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}
+                                >
+                                    Detail Informasi
                                 </h3>
-                                <p className="text-base text-gray-700 mt-1 font-semibold" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
+                                <p
+                                    className="text-base text-gray-700 mt-1 font-semibold"
+                                    style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}
+                                >
                                     {stationData.name}
                                 </p>
                             </div>
@@ -259,7 +268,10 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                                     {getStatusText(stationData.status)}
                                 </div>
                             </div>
-                            <div className="text-sm text-gray-600 font-semibold" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
+                            <div
+                                className="text-sm text-gray-600 font-semibold"
+                                style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}
+                            >
                                 Update {new Date().toLocaleTimeString("id-ID")}
                             </div>
                         </div>
@@ -284,9 +296,11 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                                         } ${isTabChanging ? "opacity-70 cursor-wait" : "cursor-pointer"}`}
                                         role="tab"
                                         aria-selected={activeTab === tab.key}
-                                        style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}
+                                        style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}
                                     >
-                                        <span className="relative z-10 whitespace-nowrap text-base font-semibold leading-tight">{tab.label}</span>
+                                        <span className="relative z-10 whitespace-nowrap text-base font-semibold leading-tight">
+                                            {tab.label}
+                                        </span>
                                         {/* Active indicator - sejajar dengan kotak navbar */}
                                         {activeTab === tab.key ? (
                                             <div className="absolute bottom-0 left-1/2 w-8 h-1 bg-gradient-to-r from-blue-300 to-blue-800 rounded-full shadow-sm underline-active" />
@@ -312,13 +326,19 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                             <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
                                 <div className="px-8 pt-8 pb-6 bg-gradient-to-r from-gray-50 to-blue-50/30 border-b border-gray-100">
                                     <div className="flex items-center justify-between mb-3">
-                                        <h3 className="text-2xl font-bold text-gray-900 tracking-tight" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
+                                        <h3
+                                            className="text-2xl font-bold text-gray-900 tracking-tight"
+                                            style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}
+                                        >
                                             {activeTab === "riwayat" && "Riwayat Data"}
                                             {activeTab === "cuaca" && "Cuaca"}
                                             {activeTab === "monitoring" && "Aktual & Prediksi"}
                                         </h3>
                                     </div>
-                                    <p className="text-base text-gray-600 font-semibold" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
+                                    <p
+                                        className="text-base text-gray-600 font-semibold"
+                                        style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}
+                                    >
                                         {stationData.location}
                                     </p>
                                 </div>
@@ -474,17 +494,18 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                                         </div>
                                     )}
                                     {activeTab === "monitoring" && (
-                                        <Suspense fallback={
-                                            <div className="w-full h-[320px] bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
-                                                <span className="text-gray-500">Loading chart...</span>
-                                            </div>
-                                        }>
+                                        <Suspense
+                                            fallback={
+                                                <div className="w-full h-[320px] bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
+                                                    <span className="text-gray-500">Loading chart...</span>
+                                                </div>
+                                            }
+                                        >
                                             <MonitoringChart
                                                 actualData={chartHistory || []}
-                                                width={640}
+                                                predictedData={chartHistory ? chartHistory.slice(1) : []}
+                                                width="100%"
                                                 height={320}
-                                                className="w-full"
-                                                canvasId="monitoring-chart-detail"
                                             />
                                         </Suspense>
                                     )}
@@ -494,11 +515,13 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
 
                         {/* Tab Sensor - Perkembangan Air Sungai Aktual */}
                         {activeTab === "sensor" && (
-                            <Suspense fallback={
-                                <div className="w-full h-[220px] bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
-                                    <span className="text-gray-500">Loading chart...</span>
-                                </div>
-                            }>
+                            <Suspense
+                                fallback={
+                                    <div className="w-full h-[220px] bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
+                                        <span className="text-gray-500">Loading chart...</span>
+                                    </div>
+                                }
+                            >
                                 <TanggulAktual
                                     stationData={stationData}
                                     chartHistory={chartHistory}
@@ -511,11 +534,13 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
 
                         {/* Kartu kedua: Konfigurasi Prediksi - hanya untuk tab sensor */}
                         {activeTab === "sensor" && (
-                            <Suspense fallback={
-                                <div className="w-full h-[220px] bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
-                                    <span className="text-gray-500">Loading chart...</span>
-                                </div>
-                            }>
+                            <Suspense
+                                fallback={
+                                    <div className="w-full h-[220px] bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
+                                        <span className="text-gray-500">Loading chart...</span>
+                                    </div>
+                                }
+                            >
                                 <PredictionChart
                                     stationData={stationData}
                                     chartHistory={chartHistory}

@@ -28,11 +28,11 @@
     <!-- Main Information Card -->
     <x-admin.card title="Informasi Prediksi" subtitle="Detail lengkap data prediksi sistem peringatan dini banjir">
         <dl>
-            <div class="bg-gray-50 dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <div class="bg-gray-50 dark:bg-[#18181b] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">ID Prediksi</dt>
                 <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">#{{ $dataPrediction->id }}</dd>
             </div>
-            <div class="bg-white dark:bg-gray-900 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <div class="bg-white dark:bg-[#09090b] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Sensor</dt>
                 <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">
                     <div>
@@ -41,31 +41,31 @@
                     </div>
                 </dd>
             </div>
-            <div class="bg-gray-50 dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <div class="bg-gray-50 dark:bg-[#18181b] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Model</dt>
                 <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">{{ $dataPrediction->masModel->name ?? 'N/A' }}</dd>
             </div>
-            <div class="bg-white dark:bg-gray-900 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <div class="bg-white dark:bg-[#09090b] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Waktu Prediksi Dijalankan</dt>
                 <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">
                     {{ $dataPrediction->prediction_run_at->format('d F Y, H:i:s') }}
                     <span class="text-gray-500 dark:text-gray-400">({{ $dataPrediction->prediction_run_at->diffForHumans() }})</span>
                 </dd>
             </div>
-            <div class="bg-gray-50 dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <div class="bg-gray-50 dark:bg-[#18181b] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Target Waktu Prediksi</dt>
                 <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">
                     {{ $dataPrediction->prediction_for_ts->format('d F Y, H:i:s') }}
                     <span class="text-gray-500 dark:text-gray-400">({{ $dataPrediction->prediction_for_ts->diffForHumans() }})</span>
                 </dd>
             </div>
-            <div class="bg-white dark:bg-gray-900 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <div class="bg-white dark:bg-[#09090b] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Nilai Prediksi</dt>
                 <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">
                     <span class="font-mono text-lg font-semibold">{{ number_format($dataPrediction->predicted_value, 2) }}</span>
                 </dd>
             </div>
-            <div class="bg-gray-50 dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <div class="bg-gray-50 dark:bg-[#18181b] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Skor Kepercayaan</dt>
                 <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">
                     @if($dataPrediction->confidence_score)
@@ -82,7 +82,7 @@
                     @endif
                 </dd>
             </div>
-            <div class="bg-white dark:bg-gray-900 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <div class="bg-white dark:bg-[#09090b] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status Threshold</dt>
                 <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">
                     @if($dataPrediction->threshold_prediction_status)
@@ -112,14 +112,14 @@
                     @endif
                 </dd>
             </div>
-            <div class="bg-gray-50 dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <div class="bg-gray-50 dark:bg-[#18181b] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Dibuat</dt>
                 <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">
                     {{ $dataPrediction->created_at->format('d F Y, H:i:s') }}
                     <span class="text-gray-500 dark:text-gray-400">({{ $dataPrediction->created_at->diffForHumans() }})</span>
                 </dd>
             </div>
-            <div class="bg-white dark:bg-gray-900 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <div class="bg-white dark:bg-[#09090b] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Terakhir Diupdate</dt>
                 <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">
                     {{ $dataPrediction->updated_at->format('d F Y, H:i:s') }}

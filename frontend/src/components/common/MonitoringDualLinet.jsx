@@ -1,7 +1,4 @@
 import React, { useMemo } from 'react';
-import { LineChart,Line, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, Legend } from 'recharts';
-
-
 /**
  * Komponen MonitoringChart untuk menampilkan data aktual dan prediksi
  * Digunakan di tab monitoring DetailPanel

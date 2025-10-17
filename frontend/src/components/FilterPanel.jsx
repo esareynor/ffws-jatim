@@ -1,3 +1,5 @@
+// src/components/FilterPanel.jsx
+
 import React, { useEffect, useState } from "react";
 import { Sliders, ToggleRight, Layers, AlertTriangle } from "lucide-react";
 
@@ -56,7 +58,7 @@ const FilterPanel = ({
   currentStationIndex,
   handleAutoSwitchToggle,
   onLayerToggle = () => {}, // Tambahkan nilai default
-  activeLayers = {}
+  activeLayers = {}, // <-- default agar tidak undefined
 }) => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -210,6 +212,7 @@ const FilterPanel = ({
                   <div className="text-xs text-amber-800">
                     <div className="font-medium">Layer Control</div>
                     <div className="mt-1">Klik toggle untuk mengaktifkan atau menonaktifkan layer.</div>
+                    <div className="mt-1">Layer "Sungai" akan menampilkan area air di sekitar marker yang dipilih.</div>
                   </div>
                 </div>
               </div>

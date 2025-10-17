@@ -1,17 +1,4 @@
 import React, { useMemo } from "react";
-import {
-    AreaChart,
-    Area,
-    Line,
-    XAxis,
-    YAxis,
-    ResponsiveContainer,
-    Tooltip,
-    CartesianGrid,
-    ReferenceLine,
-    Legend,
-} from "recharts";
-
 /*Komponen untuk menampilkan perkembangan air sungai aktual*/
 const RiverDevelopmentChart = ({ stationData, chartHistory = [], width = 560, height = 220, className = "w-full" }) => {
     const getStatusColor = (status) => {

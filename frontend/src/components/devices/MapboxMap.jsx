@@ -4,6 +4,8 @@ import React, { useEffect, useRef, useState, lazy, Suspense } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { fetchDevices } from "../../services/devices";
+import VectorTilesAPI from "../VectorTilesAPI";
+
 
 // Lazy imports
 const MapTooltip = lazy(() => import("./maptooltip"));
@@ -27,8 +29,9 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
   const [currentStationIndex, setCurrentStationIndex] = useState(0);
   const [clickedCoordinates, setClickedCoordinates] = useState(null);
   const [showCoordinatesPopup, setShowCoordinatesPopup] = useState(false);
+  const [clickedMarkerCoords, setClickedMarkerCoords] = useState(null);
 
-  // State untuk layer (tetap ada, tapi tidak digunakan jika tidak perlu toggle)
+  // State untuk layer
   const [activeLayers, setActiveLayers] = useState({
     rivers: false,
     'flood-risk': false,
@@ -37,85 +40,11 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     administrative: false,
   });
 
-  // === HIGHLIGHT AIR HANYA DI SEKITAR MARKER ===
-  const HIGHLIGHT_SOURCE_ID = 'highlighted-water-source';
-  const HIGHLIGHT_LAYER_ID = 'highlighted-water-layer';
-
-  const cleanupHighlight = () => {
-    if (!map.current) return;
-    try {
-      if (map.current.getLayer(HIGHLIGHT_LAYER_ID)) map.current.removeLayer(HIGHLIGHT_LAYER_ID);
-      if (map.current.getSource(HIGHLIGHT_SOURCE_ID)) map.current.removeSource(HIGHLIGHT_SOURCE_ID);
-    } catch (e) {
-      console.warn('Cleanup highlight error:', e.message);
-    }
-  };
-
-  const highlightWaterNearMarker = (lng, lat) => {
-    if (!map.current || !map.current.isStyleLoaded()) return;
-
-    cleanupHighlight();
-
-    try {
-      if (typeof lng !== 'number' || typeof lat !== 'number' || isNaN(lng) || isNaN(lat)) return;
-      if (Math.abs(lng) > 180 || Math.abs(lat) > 90) return;
-
-      const point = map.current.project([lng, lat]);
-      if (!point || isNaN(point.x) || isNaN(point.y)) return;
-
-      const radius = 50;
-      const bbox = [
-        [Math.max(0, point.x - radius), Math.max(0, point.y - radius)],
-        [point.x + radius, point.y + radius]
-      ];
-
-      const allLayers = map.current.getStyle().layers || [];
-      const waterLayerIds = allLayers
-        .filter(layer => layer.id.includes('water') && layer.type === 'fill')
-        .map(layer => layer.id);
-
-      if (waterLayerIds.length === 0) return;
-
-      let features = [];
-      for (const id of waterLayerIds) {
-        const f = map.current.queryRenderedFeatures(bbox, { layers: [id] });
-        features.push(...f);
-      }
-
-      const waterFeatures = features.filter(f =>
-        f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon'
-      );
-
-      if (waterFeatures.length === 0) return;
-
-      // ✅ Perbaikan: tambahkan "data:"
-      map.current.addSource(HIGHLIGHT_SOURCE_ID, {
-        type: 'geojson',
-        data: {
-          type: 'FeatureCollection',
-          features: waterFeatures
-        }
-      });
-
-      map.current.addLayer({
-        id: HIGHLIGHT_LAYER_ID,
-        type: 'fill',
-        source: HIGHLIGHT_SOURCE_ID,
-        paint: {
-          'fill-color': '#003366',
-          'fill-opacity': 0.75,
-          'fill-outline-color': '#001a33',
-          'fill-outline-width': 1
-        }
-      }, 'water');
-
-    } catch (error) {
-      console.error('Highlight water error:', error);
-      cleanupHighlight();
-    }
-  };
-
-  // === SISA KODE TETAP SAMA ===
+  const [layerVisibility, setLayerVisibility] = useState({
+    rivers: false,
+    Vector: false,
+    // ...layer lain jika ada
+  });
 
   useEffect(() => {
     const loadDevices = async () => {
@@ -177,7 +106,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
       map.current.flyTo({ center: coordinates, zoom: 14 });
     }
     setTooltip({ visible: true, station: station, coordinates });
-    highlightWaterNearMarker(coordinates[0], coordinates[1]);
+    setClickedMarkerCoords(coordinates);
   };
 
   const handleShowDetail = (station) => {
@@ -194,7 +123,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
       setSelectedStation(station);
       setSelectedStationCoords(coords);
       handleMapFocus({ lat: station.latitude, lng: station.longitude, zoom: 14, stationId: station.id });
-      highlightWaterNearMarker(coords[0], coords[1]);
+      setClickedMarkerCoords(coords);
     }
   };
 
@@ -218,7 +147,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         const coordinates = getStationCoordinates(station.name);
         if (coordinates) {
           setTooltip({ visible: true, station: station, coordinates: coordinates });
-          highlightWaterNearMarker(coordinates[0], coordinates[1]);
+          setClickedMarkerCoords(coordinates);
         }
       }
     }, 800);
@@ -230,8 +159,11 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     setShowCoordinatesPopup(true);
   };
 
-  const handleLayerToggle = (layerId, isActive) => {
-    setActiveLayers(prev => ({ ...prev, [layerId]: isActive }));
+  const handleLayerToggle = (layerId) => {
+    setActiveLayers(prev => ({
+      ...prev,
+      [layerId]: !prev[layerId]
+    }));
   };
 
   useEffect(() => {
@@ -384,6 +316,21 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
           </svg>
         </button>
       </div>
+
+      {/* Hapus RiverLayer di sini, hanya VectorTilesAPI yang dirender */}
+      <VectorTilesAPI 
+        map={map.current}
+        mapLoaded={mapLoaded}
+        isRiverLayerActive={activeLayers.rivers}
+        selectedLocation={
+          selectedStation
+            ? {
+                lat: parseFloat(selectedStation.latitude),
+                lng: parseFloat(selectedStation.longitude)
+              }
+            : null
+        }
+      />
     </div>
   );
 };

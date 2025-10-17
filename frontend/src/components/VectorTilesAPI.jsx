@@ -1,7 +1,7 @@
 // src/components/VectorTilesAPI.jsx
 import React, { useEffect } from 'react';
 
-const VectorTilesAPI = ({ map, mapLoaded, selectedLocation, isRiverLayerActive }) => {
+const VectorTilesAPI = ({ map, mapLoaded, isRiverLayerActive, selectedLocation }) => {
   const SOURCE_ID = 'highlighted-water-source';
   const LAYER_ID = 'highlighted-water-layer';
 
@@ -16,6 +16,7 @@ const VectorTilesAPI = ({ map, mapLoaded, selectedLocation, isRiverLayerActive }
   };
 
   useEffect(() => {
+    console.log('VectorTilesAPI:', { isRiverLayerActive, mapLoaded, selectedLocation });
     // Jika layer sungai tidak aktif atau belum ada lokasi terpilih, bersihkan
     if (!isRiverLayerActive || !mapLoaded || !selectedLocation || !map) {
       cleanup();
@@ -81,22 +82,12 @@ const VectorTilesAPI = ({ map, mapLoaded, selectedLocation, isRiverLayerActive }
           return;
         }
 
-        // Tambahkan properti untuk pewarnaan
-        const processedFeatures = waterFeatures.map((f, index) => ({
-          ...f,
-          properties: {
-            ...f.properties,
-            isHighlighted: true,
-            distance: Math.random() * 100
-          }
-        }));
-
         // Tambahkan sumber data baru
         map.addSource(SOURCE_ID, {
           type: 'geojson',
           data: {
             type: 'FeatureCollection',
-            features: processedFeatures
+            features: waterFeatures
           }
         });
 

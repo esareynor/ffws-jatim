@@ -32,7 +32,7 @@
     @close-modal.window="if(!$event.detail || $event.detail === @js($name)) internalShow = false"
 >
     <!-- Backdrop -->
-    <div class="fixed inset-0 bg-black bg-opacity-40" @if($closeOnBackdrop) @click="internalShow = false" @endif></div>
+    <div class="fixed inset-0 bg-[#09090b] bg-opacity-40" @if($closeOnBackdrop) @click="internalShow = false" @endif></div>
 
     <!-- Dialog -->
     <div class="min-h-screen flex items-center justify-center p-4">
@@ -65,7 +65,7 @@
 
                 <!-- Modal Footer -->
                 @isset($footer)
-                    <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 flex items-center justify-end gap-2">
+                    <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-[#18181b] flex items-center justify-end gap-2">
                         {{ $footer }}
                     </div>
                 @endisset

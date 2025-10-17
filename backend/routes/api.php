@@ -25,12 +25,6 @@ Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 });
 
-// Public device routes for map
-Route::prefix('devices')->group(function () {
-    Route::get('/map', [MasDeviceController::class, 'getDevicesForMap']);
-    Route::get('/{id}', [MasDeviceController::class, 'show']);
-});
-
 // Test route untuk memastikan API berjalan
 Route::get('/test', function () {
     return response()->json([
@@ -92,12 +86,4 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [\App\Http\Controllers\Api\Admin\GeojsonFileController::class, 'index']);
         Route::get('/{id}/content', [\App\Http\Controllers\Api\Admin\GeojsonFileController::class, 'content']);
     });
-});
-
-// Test route untuk memastikan API berjalan
-Route::get('/test', function () {
-    return response()->json([
-        'success' => true,
-        'message' => 'API berjalan dengan baik'
-    ]);
 });

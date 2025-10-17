@@ -41,7 +41,7 @@
                         @elseif($model->model_type === 'transformer') bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200
                         @elseif($model->model_type === 'cnn') bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
                         @elseif($model->model_type === 'rnn') bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
-                        @else bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200
+                        @else bg-gray-100 text-gray-800 dark:bg-[#18181b] dark:text-gray-200
                         @endif">
                         {{ strtoupper($model->model_type) }}
                     </span>
@@ -64,7 +64,7 @@
                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Path File</dt>
                 <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
                     @if($model->file_path)
-                        <code class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs">{{ $model->file_path }}</code>
+                        <code class="bg-gray-100 dark:bg-[#18181b] px-2 py-1 rounded text-xs">{{ $model->file_path }}</code>
                     @else
                         -
                     @endif
@@ -123,7 +123,7 @@
         @if($model->sensors->count() > 0)
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach($model->sensors as $sensor)
-                    <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
+                    <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-[#18181b]">
                         <div class="flex items-center justify-between">
                             <div>
                                 <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $sensor->name }}</h4>

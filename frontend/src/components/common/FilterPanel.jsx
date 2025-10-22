@@ -4,7 +4,7 @@ import { Sliders, ToggleLeft, ToggleRight, Layers, Keyboard, AlertTriangle } fro
 
 /**
  * FilterPanel
- * A slide-in panel from the right side, similar to StationDetail but right-anchored.
+ * A responsive panel that slides in from the right on desktop and from the bottom on mobile.
  * Intended to host filter controls like AutoSwitchToggle, checkboxes, etc.
  */
 const FilterPanel = ({
@@ -22,6 +22,7 @@ const FilterPanel = ({
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("controls");
+  const [isMobile, setIsMobile] = useState(false);
   const [layersState, setLayersState] = useState([
     { id: "stations", name: "Stasiun Monitoring", color: "#3B82F6", enabled: false},
     { id: "rivers", name: "Sungai", color: "#06B6D4", enabled: false },
@@ -40,6 +41,71 @@ const FilterPanel = ({
     }
   }, [isOpen]);
 
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Handle swipe down to close on mobile
+  const handleTouchStart = (e) => {
+    if (!isMobile) return;
+    const touch = e.touches ? e.touches[0] : e;
+    const startY = touch.clientY;
+    
+    const handleTouchMove = (e) => {
+      const currentTouch = e.touches ? e.touches[0] : e;
+      const currentY = currentTouch.clientY;
+      const deltaY = currentY - startY;
+      
+      // If swiping down more than 100px, close the panel
+      if (deltaY > 100) {
+        setIsVisible(false);
+        setTimeout(() => {
+          onClose && onClose();
+        }, 300);
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', handleTouchEnd);
+        document.removeEventListener('mousemove', handleTouchMove);
+        document.removeEventListener('mouseup', handleTouchEnd);
+      }
+    };
+    
+    const handleTouchEnd = () => {
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('mousemove', handleTouchMove);
+      document.removeEventListener('mouseup', handleTouchEnd);
+    };
+    
+    if (e.type === 'touchstart') {
+      document.addEventListener('touchmove', handleTouchMove);
+      document.addEventListener('touchend', handleTouchEnd);
+    } else {
+      document.addEventListener('mousemove', handleTouchMove);
+      document.addEventListener('mouseup', handleTouchEnd);
+    }
+  };
+
+  // Prevent body scroll when mobile panel is open
+  useEffect(() => {
+    if (isMobile && isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMobile, isOpen]);
+
   const handleLayerToggle = (layerId) => {
     setLayersState((prev) =>
       prev.map((layer) =>
@@ -53,10 +119,10 @@ const FilterPanel = ({
   // Panel tetap muncul seperti biasa
   return (
     <>
-      <div className="absolute top-4 right-4 z-[80]">
+      <div className="absolute top-2 sm:top-4 right-2 sm:right-4 z-[80] h-12">
         <button
           onClick={onOpen}
-          className="relative inline-flex items-center justify-center w-12 h-12 rounded-full bg-white hover:bg-blue-50 transition-colors"
+          className="relative inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white hover:bg-blue-50 transition-colors shadow-lg"
           title="Buka Filter"
           aria-label="Buka Filter"
         >
@@ -66,14 +132,49 @@ const FilterPanel = ({
         </button>
       </div>
       {isOpen && (
+        <>
+          {/* Backdrop for mobile */}
+          {isMobile && (
         <div
-          className={`fixed rounded-tl-lg rounded-bl-lg top-20 right-0 h-[calc(80%-8%)] ${widthClass} bg-white shadow-2xl z-[70] transform transition-all duration-300 ease-in-out flex flex-col ${
+              className={`fixed inset-0 bg-black/50 z-[60] transition-opacity duration-300 ${
+                isVisible ? 'opacity-100' : 'opacity-0'
+          }`}
+          onClick={() => {
+            setIsVisible(false);
+            setTimeout(() => {
+              onClose && onClose();
+            }, 300);
+          }}
+        />
+      )}
+
+          {/* Panel */}
+          <div
+            className={`fixed bg-white shadow-2xl z-[70] transform transition-all duration-300 ease-in-out flex flex-col ${
+              isMobile 
+                ? `bottom-0 left-0 right-0 h-[75vh] rounded-t-2xl ${
+                    isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
+                  }`
+                : `top-16 sm:top-20 right-2 sm:right-0 h-[calc(100vh-2rem)] sm:h-[calc(80%-8%)] w-[75%] sm:w-50 md:w-82 max-w-[300px] sm:max-w-none rounded-lg ${
             isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
+                  }`
           }`}
           style={{ willChange: "transform, opacity" }}
         >
           {/* Header */}
-          <div className="rounded-tl-lg flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50/50">
+          <div 
+            className={`flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50/50 ${
+              isMobile ? 'rounded-t-2xl' : 'rounded-t-lg'
+            }`}
+          >
+            {/* Mobile drag handle */}
+            {isMobile && (
+              <div 
+                className="absolute top-2 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-gray-300 rounded-full cursor-pointer"
+                onTouchStart={handleTouchStart}
+                onMouseDown={handleTouchStart}
+              ></div>
+            )}
             <div className="flex items-center gap-2">
               <Sliders className="w-5 h-5 text-blue-600" />
               <div>
@@ -100,7 +201,9 @@ const FilterPanel = ({
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto overflow-x-hidden p-4">
+          <div className={`flex-1 overflow-y-auto overflow-x-hidden p-4 ${
+            isMobile ? 'pb-6' : ''
+          }`}>
             {/* Section Controls */}
             <section className="space-y-3">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
@@ -166,7 +269,9 @@ const FilterPanel = ({
           </div>
 
           {/* Footer */}
-          <div className="rounded-bl-lg border-t border-gray-200 p-4 bg-gray-50/50">
+          <div className={`border-t border-gray-200 p-4 bg-gray-50/50 ${
+            isMobile ? 'rounded-b-2xl pb-6' : 'rounded-b-lg'
+          }`}>
             <div className="flex items-center justify-between text-xs text-gray-500">
               <div className="flex items-center gap-4">
                 {/* <div className="flex items-center gap-1">
@@ -176,14 +281,15 @@ const FilterPanel = ({
                 <div className="flex items-center gap-1">
                   <span>Ctrl+Tab to switch</span>
                 </div> */}
-                <div className="flex items-center gap-1">
-                  <span>Map Layer Control</span>
+              <div className="flex items-center gap-1">
+                <span>Map Layer Control</span>
                 </div>
               </div>
               <div className="text-gray-400">Filter v1.0</div>
             </div>
           </div>
         </div>
+        </>
       )}
     </>
   );

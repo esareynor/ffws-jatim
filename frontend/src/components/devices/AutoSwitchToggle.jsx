@@ -333,8 +333,8 @@ const AutoSwitchToggle = ({
     const hasData = tickerData && tickerData.length > 0;
 
     return (
-        <div className="flex flex-col sm:flex-row items-center justify-between w-full p-3 bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center gap-3 mb-2 sm:mb-0">
+        <div className="flex items-center justify-between w-full p-3 bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center gap-3">
                 <span className="text-sm font-semibold text-gray-800">Auto Switch</span>
                 
                 <div className="flex items-center gap-2">

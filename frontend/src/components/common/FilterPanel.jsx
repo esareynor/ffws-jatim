@@ -23,6 +23,7 @@ const FilterPanel = ({
   const [isVisible, setIsVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("controls");
   const [isMobile, setIsMobile] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [layersState, setLayersState] = useState([
     { id: "stations", name: "Stasiun Monitoring", color: "#3B82F6", enabled: false},
     { id: "rivers", name: "Sungai", color: "#06B6D4", enabled: false },
@@ -56,28 +57,50 @@ const FilterPanel = ({
   // Handle swipe down to close on mobile
   const handleTouchStart = (e) => {
     if (!isMobile) return;
+    
+    // Prevent default to avoid scrolling
+    e.preventDefault();
+    setIsDragging(true);
+    
     const touch = e.touches ? e.touches[0] : e;
     const startY = touch.clientY;
+    const startTime = Date.now();
     
     const handleTouchMove = (e) => {
+      e.preventDefault();
       const currentTouch = e.touches ? e.touches[0] : e;
       const currentY = currentTouch.clientY;
       const deltaY = currentY - startY;
       
-      // If swiping down more than 100px, close the panel
-      if (deltaY > 100) {
+      // If swiping down more than 80px, close the panel
+      if (deltaY > 80) {
         setIsVisible(false);
         setTimeout(() => {
           onClose && onClose();
         }, 300);
-        document.removeEventListener('touchmove', handleTouchMove);
-        document.removeEventListener('touchend', handleTouchEnd);
-        document.removeEventListener('mousemove', handleTouchMove);
-        document.removeEventListener('mouseup', handleTouchEnd);
+        cleanup();
       }
     };
     
-    const handleTouchEnd = () => {
+    const handleTouchEnd = (e) => {
+      const currentTouch = e.changedTouches ? e.changedTouches[0] : e;
+      const currentY = currentTouch.clientY;
+      const deltaY = currentY - startY;
+      const deltaTime = Date.now() - startTime;
+      
+      // If swiped down more than 50px or fast swipe down, close the panel
+      if (deltaY > 50 || (deltaY > 30 && deltaTime < 300)) {
+        setIsVisible(false);
+        setTimeout(() => {
+          onClose && onClose();
+        }, 300);
+      }
+      
+      setIsDragging(false);
+      cleanup();
+    };
+    
+    const cleanup = () => {
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
       document.removeEventListener('mousemove', handleTouchMove);
@@ -85,7 +108,7 @@ const FilterPanel = ({
     };
     
     if (e.type === 'touchstart') {
-      document.addEventListener('touchmove', handleTouchMove);
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
       document.addEventListener('touchend', handleTouchEnd);
     } else {
       document.addEventListener('mousemove', handleTouchMove);
@@ -97,12 +120,15 @@ const FilterPanel = ({
   useEffect(() => {
     if (isMobile && isOpen) {
       document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
     } else {
       document.body.style.overflow = 'unset';
+      document.body.style.touchAction = 'auto';
     }
     
     return () => {
       document.body.style.overflow = 'unset';
+      document.body.style.touchAction = 'auto';
     };
   }, [isMobile, isOpen]);
 
@@ -165,39 +191,47 @@ const FilterPanel = ({
           <div 
             className={`flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50/50 ${
               isMobile ? 'rounded-t-2xl' : 'rounded-t-lg'
+            } ${isMobile ? 'cursor-grab active:cursor-grabbing' : ''} ${
+              isMobile && isDragging ? 'bg-gray-100/80' : ''
             }`}
+            onTouchStart={isMobile ? handleTouchStart : undefined}
+            onMouseDown={isMobile ? handleTouchStart : undefined}
           >
             {/* Mobile drag handle */}
             {isMobile && (
-              <div 
-                className="absolute top-2 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-gray-300 rounded-full cursor-pointer"
-                onTouchStart={handleTouchStart}
-                onMouseDown={handleTouchStart}
-              ></div>
+              <div className={`absolute top-2 left-1/2 transform -translate-x-1/2 w-8 h-1 rounded-full transition-colors ${
+                isDragging ? 'bg-gray-500' : 'bg-gray-400'
+              }`}></div>
             )}
             <div className="flex items-center gap-2">
               <Sliders className="w-5 h-5 text-blue-600" />
               <div>
                 <h2 className="text-lg font-semibold text-gray-800">Filter &amp; Controls</h2>
                 {subtitle && <p className="text-gray-500 text-sm">{subtitle}</p>}
+                {isMobile && (
+                  <p className="text-xs text-gray-400 mt-1">Geser ke bawah untuk menutup</p>
+                )}
               </div>
             </div>
-            <button
-              onClick={() => {
-                setIsVisible(false);
-                setTimeout(() => {
-                  onClose && onClose();
-                }, 300);
-              }}
-              className="p-1.5 hover:bg-gray-200 rounded-md transition-colors"
-              title="Tutup"
-              aria-label="Tutup panel filter"
-            >
-              <span className="sr-only">Close</span>
-              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            {/* Desktop close button */}
+            {!isMobile && (
+              <button
+                onClick={() => {
+                  setIsVisible(false);
+                  setTimeout(() => {
+                    onClose && onClose();
+                  }, 300);
+                }}
+                className="p-1.5 hover:bg-gray-200 rounded-md transition-colors"
+                title="Tutup"
+                aria-label="Tutup panel filter"
+              >
+                <span className="sr-only">Close</span>
+                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
           </div>
 
           {/* Content */}

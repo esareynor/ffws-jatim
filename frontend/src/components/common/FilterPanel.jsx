@@ -24,6 +24,7 @@ const FilterPanel = ({
   const [activeTab, setActiveTab] = useState("controls");
   const [isMobile, setIsMobile] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
   const [layersState, setLayersState] = useState([
     { id: "stations", name: "Stasiun Monitoring", color: "#3B82F6", enabled: false},
     { id: "rivers", name: "Sungai", color: "#06B6D4", enabled: false },
@@ -54,13 +55,14 @@ const FilterPanel = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Handle swipe down to close on mobile
+  // Handle swipe down to close on mobile with improved flexibility
   const handleTouchStart = (e) => {
     if (!isMobile) return;
     
     // Prevent default to avoid scrolling
     e.preventDefault();
     setIsDragging(true);
+    setDragOffset(0);
     
     const touch = e.touches ? e.touches[0] : e;
     const startY = touch.clientY;
@@ -72,13 +74,9 @@ const FilterPanel = ({
       const currentY = currentTouch.clientY;
       const deltaY = currentY - startY;
       
-      // If swiping down more than 80px, close the panel
-      if (deltaY > 80) {
-        setIsVisible(false);
-        setTimeout(() => {
-          onClose && onClose();
-        }, 300);
-        cleanup();
+      // Only allow downward movement
+      if (deltaY > 0) {
+        setDragOffset(deltaY);
       }
     };
     
@@ -87,9 +85,18 @@ const FilterPanel = ({
       const currentY = currentTouch.clientY;
       const deltaY = currentY - startY;
       const deltaTime = Date.now() - startTime;
+      const velocity = deltaY / deltaTime; // pixels per ms
       
-      // If swiped down more than 50px or fast swipe down, close the panel
-      if (deltaY > 50 || (deltaY > 30 && deltaTime < 300)) {
+      // More flexible thresholds:
+      // - Close if dragged down more than 120px (increased from 50px)
+      // - Close if fast swipe down (>0.5 px/ms) and dragged more than 60px
+      // - Close if very fast swipe (>1 px/ms) and dragged more than 30px
+      const shouldClose = 
+        deltaY > 120 || 
+        (velocity > 0.5 && deltaY > 60) || 
+        (velocity > 1 && deltaY > 30);
+      
+      if (shouldClose) {
         setIsVisible(false);
         setTimeout(() => {
           onClose && onClose();
@@ -97,6 +104,7 @@ const FilterPanel = ({
       }
       
       setIsDragging(false);
+      setDragOffset(0);
       cleanup();
     };
     
@@ -176,31 +184,45 @@ const FilterPanel = ({
 
           {/* Panel */}
           <div
-            className={`fixed bg-white shadow-2xl z-[70] transform transition-all duration-300 ease-in-out flex flex-col ${
+            className={`fixed bg-white shadow-2xl z-[70] transform flex flex-col ${
               isMobile 
-                ? `bottom-0 left-0 right-0 h-[75vh] rounded-t-2xl ${
-                    isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
+                ? `bottom-0 left-0 right-0 h-[65vh] rounded-t-2xl ${
+                    isVisible ? "opacity-100" : "opacity-0"
                   }`
-                : `top-16 sm:top-20 right-2 sm:right-0 h-[calc(100vh-2rem)] sm:h-[calc(80%-8%)] w-[75%] sm:w-50 md:w-82 max-w-[300px] sm:max-w-none rounded-lg ${
+                : `top-16 sm:top-20 right-2 sm:right-0 h-[calc(100vh-2rem)] sm:h-[calc(80%-8%)] w-[75%] sm:w-50 md:w-82 max-w-[300px] sm:max-w-none rounded-lg transition-all duration-300 ease-in-out ${
             isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
                   }`
           }`}
-          style={{ willChange: "transform, opacity" }}
+          style={{ 
+            willChange: "transform, opacity",
+            transform: isMobile 
+              ? isDragging 
+                ? `translateY(${dragOffset}px)` 
+                : isVisible 
+                  ? "translateY(0)" 
+                  : "translateY(100%)"
+              : undefined,
+            transition: isMobile && !isDragging 
+              ? "transform 300ms ease-in-out, opacity 300ms ease-in-out" 
+              : undefined
+          }}
         >
           {/* Header */}
           <div 
-            className={`flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50/50 ${
+            className={`flex items-center justify-between p-4 border-b border-gray-200 transition-colors ${
               isMobile ? 'rounded-t-2xl' : 'rounded-t-lg'
             } ${isMobile ? 'cursor-grab active:cursor-grabbing' : ''} ${
-              isMobile && isDragging ? 'bg-gray-100/80' : ''
+              isMobile && isDragging ? 'bg-gray-100' : 'bg-gray-50/50'
             }`}
             onTouchStart={isMobile ? handleTouchStart : undefined}
             onMouseDown={isMobile ? handleTouchStart : undefined}
           >
             {/* Mobile drag handle */}
             {isMobile && (
-              <div className={`absolute top-2 left-1/2 transform -translate-x-1/2 w-8 h-1 rounded-full transition-colors ${
-                isDragging ? 'bg-gray-500' : 'bg-gray-400'
+              <div className={`absolute top-2 left-1/2 transform -translate-x-1/2 w-10 h-1.5 rounded-full transition-all duration-200 ${
+                isDragging 
+                  ? 'bg-gray-600 w-12' 
+                  : 'bg-gray-400 hover:bg-gray-500'
               }`}></div>
             )}
             <div className="flex items-center gap-2">
@@ -209,7 +231,12 @@ const FilterPanel = ({
                 <h2 className="text-lg font-semibold text-gray-800">Filter &amp; Controls</h2>
                 {subtitle && <p className="text-gray-500 text-sm">{subtitle}</p>}
                 {isMobile && (
-                  <p className="text-xs text-gray-400 mt-1">Geser ke bawah untuk menutup</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {isDragging 
+                      ? `Geser ${dragOffset > 60 ? 'lebih jauh' : 'lagi'} untuk menutup` 
+                      : 'Geser ke bawah untuk menutup'
+                    }
+                  </p>
                 )}
               </div>
             </div>

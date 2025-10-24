@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState, lazy, Suspense } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { fetchDevices } from "../../services/devices";
+import GoogleMapsSearchbar from "/src/components/common/GoogleMapsSearchbar";
 
 const MapTooltip = lazy(() => import("./maptooltip"));
 const FilterPanel = lazy(() => import("../FilterPanel.jsx"));
@@ -54,7 +55,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     traverse(geometry.coordinates);
     return bounds;
   };
-
+  
   useEffect(() => {
     const loadDevices = async () => {
       try {
@@ -131,6 +132,12 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         center: [112.5, -7.5],
         zoom: 8
       });
+
+      // Simpan instance map ke window sebagai fallback
+      if (typeof window !== 'undefined') {
+        window.mapboxMap = map.current;
+      }
+
       map.current.addControl(new mapboxgl.ScaleControl(), "bottom-left");
       map.current.on("zoom", () => map.current && setZoomLevel(map.current.getZoom()));
       map.current.on('load', () => setMapLoaded(true));
@@ -332,9 +339,30 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     return () => { if (map.current) map.current.off('click', administrativeLayerId, handleClick); };
   }, [mapLoaded, activeLayers.administrative]);
 
+  const handleSearch = (query, coords) => {
+    console.log("Pencarian berhasil:", query, coords);
+  };
+
   return (
     <div className="w-full h-screen overflow-hidden relative z-0">
       <div ref={mapContainer} className="w-full h-full relative z-0" />
+      
+      {/* --- Searchbar hanya ditampilkan setelah map siap --- */}
+      {mapLoaded && map.current ? (
+        <GoogleMapsSearchbar
+          mapboxMap={map.current} // ✅ Kirim instance langsung
+          stationsData={tickerData}
+          onSearch={handleSearch}
+          isSidebarOpen={showFilterSidebar}
+          placeholder="Cari Lokasi di Jawa Timur..."
+        />
+      ) : (
+        <div className="fixed top-4 left-4 z-[70] bg-white rounded-lg shadow-lg p-2">
+          <span className="text-sm text-gray-500">Memuat peta...</span>
+        </div>
+      )}
+      {/* --- Akhir Searchbar --- */}
+      
       <Suspense fallback={null}>
         <FilterPanel
           isOpen={showFilterSidebar}

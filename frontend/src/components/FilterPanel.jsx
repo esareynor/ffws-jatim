@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { Sliders, ToggleRight, Layers, AlertTriangle } from "lucide-react";
-import AutoSwitchToggle from "./devices/AutoSwitchToggle"; // Perhatikan titik (.)
+// import AutoSwitchToggle from "./devices/AutoSwitchToggle"; // Perhatikan titik (.)
+
 const FilterPanel = ({
   isOpen,
   onOpen,
@@ -115,7 +116,7 @@ const FilterPanel = ({
               Device Auto Switch
             </h3>
             <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-              <AutoSwitchToggle
+              {/* <AutoSwitchToggle
                 tickerData={tickerData}
                 administrativeRegions={administrativeRegions}
                 autoSwitchMode={autoSwitchMode}
@@ -126,7 +127,7 @@ const FilterPanel = ({
                 onAutoSwitchToggle={handleAutoSwitchToggle}
                 interval={5000}
                 stopDelay={5000}
-              />
+              /> */}
             </div>
           </section>
 

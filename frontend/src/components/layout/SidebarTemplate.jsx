@@ -31,7 +31,8 @@ const SidebarTemplate  = ({
   
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => setIsVisible(true), 10);
+      // Tambahkan delay yang lebih konsisten untuk animasi slide in
+      setTimeout(() => setIsVisible(true), 50);
     } else {
       setIsVisible(false);
     }
@@ -102,6 +103,7 @@ const SidebarTemplate  = ({
     if (isDetailPanelOpen && onCloseDetailPanel) {
       onCloseDetailPanel();
     }
+    // Tambahkan delay yang lebih konsisten untuk animasi keluar
     setTimeout(onClose, 300);
   };
 
@@ -128,7 +130,7 @@ const SidebarTemplate  = ({
       {/* Backdrop for mobile */}
       {isMobile && (
         <div
-          className={`fixed inset-0 bg-black/50 z-[50] transition-opacity duration-300 ${
+          className={`fixed inset-0 bg-black/50 z-[50] transition-opacity duration-300 ease-out ${
             isVisible ? 'opacity-100' : 'opacity-0'
           }`}
           onClick={handleClose}
@@ -139,7 +141,7 @@ const SidebarTemplate  = ({
       <div 
         className={`fixed bg-white shadow-2xl z-[60] transform flex flex-col ${
           isMobile 
-            ? `bottom-0 left-0 right-0 h-[70vh] rounded-t-2xl ${
+            ? `bottom-0 left-0 right-0 h-[70vh] rounded-t-2xl transition-all duration-300 ease-out ${
                 isVisible ? "opacity-100" : "opacity-0"
               }`
             : `top-20 left-0 h-[calc(100vh-5rem)] w-96 transition-all duration-300 ease-in-out ${
@@ -156,7 +158,7 @@ const SidebarTemplate  = ({
                 : "translateY(100%)"
             : undefined,
           transition: isMobile && !isDragging 
-            ? "transform 300ms ease-in-out, opacity 300ms ease-in-out" 
+            ? "transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 300ms ease-out" 
             : undefined
         }}
       >

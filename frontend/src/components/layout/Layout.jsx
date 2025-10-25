@@ -175,6 +175,23 @@ const Layout = ({ children }) => {
                 </Suspense>
             </div>
 
+            {/* Global Backdrop - tampil ketika ada modal yang terbuka */}
+            {(selectedStation || isDetailPanelOpen || isFilterOpen) && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-[10] transition-opacity duration-300"
+                    onClick={() => {
+                        // Tutup modal yang sedang aktif berdasarkan prioritas
+                        if (isFilterOpen) {
+                            setIsFilterOpen(false);
+                        } else if (isDetailPanelOpen) {
+                            handleCloseDetailPanel();
+                        } else if (selectedStation) {
+                            handleCloseStationDetail();
+                        }
+                    }}
+                />
+            )}
+
             {/* Station Detail Modal */}
             <Suspense
                 fallback={

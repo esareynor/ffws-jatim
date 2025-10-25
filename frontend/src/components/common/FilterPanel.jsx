@@ -167,26 +167,12 @@ const FilterPanel = ({
       </div>
       {isOpen && (
         <>
-          {/* Backdrop for mobile */}
-          {isMobile && (
-        <div
-              className={`fixed inset-0 bg-black/50 z-[60] transition-opacity duration-300 ${
-                isVisible ? 'opacity-100' : 'opacity-0'
-          }`}
-          onClick={() => {
-            setIsVisible(false);
-            setTimeout(() => {
-              onClose && onClose();
-            }, 300);
-          }}
-        />
-      )}
-
           {/* Panel */}
           <div
-            className={`fixed bg-white shadow-2xl z-[70] transform flex flex-col ${
+            className={`fixed bg-white shadow-2xl z-[50] transform flex flex-col ${
               isMobile 
-                ? `bottom-0 left-0 right-0 h-[65vh] rounded-t-2xl ${
+              // h-[60vh] ukuran tinggi modal
+                ? `bottom-0 left-0 right-0 h-[70vh] rounded-t-2xl ${
                     isVisible ? "opacity-100" : "opacity-0"
                   }`
                 : `top-16 sm:top-20 right-2 sm:right-0 h-[calc(100vh-2rem)] sm:h-[calc(80%-8%)] w-[75%] sm:w-50 md:w-82 max-w-[300px] sm:max-w-none rounded-lg transition-all duration-300 ease-in-out ${

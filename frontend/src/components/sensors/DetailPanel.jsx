@@ -273,24 +273,15 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
     if (!stationData) {
         return (
             <>
-                {/* Backdrop for mobile */}
-                {isMobile && (
-                    <div
-                        className={`fixed inset-0 bg-black/50 z-[40] transition-opacity duration-300 ${
-                            isVisible ? 'opacity-100' : 'opacity-0'
-                        }`}
-                        onClick={handleClose}
-                    />
-                )}
-
                 {/* Panel */}
                 <div
                     className={`fixed bg-white shadow-2xl z-[50] transform flex flex-col ${
                         isMobile 
-                            ? `bottom-0 left-0 right-0 h-[80vh] rounded-t-2xl ${
+                        // h-[60vh] ukuran tinggi modal
+                            ? `bottom-0 left-0 right-0 h-[70vh] rounded-t-2xl ${ 
                                 isVisible ? "opacity-100" : "opacity-0"
                               }`
-                            : `rounded-tr-lg top-20 left-96 right-80 bottom-0 transition-all duration-300 ease-in-out ${
+                            : `rounded-tr-lg top-20 left-96 right-0 bottom-0 transition-all duration-300 ease-in-out ${
                                 isVisible ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
                               }`
                     }`}
@@ -321,24 +312,14 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
 
     return (
         <>
-            {/* Backdrop for mobile */}
-            {isMobile && (
-                <div
-                    className={`fixed inset-0 bg-black/50 z-[40] transition-opacity duration-300 ${
-                        isVisible ? 'opacity-100' : 'opacity-0'
-                    }`}
-                    onClick={handleClose}
-                />
-            )}
-
             {/* Panel */}
             <div
                 className={`fixed bg-white shadow-2xl z-[50] transform flex flex-col ${
                     isMobile 
-                        ? `bottom-0 left-0 right-0 h-[80vh] rounded-t-2xl ${
+                        ? `bottom-0 left-0 right-0 h-[70vh] rounded-t-2xl ${
                             isVisible ? "opacity-100" : "opacity-0"
                           }`
-                        : `rounded-tr-lg top-20 left-96 right-80 bottom-0 transition-all duration-300 ease-in-out ${
+                        : `rounded-tr-lg top-20 left-96 right-0 bottom-0 transition-all duration-300 ease-in-out ${
                             isVisible ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
                           }`
                 }`}

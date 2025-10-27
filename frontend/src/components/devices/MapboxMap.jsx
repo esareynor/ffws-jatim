@@ -135,6 +135,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
       'ws-brantas': { filename: 'WSBrantas.json', color: '#FF4500' },
       'ws-pekalen-sampean': { filename: 'WSPekalenSampean.json', color: '#FF69B4' },
       'ws-welang-rejoso': { filename: 'WSWelangRejoso.json', color: '#FF00FF' },
+      'ws-madura-bawean': { filename: 'WSMaduraBawean.json', color: '#FFD700' },
       // Tambahkan lainnya sesuai kebutuhan
     };
 
@@ -242,10 +243,14 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     return () => { if (map.current) { map.current.remove(); map.current = null; } };
   }, []);
 
+  // ✅ Perbaikan: Gunakan useEffect untuk memperbarui marker hanya saat tickerData atau devices berubah
   useEffect(() => {
     if (!map.current || !tickerData || !devices.length) return;
+
+    // Hapus marker lama
     markersRef.current.forEach(marker => marker?.remove?.());
     markersRef.current = [];
+
     tickerData.forEach(station => {
       const coordinates = getStationCoordinates(station.name);
       if (coordinates) {
@@ -281,7 +286,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         }
       }
     });
-  }, [tickerData, devices, autoSwitchActive]);
+  }, [tickerData, devices]); // ✅ Hanya perbarui saat tickerData atau devices berubah
 
   useEffect(() => {
     const handleClickOutside = (event) => {

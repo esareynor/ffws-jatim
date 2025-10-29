@@ -1,15 +1,10 @@
 // src/components/StationDetail.jsx
 
 import React, { useState, useEffect } from "react";
-<<<<<<< HEAD:frontend/src/components/sensors/StationDetail.jsx
 import SidebarTemplate from "@components/layout/SidebarTemplate";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLocationDot } from '@fortawesome/free-solid-svg-icons';
 import { getStatusColor, getStatusBgColor, getStatusText } from "@/utils/statusUtils";
-=======
-import SidebarTemplate from "./layout/SidebarTemplate"; // ✅ Path relatif ke layout
-import { getStatusColor, getStatusBgColor, getStatusText } from "../utils/statusUtils"; // ✅ Path relatif ke utils
->>>>>>> 1e5ec93fbafc42634963fa2fc95528c7afae9bf9:frontend/src/components/StationDetail.jsx
 
 const StationDetail = ({
     selectedStation,

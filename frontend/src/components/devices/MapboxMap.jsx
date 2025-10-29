@@ -7,7 +7,7 @@ import { fetchDevices } from "../../services/devices";
 import GoogleMapsSearchbar from "../common/GoogleMapsSearchbar";
 
 const MapTooltip = lazy(() => import("./maptooltip"));
-const FilterPanel = lazy(() => import("../FilterPanel.jsx"));
+const FilterPanel = lazy(() => import("/src/components/common/FilterPanel.jsx"));
 const StationDetail = lazy(() => import("../StationDetail.jsx"));
 
 mapboxgl.accessToken = "pk.eyJ1IjoiZGl0b2ZhdGFoaWxsYWgxIiwiYSI6ImNtZjNveGloczAwNncya3E1YzdjcTRtM3MifQ.kIf5rscGYOzvvBcZJ41u8g";

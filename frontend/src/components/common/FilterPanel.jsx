@@ -1,291 +1,158 @@
-import React, { useEffect, useState } from "react";
-import AutoSwitchToggle from "../devices/AutoSwitchToggle";
-import { Sliders, ToggleLeft, ToggleRight, Layers, Keyboard, AlertTriangle } from "lucide-react";
+// src/components/FilterPanel.jsx
 
-/**
- * FilterPanel
- * A responsive panel that slides in from the right on desktop and from the bottom on mobile.
- * Intended to host filter controls like AutoSwitchToggle, checkboxes, etc.
- */
+import React, { useEffect, useState } from "react";
+import { Sliders, ToggleRight, Layers, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
+
 const FilterPanel = ({
   isOpen,
-  onOpen, // tambahkan prop baru untuk membuka panel
+  onOpen,
   onClose,
-  title = "Filter",
   subtitle,
-  children,
   widthClass = "w-80",
   tickerData,
   handleStationChange,
+  handleRegionChange,
   currentStationIndex,
-  handleAutoSwitchToggle
+  currentRegionIndex,
+  handleAutoSwitchToggle,
+  onLayerToggle = () => {},
+  activeLayers = {},
+  administrativeRegions = [],
+  autoSwitchMode = 'station',
 }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState("controls");
-  const [isMobile, setIsMobile] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState(0);
-  const [layersState, setLayersState] = useState([
-    { id: "stations", name: "Stasiun Monitoring", color: "#3B82F6", enabled: false},
-    { id: "rivers", name: "Sungai", color: "#06B6D4", enabled: false },
-    { id: "flood-risk", name: "Area Risiko Banjir", color: "#F59E0B", enabled: false },
-    { id: "rainfall", name: "Data Curah Hujan", color: "#10B981", enabled: false },
-    { id: "elevation", name: "Elevasi Terrain", color: "#8B5CF6", enabled: false },
-    { id: "administrative", name: "Batas Administrasi", color: "#6B7280", enabled: false }
-  ]);
+  const [showLayers, setShowLayers] = useState(false); // ✅ Collapsible Map Layers
+  const [showLegend, setShowLegend] = useState(false); // ✅ Collapsible Legenda Peta
+
+  // ✅ Tambahkan state untuk section baru
+  const [showPetaGenangan, setShowPetaGenangan] = useState(false);
+  const [showKabupatenKota, setShowKabupatenKota] = useState(false);
+  const [showWilayahSungai, setShowWilayahSungai] = useState(false);
+  const [showDaerahAliranSungai, setShowDaerahAliranSungai] = useState(false);
+  const [showSamplingAir, setShowSamplingAir] = useState(false);
+  const [showSensorBanjir, setShowSensorBanjir] = useState(false);
+  const [showPosTinggiMukaAir, setShowPosTinggiMukaAir] = useState(false);
+  const [showPosHujan, setShowPosHujan] = useState(false);
+  const [showPosDugaAir, setShowPosDugaAir] = useState(false);
+  const [showHujanHarian, setShowHujanHarian] = useState(false);
+  const [showLainnya, setShowLainnya] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      setIsVisible(true);
+      const t = setTimeout(() => setIsVisible(true), 10);
+      return () => clearTimeout(t);
     } else {
-      const timeout = setTimeout(() => setIsVisible(false), 300); // Delay untuk transisi
-      return () => clearTimeout(timeout);
+      setIsVisible(false);
     }
   }, [isOpen]);
 
-  // Detect mobile screen size
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Handle swipe down to close on mobile with improved flexibility
-  const handleTouchStart = (e) => {
-    if (!isMobile) return;
-    
-    // Prevent default to avoid scrolling
-    e.preventDefault();
-    setIsDragging(true);
-    setDragOffset(0);
-    
-    const touch = e.touches ? e.touches[0] : e;
-    const startY = touch.clientY;
-    const startTime = Date.now();
-    
-    const handleTouchMove = (e) => {
-      e.preventDefault();
-      const currentTouch = e.touches ? e.touches[0] : e;
-      const currentY = currentTouch.clientY;
-      const deltaY = currentY - startY;
-      
-      // Only allow downward movement
-      if (deltaY > 0) {
-        setDragOffset(deltaY);
-      }
-    };
-    
-    const handleTouchEnd = (e) => {
-      const currentTouch = e.changedTouches ? e.changedTouches[0] : e;
-      const currentY = currentTouch.clientY;
-      const deltaY = currentY - startY;
-      const deltaTime = Date.now() - startTime;
-      const velocity = deltaY / deltaTime; // pixels per ms
-      
-      // More flexible thresholds:
-      // - Close if dragged down more than 120px (increased from 50px)
-      // - Close if fast swipe down (>0.5 px/ms) and dragged more than 60px
-      // - Close if very fast swipe (>1 px/ms) and dragged more than 30px
-      const shouldClose = 
-        deltaY > 120 || 
-        (velocity > 0.5 && deltaY > 60) || 
-        (velocity > 1 && deltaY > 30);
-      
-      if (shouldClose) {
-        setIsVisible(false);
-        setTimeout(() => {
-          onClose && onClose();
-        }, 300);
-      }
-      
-      setIsDragging(false);
-      setDragOffset(0);
-      cleanup();
-    };
-    
-    const cleanup = () => {
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
-      document.removeEventListener('mousemove', handleTouchMove);
-      document.removeEventListener('mouseup', handleTouchEnd);
-    };
-    
-    if (e.type === 'touchstart') {
-      document.addEventListener('touchmove', handleTouchMove, { passive: false });
-      document.addEventListener('touchend', handleTouchEnd);
-    } else {
-      document.addEventListener('mousemove', handleTouchMove);
-      document.addEventListener('mouseup', handleTouchEnd);
-    }
-  };
-
-  // Prevent body scroll when mobile panel is open
-  useEffect(() => {
-    if (isMobile && isOpen) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-    } else {
-      document.body.style.overflow = 'unset';
-      document.body.style.touchAction = 'auto';
-    }
-    
-    return () => {
-      document.body.style.overflow = 'unset';
-      document.body.style.touchAction = 'auto';
-    };
-  }, [isMobile, isOpen]);
-
+  // ✅ Hanya kirim layerId
   const handleLayerToggle = (layerId) => {
-    setLayersState((prev) =>
-      prev.map((layer) =>
-        layer.id === layerId ? { ...layer, enabled: !layer.enabled } : layer
-      )
-    );
+    console.log("🖱️ Klik layer di FilterPanel:", layerId);
+    if (typeof onLayerToggle === 'function') {
+      onLayerToggle(layerId);
+    }
   };
 
-  // Handler untuk trigger close dari backdrop - untuk memberikan animasi
-  const handleTriggerClose = React.useCallback(() => {
-    setIsVisible(false);
-    setTimeout(() => {
-      onClose && onClose();
-    }, 300); // Sama dengan durasi animasi
-  }, [onClose]);
+  if (!isOpen) return null;
 
-  // Expose method untuk parent component
-  useEffect(() => {
-    // Set up event listener untuk trigger close dari backdrop
-    const triggerClose = (event) => {
-      if (event.detail?.type === 'filter-panel') {
-        handleTriggerClose();
-      }
-    };
-    window.addEventListener('triggerCloseFilterPanel', triggerClose);
-    return () => window.removeEventListener('triggerCloseFilterPanel', triggerClose);
-  }, [handleTriggerClose]);
-
-  // Tombol trigger filter
-  // Selalu tampil di kanan atas, di luar panel
-  // Panel tetap muncul seperti biasa
   return (
     <>
-      <div className="absolute top-2 sm:top-4 right-2 sm:right-4 z-[80] h-12">
+      {/* Tombol buka filter */}
+      <div className="absolute top-4 right-4 z-[80]">
         <button
-          onClick={onOpen}
-          className="relative inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white hover:bg-blue-50 transition-colors shadow-lg"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onOpen();
+          }}
+          className="relative inline-flex items-center justify-center w-12 h-12 rounded-full bg-white hover:bg-blue-50 transition-colors shadow-md"
           title="Buka Filter"
           aria-label="Buka Filter"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="relative z-10 w-6 h-6 text-blue-600 mix-blend-normal pointer-events-none">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="relative z-10 w-6 h-6 text-blue-600">
             <path d="M22 3H2l8 9v7l4 2v-9l8-9z"></path>
           </svg>
         </button>
       </div>
-      {isOpen && (
-        <>
-          {/* Panel */}
-          <div
-            className={`fixed bg-white shadow-2xl z-[50] transform flex flex-col ${
-              isMobile 
-              // h-[60vh] ukuran tinggi modal
-                ? `bottom-0 left-0 right-0 h-[70vh] rounded-t-2xl ${
-                    isVisible ? "opacity-100" : "opacity-0"
-                  }`
-                : `top-16 sm:top-20 right-2 sm:right-0 h-[calc(100vh-2rem)] sm:h-[calc(80%-8%)] w-[75%] sm:w-50 md:w-82 max-w-[300px] sm:max-w-none rounded-lg transition-all duration-300 ease-in-out ${
-            isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
-                  }`
-          }`}
-          style={{ 
-            willChange: "transform, opacity",
-            transform: isMobile 
-              ? isDragging 
-                ? `translateY(${dragOffset}px)` 
-                : isVisible 
-                  ? "translateY(0)" 
-                  : "translateY(100%)"
-              : undefined,
-            transition: isMobile && !isDragging 
-              ? "transform 300ms ease-in-out, opacity 300ms ease-in-out" 
-              : undefined
-          }}
-        >
-          {/* Header */}
-          <div 
-            className={`flex items-center justify-between p-4 border-b border-gray-200 transition-colors ${
-              isMobile ? 'rounded-t-2xl' : 'rounded-t-lg'
-            } ${isMobile ? 'cursor-grab active:cursor-grabbing' : ''} ${
-              isMobile && isDragging ? 'bg-gray-100' : 'bg-gray-50/50'
-            }`}
-            onTouchStart={isMobile ? handleTouchStart : undefined}
-            onMouseDown={isMobile ? handleTouchStart : undefined}
-          >
-            {/* Mobile drag handle */}
-            {isMobile && (
-              <div className={`absolute top-2 left-1/2 transform -translate-x-1/2 w-10 h-1.5 rounded-full transition-all duration-200 ${
-                isDragging 
-                  ? 'bg-gray-600 w-12' 
-                  : 'bg-gray-400 hover:bg-gray-500'
-              }`}></div>
-            )}
-            <div className="flex items-center gap-2">
-              <Sliders className="w-5 h-5 text-blue-600" />
-              <div>
-                <h2 className="text-lg font-semibold text-gray-800">Filter &amp; Controls</h2>
-              </div>
+
+      {/* Panel Filter */}
+      <div
+        className={`fixed rounded-tl-lg rounded-bl-lg top-20 right-0 h-[calc(80%-8%)] ${widthClass} bg-white shadow-2xl z-[1000] transform transition-all duration-300 ease-in-out flex flex-col ${
+          isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
+        }`}
+        style={{
+          pointerEvents: isVisible ? "auto" : "none",
+          willChange: "transform, opacity"
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="rounded-tl-lg flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50/50">
+          <div className="flex items-center gap-2">
+            <Sliders className="w-5 h-5 text-blue-600" />
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800">Filter &amp; Controls</h2>
+              {subtitle && <p className="text-gray-500 text-sm">{subtitle}</p>}
             </div>
-            {/* Desktop close button */}
-            {!isMobile && (
-              <button
-                onClick={() => {
-                  setIsVisible(false);
-                  setTimeout(() => {
-                    onClose && onClose();
-                  }, 300);
-                }}
-                className="p-1.5 hover:bg-gray-200 rounded-md transition-colors"
-                title="Tutup"
-                aria-label="Tutup panel filter"
-              >
-                <span className="sr-only">Close</span>
-                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            )}
           </div>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsVisible(false);
+              setTimeout(onClose, 300);
+            }}
+            className="p-1.5 hover:bg-gray-200 rounded-md transition-colors"
+            title="Tutup"
+            aria-label="Tutup panel filter"
+          >
+            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
 
-          {/* Content */}
-          <div className={`flex-1 overflow-y-auto overflow-x-hidden p-4 ${
-            isMobile ? 'pb-6' : ''
-          }`}>
-            {/* Section Controls */}
-            <section className="space-y-3">
-              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                <ToggleRight className="w-4 h-4 text-blue-600" />
-                Device Auto Switch
-              </h3>
-              <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-                <AutoSwitchToggle
-                  tickerData={tickerData}
-                  onStationChange={handleStationChange}
-                  currentStationIndex={currentStationIndex}
-                  onAutoSwitchToggle={handleAutoSwitchToggle}
-                />
-              </div>
-            </section>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4">
+          {/* Auto Switch */}
+          <section className="space-y-3">
+            <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+              <ToggleRight className="w-4 h-4 text-blue-600" />
+              Device Auto Switch
+            </h3>
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+              {/* AutoSwitchToggle komponen bisa ditambahkan di sini jika dibutuhkan */}
+            </div>
+          </section>
 
-            {/* Section Layers */}
-            <section className="mt-4 space-y-4">
-              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+          {/* SECTION 1: MAP LAYERS */}
+          <section className="mt-4 space-y-4">
+            {/* Header Map Layers + Panah */}
+            <div
+              onClick={() => setShowLayers(!showLayers)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
                 <Layers className="w-4 h-4 text-blue-600" />
-                Map Layers
-              </h3>
-              <div className="space-y-3">
-                {layersState.map((layer) => (
+                <span className="font-semibold text-gray-700">Map Layers</span>
+              </div>
+              {showLayers ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {/* Isi Layers — MUNCUL SAAT showLayers = true */}
+            {showLayers && (
+              <div className="pl-4 pt-2 pb-4 space-y-3">
+                {[
+                  { id: "rivers", name: "Sungai", color: "#06B6D4" },
+                  { id: "flood-risk", name: "Area Risiko Banjir", color: "#F59E0B" },
+                  { id: "rainfall", name: "Data Curah Hujan", color: "#10B981" },
+                  { id: "administrative", name: "Batas Administrasi", color: "#6B7280" }
+                ].map((layer) => (
                   <div
                     key={layer.id}
                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
@@ -300,55 +167,760 @@ const FilterPanel = ({
                     <button
                       onClick={() => handleLayerToggle(layer.id)}
                       className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                        layer.enabled ? "bg-blue-600" : "bg-gray-300"
+                        activeLayers[layer.id] ? "bg-blue-600" : "bg-gray-300"
                       }`}
                       type="button"
+                      aria-pressed={!!activeLayers[layer.id]}
                     >
                       <span
                         className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                          layer.enabled ? "translate-x-5" : "translate-x-1"
+                          activeLayers[layer.id] ? "translate-x-5" : "translate-x-1"
                         }`}
                       />
                     </button>
                   </div>
                 ))}
               </div>
+            )}
+          </section>
 
-              <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200 space-y-1">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5" />
-                  <div className="text-xs text-amber-800">
-                    <div className="font-medium">Layer Control</div>
-                    <div className="mt-1">Beberapa layer mungkin memerlukan waktu loading tambahan.</div>
+          {/* SECTION 2: LEGENDA PETA */}
+          <section className="mt-4 space-y-4">
+            {/* Header Legenda Peta + Panah */}
+            <div
+              onClick={() => setShowLegend(!showLegend)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                {/* Ikon legenda — bisa gunakan Layers atau custom */}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                  <path d="M12 2L2 7l10 5 10-5M2 12l10 5 10-5M2 7v10l10 5m0 0v-10M12 12v10l10-5M12 12L2 7m10 5v10"/>
+                </svg>
+                <span className="font-semibold text-gray-700">Legenda Peta</span>
+              </div>
+              {showLegend ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {/* Isi Legenda Peta — MUNCUL SAAT showLegend = true */}
+            {showLegend && (
+              <div className="pl-4 pt-2 pb-4 space-y-3">
+                {/* Data Master */}
+                <div>
+                  <div className="font-medium text-xs text-gray-600 mb-1">Data Master</div>
+                  <div className="space-y-1 pl-2">
+                    {[
+                      { id: "dinas-pusda", name: "Dinas PUSDA Jatim", color: "#00008B" },
+                      { id: "upt-welang-pekalen", name: "UPT PSDA Welang Pekalen Pasuruan", color: "#00008B" },
+                      { id: "upt-madura", name: "UPT PSDA Madura Pamekasan", color: "#00008B" },
+                      { id: "upt-bengawan-solo", name: "UPT PSDA Bengawan Solo Bojonegoro", color: "#00008B" },
+                      { id: "upt-brantas", name: "UPT PSDA Brantas Kediri", color: "#00008B" },
+                      { id: "upt-sampean", name: "UPT PSDA Sampean Setail Bondowoso", color: "#00008B" },
+                      { id: "ws-baru-bajul-mati", name: "WS Baru Bajul Mati", color: "#8A2BE2" },
+                      { id: "ws-bondoyudo-bedadung", name: "WS Bondoyudo Bedadung", color: "#00CED1" },
+                      { id: "ws-bengawan-solo", name: "WS Bengawan Solo", color: "#FF7F50" },
+                      { id: "ws-brantas", name: "WS Brantas", color: "#FF4500" },
+                      { id: "ws-madura-bawean", name: "WS Madura Bawean", color: "#FFD700" },
+                      { id: "ws-welang-rejoso", name: "WS Welang Rejoso", color: "#FF00FF" },
+                      { id: "ws-pekalen-sampean", name: "WS Pekalen Sampean", color: "#FF69B4" },
+                    ].map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: item.color }}
+                          ></span>
+                          <span className="text-xs text-gray-700">{item.name}</span>
+                        </div>
+                        <button
+                          onClick={() => handleLayerToggle(item.id)}
+                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                            activeLayers[item.id] ? "bg-blue-600" : "bg-gray-300"
+                          }`}
+                          type="button"
+                          aria-pressed={!!activeLayers[item.id]}
+                        >
+                          <span
+                            className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                              activeLayers[item.id] ? "translate-x-5" : "translate-x-1"
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* SIH3 */}
+                <div>
+                  <div className="font-medium text-xs text-gray-600 mb-1">SIH3</div>
+                  <div className="space-y-1 pl-2">
+                    {[
+                      { id: "awlr", name: "AWLR", color: "#00FF00" },
+                      { id: "pos-duga-air", name: "Pos Duga Air", color: "#FFA500" },
+                    ].map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: item.color }}
+                          ></span>
+                          <span className="text-xs text-gray-700">{item.name}</span>
+                        </div>
+                        <button
+                          onClick={() => handleLayerToggle(item.id)}
+                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                            activeLayers[item.id] ? "bg-blue-600" : "bg-gray-300"
+                          }`}
+                          type="button"
+                          aria-pressed={!!activeLayers[item.id]}
+                        >
+                          <span
+                            className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                              activeLayers[item.id] ? "translate-x-5" : "translate-x-1"
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* IRIGASI */}
+                <div>
+                  <div className="font-medium text-xs text-gray-600 mb-1">IRIGASI</div>
+                  <div className="space-y-1 pl-2">
+                    {[
+                      { id: "jaringan-irigasi", name: "Jaringan Irigasi", color: "#800080", isLine: true },
+                    ].map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-4 h-1 ${item.isLine ? 'w-full' : ''}`}
+                            style={{ backgroundColor: item.color }}
+                          ></div>
+                          <span className="text-xs text-gray-700">{item.name}</span>
+                        </div>
+                        <button
+                          onClick={() => handleLayerToggle(item.id)}
+                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                            activeLayers[item.id] ? "bg-blue-600" : "bg-gray-300"
+                          }`}
+                          type="button"
+                          aria-pressed={!!activeLayers[item.id]}
+                        >
+                          <span
+                            className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                              activeLayers[item.id] ? "translate-x-5" : "translate-x-1"
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
-            </section>
-          </div>
+            )}
+          </section>
 
-          {/* Footer */}
-          <div className={`border-t border-gray-200 p-4 bg-gray-50/50 ${
-            isMobile ? 'rounded-b-2xl pb-6' : 'rounded-b-lg'
-          }`}>
-            <div className="flex items-center justify-between text-xs text-gray-500">
-              <div className="flex items-center gap-4">
-                {/* <div className="flex items-center gap-1">
-                  <Keyboard className="w-3 h-3" />
-                  <span>ESC to close</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span>Ctrl+Tab to switch</span>
-                </div> */}
-              <div className="flex items-center gap-1">
-                <span>Map Layer Control</span>
+          {/* SECTION 3: PETA GENANGAN WELANG #1 */}
+          <section className="mt-4 space-y-4">
+            <div
+              onClick={() => setShowPetaGenangan(!showPetaGenangan)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                </svg>
+                <span className="font-semibold text-gray-700">Peta Genangan Welang #1</span>
+              </div>
+              {showPetaGenangan ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {showPetaGenangan && (
+              <div className="pl-4 pt-2 pb-4 space-y-2">
+                <div
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-3 h-3 rounded-full bg-purple-500"></span>
+                    <span className="text-xs text-gray-700">Peta Genangan Welang #1</span>
+                  </div>
+                  <button
+                    onClick={() => handleLayerToggle('peta-genangan-welang')}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      activeLayers['peta-genangan-welang'] ? "bg-blue-600" : "bg-gray-300"
+                    }`}
+                    type="button"
+                    aria-pressed={!!activeLayers['peta-genangan-welang']}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                        activeLayers['peta-genangan-welang'] ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
                 </div>
               </div>
-              <div className="text-gray-400">Filter v1.0</div>
+            )}
+          </section>
+
+          {/* SECTION 4: KABUPATEN KOTA */}
+          <section className="mt-4 space-y-4">
+            <div
+              onClick={() => setShowKabupatenKota(!showKabupatenKota)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                </svg>
+                <span className="font-semibold text-gray-700">Kabupaten Kota</span>
+              </div>
+              {showKabupatenKota ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {showKabupatenKota && (
+              <div className="pl-4 pt-2 pb-4 space-y-2">
+                <div
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-3 h-3 rounded-full bg-indigo-500"></span>
+                    <span className="text-xs text-gray-700">Kabupaten Kota</span>
+                  </div>
+                  <button
+                    onClick={() => handleLayerToggle('kabupaten-kota')}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      activeLayers['kabupaten-kota'] ? "bg-blue-600" : "bg-gray-300"
+                    }`}
+                    type="button"
+                    aria-pressed={!!activeLayers['kabupaten-kota']}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                        activeLayers['kabupaten-kota'] ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* SECTION 5: WILAYAH SUNGAI */}
+          <section className="mt-4 space-y-4">
+            <div
+              onClick={() => setShowWilayahSungai(!showWilayahSungai)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                </svg>
+                <span className="font-semibold text-gray-700">Wilayah Sungai</span>
+              </div>
+              {showWilayahSungai ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {showWilayahSungai && (
+              <div className="pl-4 pt-2 pb-4 space-y-2">
+                <div
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-3 h-3 rounded-full bg-green-500"></span>
+                    <span className="text-xs text-gray-700">Wilayah Sungai</span>
+                  </div>
+                  <button
+                    onClick={() => handleLayerToggle('wilayah-sungai')}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      activeLayers['wilayah-sungai'] ? "bg-blue-600" : "bg-gray-300"
+                    }`}
+                    type="button"
+                    aria-pressed={!!activeLayers['wilayah-sungai']}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                        activeLayers['wilayah-sungai'] ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* SECTION 6: DAERAH ALIRAN SUNGAI */}
+          <section className="mt-4 space-y-4">
+            <div
+              onClick={() => setShowDaerahAliranSungai(!showDaerahAliranSungai)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                </svg>
+                <span className="font-semibold text-gray-700">Daerah Aliran Sungai</span>
+              </div>
+              {showDaerahAliranSungai ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {showDaerahAliranSungai && (
+              <div className="pl-4 pt-2 pb-4 space-y-2">
+                <div
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-3 h-3 rounded-full bg-blue-500"></span>
+                    <span className="text-xs text-gray-700">Daerah Aliran Sungai</span>
+                  </div>
+                  <button
+                    onClick={() => handleLayerToggle('daerah-aliran-sungai')}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      activeLayers['daerah-aliran-sungai'] ? "bg-blue-600" : "bg-gray-300"
+                    }`}
+                    type="button"
+                    aria-pressed={!!activeLayers['daerah-aliran-sungai']}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                        activeLayers['daerah-aliran-sungai'] ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* SECTION 7: TITIK SAMPLING KUALITAS AIR DINAS PU SDA */}
+          <section className="mt-4 space-y-4">
+            <div
+              onClick={() => setShowSamplingAir(!showSamplingAir)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                </svg>
+                <span className="font-semibold text-gray-700">Titik Sampling Kualitas Air Dinas PU SDA</span>
+              </div>
+              {showSamplingAir ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {showSamplingAir && (
+              <div className="pl-4 pt-2 pb-4 space-y-2">
+                <div
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-3 h-3 rounded-full bg-teal-500"></span>
+                    <span className="text-xs text-gray-700">Titik Sampling Kualitas Air</span>
+                  </div>
+                  <button
+                    onClick={() => handleLayerToggle('sampling-air')}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      activeLayers['sampling-air'] ? "bg-blue-600" : "bg-gray-300"
+                    }`}
+                    type="button"
+                    aria-pressed={!!activeLayers['sampling-air']}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                        activeLayers['sampling-air'] ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* SECTION 8: SENSOR BANJIR BPBD JATIM */}
+          <section className="mt-4 space-y-4">
+            <div
+              onClick={() => setShowSensorBanjir(!showSensorBanjir)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                </svg>
+                <span className="font-semibold text-gray-700">SENSOR BANJIR BPBD JATIM</span>
+              </div>
+              {showSensorBanjir ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {showSensorBanjir && (
+              <div className="pl-4 pt-2 pb-4 space-y-2">
+                <div
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-3 h-3 rounded-full bg-red-500"></span>
+                    <span className="text-xs text-gray-700">SENSOR BANJIR BPBD JATIM</span>
+                  </div>
+                  <button
+                    onClick={() => handleLayerToggle('sensor-banjir')}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      activeLayers['sensor-banjir'] ? "bg-blue-600" : "bg-gray-300"
+                    }`}
+                    type="button"
+                    aria-pressed={!!activeLayers['sensor-banjir']}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                        activeLayers['sensor-banjir'] ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* SECTION 9: POS TINGGI MUKA AIR DAM PROVINSI JAWA TIMUR */}
+          <section className="mt-4 space-y-4">
+            <div
+              onClick={() => setShowPosTinggiMukaAir(!showPosTinggiMukaAir)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                </svg>
+                <span className="font-semibold text-gray-700">Pos Tinggi Muka Air Dam Provinsi Jawa Timur</span>
+              </div>
+              {showPosTinggiMukaAir ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {showPosTinggiMukaAir && (
+              <div className="pl-4 pt-2 pb-4 space-y-2">
+                <div
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-3 h-3 rounded-full bg-orange-500"></span>
+                    <span className="text-xs text-gray-700">Pos Tinggi Muka Air Dam</span>
+                  </div>
+                  <button
+                    onClick={() => handleLayerToggle('pos-tinggi-muka-air')}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      activeLayers['pos-tinggi-muka-air'] ? "bg-blue-600" : "bg-gray-300"
+                    }`}
+                    type="button"
+                    aria-pressed={!!activeLayers['pos-tinggi-muka-air']}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                        activeLayers['pos-tinggi-muka-air'] ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* SECTION 10: POS HUJAN */}
+          <section className="mt-4 space-y-4">
+            <div
+              onClick={() => setShowPosHujan(!showPosHujan)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                </svg>
+                <span className="font-semibold text-gray-700">Pos Hujan</span>
+              </div>
+              {showPosHujan ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {showPosHujan && (
+              <div className="pl-4 pt-2 pb-4 space-y-2">
+                {[
+                  { id: "pos-hujan-ws-brantas", name: "Pos Hujan WS Brantas PJT 1", color: "#FF6347" },
+                  { id: "pos-hujan-ws-bengawan-solo", name: "Pos Hujan WS Bengawan Solo PJT 1", color: "#FFA500" },
+                  { id: "pos-hujan-ws-bbws-solo", name: "Pos Hujan WS BBWS Solo", color: "#4682B4" },
+                  { id: "pos-hujan-ws-bbws-brantas", name: "Pos Hujan BBWS Brantas", color: "#008080" },
+                ].map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: item.color }}
+                      ></span>
+                      <span className="text-xs text-gray-700">{item.name}</span>
+                    </div>
+                    <button
+                      onClick={() => handleLayerToggle(item.id)}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                        activeLayers[item.id] ? "bg-blue-600" : "bg-gray-300"
+                      }`}
+                      type="button"
+                      aria-pressed={!!activeLayers[item.id]}
+                    >
+                      <span
+                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                          activeLayers[item.id] ? "translate-x-5" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* SECTION 11: POS DUGA AIR */}
+          <section className="mt-4 space-y-4">
+            <div
+              onClick={() => setShowPosDugaAir(!showPosDugaAir)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                </svg>
+                <span className="font-semibold text-gray-700">Pos Duga Air</span>
+              </div>
+              {showPosDugaAir ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {showPosDugaAir && (
+              <div className="pl-4 pt-2 pb-4 space-y-2">
+                {[
+                  { id: "pos-duga-air-ws-brantas", name: "Pos Duga Air WS Brantas PJT 1", color: "#FF6347" },
+                  { id: "pos-duga-air-ws-bengawan-solo", name: "Pos Duga Air WS Bengawan Solo PJT 1", color: "#FFA500" },
+                  { id: "pos-duga-air-pu-sda", name: "Pos Duga Air PU SDA", color: "#4682B4" },
+                  { id: "pos-duga-air-jam-jam-an", name: "Pos Duga Air Jam-jam an PU SDA", color: "#008080" },
+                  { id: "pos-duga-air-bbws-solo", name: "Pos Duga Air BBWS Solo", color: "#8A2BE2" },
+                  { id: "pos-duga-air-bbws-brantas", name: "Pos Duga Air BBWS Brantas", color: "#FF1493" },
+                ].map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: item.color }}
+                      ></span>
+                      <span className="text-xs text-gray-700">{item.name}</span>
+                    </div>
+                    <button
+                      onClick={() => handleLayerToggle(item.id)}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                        activeLayers[item.id] ? "bg-blue-600" : "bg-gray-300"
+                      }`}
+                      type="button"
+                      aria-pressed={!!activeLayers[item.id]}
+                    >
+                      <span
+                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                          activeLayers[item.id] ? "translate-x-5" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* SECTION 12: HUJAN HARIA N */}
+          <section className="mt-4 space-y-4">
+            <div
+              onClick={() => setShowHujanHarian(!showHujanHarian)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                </svg>
+                <span className="font-semibold text-gray-700">Hujan Harian</span>
+              </div>
+              {showHujanHarian ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {showHujanHarian && (
+              <div className="pl-4 pt-2 pb-4 space-y-2">
+                {[
+                  { id: "hujan-harian-ws-welang-rejoso", name: "Hujan Harian WS Welang Rejoso (PU SDA)", color: "#FF6347" },
+                  { id: "hujan-harian-ws-pekalen-sampean", name: "Hujan Harian WS Pekalen Sampean (PU SDA)", color: "#FFA500" },
+                  { id: "hujan-harian-ws-madura-bawean", name: "Hujan Harian WS Madura Bawean (PU SDA)", color: "#4682B4" },
+                  { id: "hujan-harian-ws-brantas", name: "Hujan Harian WS Brantas (PU SDA)", color: "#008080" },
+                  { id: "hujan-harian-ws-bondoyudo-bedadung", name: "Hujan Harian WS Bondoyudo Bedadung (PU SDA)", color: "#8A2BE2" },
+                  { id: "hujan-harian-ws-bengawan-solo", name: "Hujan Harian WS Bengawan Solo (PU SDA)", color: "#FF1493" },
+                  { id: "hujan-harian-ws-baru-bajulmati", name: "Hujan Harian WS Baru Bajulmati (PU SDA)", color: "#228B22" },
+                ].map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: item.color }}
+                      ></span>
+                      <span className="text-xs text-gray-700">{item.name}</span>
+                    </div>
+                    <button
+                      onClick={() => handleLayerToggle(item.id)}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                        activeLayers[item.id] ? "bg-blue-600" : "bg-gray-300"
+                      }`}
+                      type="button"
+                      aria-pressed={!!activeLayers[item.id]}
+                    >
+                      <span
+                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                          activeLayers[item.id] ? "translate-x-5" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* SECTION 13: DATA LAINNYA */}
+          <section className="mt-4 space-y-4">
+            <div
+              onClick={() => setShowLainnya(!showLainnya)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                </svg>
+                <span className="font-semibold text-gray-700">Data Lainnya</span>
+              </div>
+              {showLainnya ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {showLainnya && (
+              <div className="pl-4 pt-2 pb-4 space-y-2">
+                {[
+                  { id: "data-tinggi-muka-air-harian-pamekasan", name: "Data Tinggi Muka Air Harian Dinas PUPR Pamekasan", color: "#FF6347" },
+                  { id: "data-meteorologi-juanda", name: "Data Meteorologi Juanda", color: "#FFA500" },
+                  { id: "data-hujan-harian-pamekasan", name: "Data Hujan Harian Dinas PUPR Pamekasan", color: "#4682B4" },
+                  { id: "awlr-bidang-sungai-waduk", name: "AWLR Bidang Sungai Waduk dan Pantai Dinas PU SDA Jatim", color: "#008080" },
+                ].map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: item.color }}
+                      ></span>
+                      <span className="text-xs text-gray-700">{item.name}</span>
+                    </div>
+                    <button
+                      onClick={() => handleLayerToggle(item.id)}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                        activeLayers[item.id] ? "bg-blue-600" : "bg-gray-300"
+                      }`}
+                      type="button"
+                      aria-pressed={!!activeLayers[item.id]}
+                    >
+                      <span
+                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                          activeLayers[item.id] ? "translate-x-5" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5" />
+              <div className="text-xs text-amber-800">
+                <div className="font-medium">Layer Control</div>
+                <div className="mt-1">Klik toggle untuk mengaktifkan/menonaktifkan layer.</div>
+                <div className="mt-1">Klik panah di sebelah "Map Layers" atau "Legenda Peta" untuk melihat detailnya.</div>
+              </div>
             </div>
           </div>
         </div>
-        </>
-      )}
+
+        {/* Footer */}
+        <div className="rounded-bl-lg border-t border-gray-200 p-4 bg-gray-50/50">
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            <span>Map Layer Control</span>
+            <div className="text-gray-400">Filter v1.0</div>
+          </div>
+        </div>
+      </div>
     </>
   );
 };

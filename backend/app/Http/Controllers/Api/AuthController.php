@@ -40,9 +40,6 @@ class AuthController extends Controller
             'status' => 'active',
         ]);
 
-        // 🧹 Hapus semua token lama user ini (jika ada) sebelum buat token baru
-        $this->cleanupAllTokensForUser($user->id);
-
         $tokenResult = $user->createToken('auth_token');
         $token = $tokenResult->plainTextToken;
         
@@ -98,7 +95,8 @@ class AuthController extends Controller
             ], 403);
         }
 
-        // 🧹 Hapus semua token lama user ini sebelum buat token baru
+        // 🧹 Cleanup token expired secara global dan hapus semua token lama user ini
+        $this->cleanupExpiredTokensGlobally();
         $this->cleanupAllTokensForUser($user->id);
 
         $tokenResult = $user->createToken('auth_token');
@@ -161,8 +159,8 @@ class AuthController extends Controller
         // Revoke current token
         $request->user()->currentAccessToken()->delete();
         
-        // 🧹 Cleanup token expired untuk user ini (opsional - untuk performa)
-        $this->cleanupExpiredTokensForUser($user->id);
+        // 🧹 Cleanup token expired secara global
+        $this->cleanupExpiredTokensGlobally();
         
         // Create new token
         $tokenResult = $user->createToken('auth_token');
@@ -186,24 +184,21 @@ class AuthController extends Controller
     }
 
     /**
-     * Cleanup expired tokens for specific user
+     * Cleanup expired tokens secara global (semua user)
+     * Method ini akan dipanggil setiap kali ada aktivitas login/register/refresh
      * 
-     * @param int $userId
      * @return int Number of deleted tokens
      */
-    private function cleanupExpiredTokensForUser($userId)
+    private function cleanupExpiredTokensGlobally()
     {
-        $deletedCount = PersonalAccessToken::where('tokenable_id', $userId)
-            ->where('tokenable_type', 'App\\Models\\User')
-            ->where(function ($query) {
-                $query->where('expires_at', '<', now())
-                      ->orWhere(function ($subQuery) {
-                          // Token yang dibuat lebih dari 24 jam yang lalu dan tidak ada expires_at
-                          $subQuery->whereNull('expires_at')
-                                   ->where('created_at', '<', now()->subDay());
-                      });
-            })
-            ->delete();
+        $deletedCount = PersonalAccessToken::where(function ($query) {
+            $query->where('expires_at', '<', now())
+                  ->orWhere(function ($subQuery) {
+                      // Token yang dibuat lebih dari 24 jam yang lalu dan tidak ada expires_at
+                      $subQuery->whereNull('expires_at')
+                               ->where('created_at', '<', now()->subDay());
+                  });
+        })->delete();
 
         return $deletedCount;
     }

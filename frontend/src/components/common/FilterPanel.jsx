@@ -148,6 +148,26 @@ const FilterPanel = ({
     );
   };
 
+  // Handler untuk trigger close dari backdrop - untuk memberikan animasi
+  const handleTriggerClose = React.useCallback(() => {
+    setIsVisible(false);
+    setTimeout(() => {
+      onClose && onClose();
+    }, 300); // Sama dengan durasi animasi
+  }, [onClose]);
+
+  // Expose method untuk parent component
+  useEffect(() => {
+    // Set up event listener untuk trigger close dari backdrop
+    const triggerClose = (event) => {
+      if (event.detail?.type === 'filter-panel') {
+        handleTriggerClose();
+      }
+    };
+    window.addEventListener('triggerCloseFilterPanel', triggerClose);
+    return () => window.removeEventListener('triggerCloseFilterPanel', triggerClose);
+  }, [handleTriggerClose]);
+
   // Tombol trigger filter
   // Selalu tampil di kanan atas, di luar panel
   // Panel tetap muncul seperti biasa
@@ -215,15 +235,6 @@ const FilterPanel = ({
               <Sliders className="w-5 h-5 text-blue-600" />
               <div>
                 <h2 className="text-lg font-semibold text-gray-800">Filter &amp; Controls</h2>
-                {subtitle && <p className="text-gray-500 text-sm">{subtitle}</p>}
-                {isMobile && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    {isDragging 
-                      ? `Geser ${dragOffset > 60 ? 'lebih jauh' : 'lagi'} untuk menutup` 
-                      : 'Geser ke bawah untuk menutup'
-                    }
-                  </p>
-                )}
               </div>
             </div>
             {/* Desktop close button */}

@@ -127,15 +127,7 @@ const SidebarTemplate  = ({
   
   return (
     <>
-      {/* Backdrop for mobile */}
-      {isMobile && (
-        <div
-          className={`fixed inset-0 bg-black/50 z-[50] transition-opacity duration-300 ease-out ${
-            isVisible ? 'opacity-100' : 'opacity-0'
-          }`}
-          onClick={handleClose}
-        />
-      )}
+      {/* Backdrop dihapus sesuai permintaan */}
 
       {/* Panel */}
       <div 
@@ -196,17 +188,6 @@ const SidebarTemplate  = ({
             {headerContent || (
               <>
                 <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-                {subtitle && <p className="text-gray-500 text-sm">{subtitle}</p>}
-                
-                {/* Mobile instruction */}
-                {isMobile && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    {isDragging 
-                      ? `Geser ${dragOffset > 60 ? 'lebih jauh' : 'lagi'} untuk menutup` 
-                      : 'Geser ke bawah untuk menutup'
-                    }
-                  </p>
-                )}
                 
                 {/* --- PERUBAHAN UTAMA DI SINI --- */}
                 {showArrow && !isDetailPanelOpen && (

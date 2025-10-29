@@ -2,46 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Sliders, ToggleRight, Layers, AlertTriangle } from "lucide-react";
-
-const AutoSwitchToggle = ({ onAutoSwitchToggle }) => {
-  const [isAutoSwitchOn, setIsAutoSwitchOn] = useState(true);
-
-  const handleToggle = () => {
-    const newState = !isAutoSwitchOn;
-    setIsAutoSwitchOn(newState);
-    if (onAutoSwitchToggle) {
-      onAutoSwitchToggle(newState);
-    }
-  };
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <label htmlFor="auto-switch" className="text-sm font-medium text-gray-700">
-          Auto-Switch Stations
-        </label>
-        <button
-          id="auto-switch"
-          onClick={handleToggle}
-          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-            isAutoSwitchOn ? "bg-blue-600" : "bg-gray-300"
-          }`}
-          type="button"
-          aria-pressed={isAutoSwitchOn}
-        >
-          <span
-            className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-              isAutoSwitchOn ? "translate-x-5" : "translate-x-1"
-            }`}
-          />
-        </button>
-      </div>
-      <p className="text-xs text-gray-500">
-        Automatically cycles through device locations.
-      </p>
-    </div>
-  );
-};
+// import AutoSwitchToggle from "./devices/AutoSwitchToggle"; // Perhatikan titik (.)
 
 const FilterPanel = ({
   isOpen,
@@ -51,10 +12,14 @@ const FilterPanel = ({
   widthClass = "w-80",
   tickerData,
   handleStationChange,
+  handleRegionChange, // New prop
   currentStationIndex,
+  currentRegionIndex, // New prop
   handleAutoSwitchToggle,
   onLayerToggle = () => {},
   activeLayers = {},
+  administrativeRegions = [], // New prop
+  autoSwitchMode = 'station', // New prop
 }) => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -151,7 +116,18 @@ const FilterPanel = ({
               Device Auto Switch
             </h3>
             <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-              <AutoSwitchToggle onAutoSwitchToggle={handleAutoSwitchToggle} />
+              {/* <AutoSwitchToggle
+                tickerData={tickerData}
+                administrativeRegions={administrativeRegions}
+                autoSwitchMode={autoSwitchMode}
+                onStationChange={handleStationChange}
+                onRegionChange={handleRegionChange}
+                currentStationIndex={currentStationIndex}
+                currentRegionIndex={currentRegionIndex}
+                onAutoSwitchToggle={handleAutoSwitchToggle}
+                interval={5000}
+                stopDelay={5000}
+              /> */}
             </div>
           </section>
 

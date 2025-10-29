@@ -1,9 +1,10 @@
 // src/components/devices/MapboxMap.jsx
+
 import React, { useEffect, useRef, useState, lazy, Suspense } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { fetchDevices } from "../../services/devices";
-import GoogleMapsSearchbar from "/src/components/common/GoogleMapsSearchbar";
+import GoogleMapsSearchbar from "../common/GoogleMapsSearchbar";
 
 const MapTooltip = lazy(() => import("./maptooltip"));
 const FilterPanel = lazy(() => import("../FilterPanel.jsx"));
@@ -25,13 +26,17 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
   const [currentStationIndex, setCurrentStationIndex] = useState(0);
   const [selectedStationCoords, setSelectedStationCoords] = useState(null);
 
+  // ✅ State untuk active layers — termasuk wilayah legenda
   const [activeLayers, setActiveLayers] = useState({
     rivers: false,
     'flood-risk': false,
     rainfall: false,
-    elevation: false,
     administrative: false,
+    // Wilayah-wilayah dari legenda peta — akan ditambahkan dinamis
   });
+
+  // ✅ State untuk menyimpan reference source & layer per wilayah
+  const [regionLayers, setRegionLayers] = useState({});
 
   const [administrativeGeojson, setAdministrativeGeojson] = useState(null);
   const administrativeSourceId = 'administrative-boundaries';
@@ -55,7 +60,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     traverse(geometry.coordinates);
     return bounds;
   };
-  
+
   useEffect(() => {
     const loadDevices = async () => {
       try {
@@ -119,8 +124,100 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
 
   const handleAutoSwitchToggle = (isActive) => setAutoSwitchActive(isActive);
 
+  // ✅ Fungsi untuk mengelola layer wilayah
+  const handleRegionLayerToggle = async (regionId, isActive) => {
+    if (!map.current || !mapLoaded) return;
+
+    const regionConfig = {
+      'ws-baru-bajul-mati': { filename: 'WSBaruBajulMati.json', color: '#8A2BE2' },
+      'ws-bengawan-solo': { filename: 'WSBengawanSolo.json', color: '#FF7F50' },
+      'ws-bondoyudo-bedadung': { filename: 'WSBondoyudoBedadung.json', color: '#00CED1' },
+      'ws-brantas': { filename: 'WSBrantas.json', color: '#FF4500' },
+      'ws-pekalen-sampean': { filename: 'WSPekalenSampean.json', color: '#FF69B4' },
+      'ws-welang-rejoso': { filename: 'WSWelangRejoso.json', color: '#FF00FF' },
+      'ws-madura-bawean': { filename: 'WSMaduraBawean.json', color: '#FFD700' },
+      // Tambahkan lainnya sesuai kebutuhan
+    };
+
+    const config = regionConfig[regionId];
+    if (!config) return;
+
+    const sourceId = `region-${regionId}`;
+    const layerId = `region-${regionId}-fill`;
+
+    if (isActive) {
+      // Muat GeoJSON
+      try {
+        const response = await fetch(`/${config.filename}`);
+        if (!response.ok) throw new Error(`${config.filename} not found`);
+        const geojson = await response.json();
+
+        // Tambahkan source
+        if (!map.current.getSource(sourceId)) {
+          map.current.addSource(sourceId, { type: 'geojson', data: geojson });
+        }
+
+        // Tambahkan layer
+        if (!map.current.getLayer(layerId)) {
+          map.current.addLayer({
+            id: layerId,
+            type: 'fill',
+            source: sourceId,
+            paint: {
+              'fill-color': config.color,
+              'fill-opacity': 0.5,
+              'fill-outline-color': '#4B5563'
+            }
+          });
+        }
+
+        // Simpan reference
+        setRegionLayers(prev => ({
+          ...prev,
+          [regionId]: { sourceId, layerId }
+        }));
+
+      } catch (e) {
+        console.error(`❌ Gagal muat ${config.filename}:`, e);
+        setActiveLayers(prev => ({ ...prev, [regionId]: false }));
+      }
+
+    } else {
+      // Hapus layer & source
+      if (map.current.getLayer(layerId)) map.current.removeLayer(layerId);
+      if (map.current.getSource(sourceId)) map.current.removeSource(sourceId);
+
+      // Hapus reference
+      setRegionLayers(prev => {
+        const newLayers = { ...prev };
+        delete newLayers[regionId];
+        return newLayers;
+      });
+    }
+  };
+
   const handleLayerToggle = (layerId) => {
-    setActiveLayers(prev => ({ ...prev, [layerId]: !prev[layerId] }));
+    console.log("🔄 MapboxMap: Toggle layer received:", layerId);
+
+    // Jika layerId adalah wilayah (misal: ws-baru-bajul-mati)
+    if (layerId.startsWith('ws-')) {
+      setActiveLayers(prev => {
+        const newState = { ...prev, [layerId]: !prev[layerId] };
+        console.log("🆕 New activeLayers state:", newState);
+
+        // Aktifkan/mematikan layer wilayah
+        handleRegionLayerToggle(layerId, newState[layerId]);
+
+        return newState;
+      });
+    } else {
+      // Untuk layer biasa (rivers, flood-risk, dll)
+      setActiveLayers(prev => {
+        const newState = { ...prev, [layerId]: !prev[layerId] };
+        console.log("🆕 New activeLayers state:", newState);
+        return newState;
+      });
+    }
   };
 
   useEffect(() => {
@@ -133,7 +230,6 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         zoom: 8
       });
 
-      // Simpan instance map ke window sebagai fallback
       if (typeof window !== 'undefined') {
         window.mapboxMap = map.current;
       }
@@ -147,10 +243,14 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     return () => { if (map.current) { map.current.remove(); map.current = null; } };
   }, []);
 
+  // ✅ Perbaikan: Gunakan useEffect untuk memperbarui marker hanya saat tickerData atau devices berubah
   useEffect(() => {
     if (!map.current || !tickerData || !devices.length) return;
+
+    // Hapus marker lama
     markersRef.current.forEach(marker => marker?.remove?.());
     markersRef.current = [];
+
     tickerData.forEach(station => {
       const coordinates = getStationCoordinates(station.name);
       if (coordinates) {
@@ -186,7 +286,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         }
       }
     });
-  }, [tickerData, devices, autoSwitchActive]);
+  }, [tickerData, devices]); // ✅ Hanya perbarui saat tickerData atau devices berubah
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -343,14 +443,17 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     console.log("Pencarian berhasil:", query, coords);
   };
 
+  // ✅ Trigger: Jika "legenda-peta" aktif, sembunyikan Filter Panel
+  const showFilter = showFilterSidebar && !activeLayers['legenda-peta'];
+
   return (
     <div className="w-full h-screen overflow-hidden relative z-0">
       <div ref={mapContainer} className="w-full h-full relative z-0" />
       
-      {/* --- Searchbar hanya ditampilkan setelah map siap --- */}
+      {/* Searchbar */}
       {mapLoaded && map.current ? (
         <GoogleMapsSearchbar
-          mapboxMap={map.current} // ✅ Kirim instance langsung
+          mapboxMap={map.current}
           stationsData={tickerData}
           onSearch={handleSearch}
           isSidebarOpen={showFilterSidebar}
@@ -361,21 +464,24 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
           <span className="text-sm text-gray-500">Memuat peta...</span>
         </div>
       )}
-      {/* --- Akhir Searchbar --- */}
-      
-      <Suspense fallback={null}>
-        <FilterPanel
-          isOpen={showFilterSidebar}
-          onOpen={() => setShowFilterSidebar(true)}
-          onClose={() => setShowFilterSidebar(false)}
-          tickerData={tickerData}
-          handleStationChange={handleStationChange}
-          currentStationIndex={currentStationIndex}
-          handleAutoSwitchToggle={handleAutoSwitchToggle}
-          onLayerToggle={handleLayerToggle}
-          activeLayers={activeLayers}
-        />
-      </Suspense>
+
+      {/* ✅ Filter Panel */}
+      {showFilter && (
+        <Suspense fallback={null}>
+          <FilterPanel
+            isOpen={showFilter}
+            onOpen={() => setShowFilterSidebar(true)}
+            onClose={() => setShowFilterSidebar(false)}
+            tickerData={tickerData}
+            handleStationChange={handleStationChange}
+            currentStationIndex={currentStationIndex}
+            handleAutoSwitchToggle={handleAutoSwitchToggle}
+            onLayerToggle={handleLayerToggle}
+            activeLayers={activeLayers}
+          />
+        </Suspense>
+      )}
+
       <style>{`
         @keyframes alert-pulse { 
           0% { transform: scale(1); opacity: 0.7; } 
@@ -385,6 +491,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         .mapboxgl-popup-content { border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .coordinates-popup .mapboxgl-popup-content { padding: 0; }
       `}</style>
+
       <Suspense fallback={null}>
         <MapTooltip 
           map={map.current} 
@@ -395,6 +502,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
           onClose={handleCloseTooltip} 
         />
       </Suspense>
+
       {selectedStation && onStationSelect && (
         <Suspense fallback={null}>
           <StationDetail
@@ -404,6 +512,8 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
           />
         </Suspense>
       )}
+
+      {/* Tombol Filter */}
       <div className="absolute top-4 right-4 z-[80]">
         <button
           onClick={() => setShowFilterSidebar(true)}

@@ -94,7 +94,7 @@ const PredictionChart = ({ stationData, className = "" }) => {
             },
             y: {
                 min: 0,
-                max: 4,
+                max: 10,
                 title: {
                     display: true,
                     text: "Tinggi Air (m)",

@@ -141,7 +141,7 @@ const RiverDevelopmentChart = ({ stationData, className = "" }) => {
             },
             y: {
                 min: 0,
-                max: 12,
+                max: 10,
                 title: {
                     display: true,
                     text: "Tinggi Air (m)",

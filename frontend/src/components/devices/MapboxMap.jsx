@@ -148,7 +148,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     if (isActive) {
       // Muat GeoJSON
       try {
-        const response = await fetch(`/data_json/${config.filename}`);
+        const response = await fetch(`/src/data/${config.filename}`);
         if (!response.ok) throw new Error(`${config.filename} not found`);
         const geojson = await response.json();
 
@@ -322,7 +322,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         });
       }
     } else {
-      fetch('/data_json/TestMAP.json')
+      fetch('/src/data/TestMAP.json')
         .then(res => res.ok ? res.json() : Promise.reject('Sungai JSON not found (404)'))
         .then(data => { console.log('✅ Sungai Jawa Timur JSON dimuat'); setRiversGeojson(data); })
         .catch(e => { console.error('❌ Gagal muat GeoJSON Sungai Jawa Timur:', e); setActiveLayers(prev => ({ ...prev, rivers: false })); });
@@ -378,7 +378,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         });
       }
     } else {
-      fetch('/data_json/72_peta_4_peta_Wilayah_Sungai.json')
+      fetch('/src/data/72_peta_4_peta_Wilayah_Sungai.json')
         .then(res => res.ok ? res.json() : Promise.reject('JSON not found (404)'))
         .then(data => {
           data.features.forEach((f, i) => {

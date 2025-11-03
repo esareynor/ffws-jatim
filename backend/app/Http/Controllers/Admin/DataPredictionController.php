@@ -46,7 +46,7 @@ class DataPredictionController extends Controller
         $predictions = $query->paginate(20);
 
         // Ambil data untuk filter dropdown
-        $sensors = MasSensor::select('id', 'description', 'sensor_code')->get();
+        $sensors = MasSensor::select('id', 'description', 'code')->get();
         $models = MasModel::select('id', 'name')->get();
 
         return view('admin.data_predictions.index', compact(
@@ -61,7 +61,7 @@ class DataPredictionController extends Controller
      */
     public function create(): View
     {
-        $sensors = MasSensor::select('id', 'description', 'sensor_code')->get();
+        $sensors = MasSensor::select('id', 'description', 'code')->get();
         $models = MasModel::select('id', 'name')->get();
 
         return view('admin.data_predictions.create', compact('sensors', 'models'));
@@ -104,7 +104,7 @@ class DataPredictionController extends Controller
      */
     public function edit(DataPrediction $dataPrediction): View
     {
-        $sensors = MasSensor::select('id', 'description', 'sensor_code')->get();
+        $sensors = MasSensor::select('id', 'description', 'code')->get();
         $models = MasModel::select('id', 'name')->get();
 
         return view('admin.data_predictions.edit', compact('dataPrediction', 'sensors', 'models'));

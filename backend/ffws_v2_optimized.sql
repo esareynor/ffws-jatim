@@ -299,6 +299,16 @@ CREATE TABLE `mas_sensor_parameters`  (
 -- which references mas_sensors (created later)
 -- ----------------------------
 
+-- ----------------------------
+-- Table structure for mas_sensors
+-- FIXED: Changed device_code from bigint to varchar(100) for consistency
+-- NOTE: Legacy threshold fields are kept for backward compatibility
+-- Use dynamic threshold system (mas_sensor_threshold_*) for new implementations
+-- ----------------------------
+DROP TABLE IF EXISTS `mas_sensor_threshold_assignments`;
+DROP TABLE IF EXISTS `mas_sensor_threshold_levels`;
+DROP TABLE IF EXISTS `mas_sensor_threshold_templates`;
+
 CREATE TABLE `mas_sensor_threshold_templates` (
   `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
   `code` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -381,15 +391,6 @@ CREATE TABLE `mas_sensor_threshold_assignments` (
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC
 COMMENT = 'Assign threshold templates to sensors with effective dates';
 
--- ----------------------------
--- Table structure for mas_sensors
--- FIXED: Changed device_code from bigint to varchar(100) for consistency
--- NOTE: Legacy threshold fields are kept for backward compatibility
--- Use dynamic threshold system (mas_sensor_threshold_*) for new implementations
--- ----------------------------
-DROP TABLE IF EXISTS `mas_sensor_threshold_assignments`;
-DROP TABLE IF EXISTS `mas_sensor_threshold_levels`;
-DROP TABLE IF EXISTS `mas_sensor_threshold_templates`;
 DROP TABLE IF EXISTS `mas_sensors`;
 CREATE TABLE `mas_sensors`  (
   `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,

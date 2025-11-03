@@ -18,8 +18,9 @@ class MasSensorController extends Controller
         try {
             $sensors = MasSensor::with(['device', 'masModel'])
                 ->select([
+                    'id',
                     'device_id',
-                    'sensor_code',
+                    'code',
                     'parameter',
                     'unit',
                     'description',
@@ -46,8 +47,9 @@ class MasSensorController extends Controller
         try {
             $sensor = MasSensor::with(['device', 'masModel'])
                 ->select([
+                    'id',
                     'device_id',
-                    'sensor_code',
+                    'code',
                     'parameter',
                     'unit',
                     'description',
@@ -78,8 +80,9 @@ class MasSensorController extends Controller
         try {
             $sensors = MasSensor::with(['device', 'masModel'])
                 ->select([
+                    'id',
                     'device_id',
-                    'sensor_code',
+                    'code',
                     'parameter',
                     'unit',
                     'description',
@@ -107,8 +110,9 @@ class MasSensorController extends Controller
         try {
             $sensors = MasSensor::with(['device', 'masModel'])
                 ->select([
+                    'id',
                     'device_id',
-                    'sensor_code',
+                    'code',
                     'parameter',
                     'unit',
                     'description',
@@ -136,8 +140,9 @@ class MasSensorController extends Controller
         try {
             $sensors = MasSensor::with(['device', 'masModel'])
                 ->select([
+                    'id',
                     'device_id',
-                    'sensor_code',
+                    'code',
                     'parameter',
                     'unit',
                     'description',

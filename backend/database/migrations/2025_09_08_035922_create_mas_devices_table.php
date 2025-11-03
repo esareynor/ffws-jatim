@@ -15,12 +15,15 @@ return new class extends Migration
             $table->id();
             $table->foreignId('mas_river_basin_id')->constrained('mas_river_basins')->onUpdate('restrict')->onDelete('restrict');
             $table->string('name');
-            $table->string('code');
+            $table->string('code', 100)->unique();
             $table->double('latitude');
             $table->double('longitude');
             $table->double('elevation_m');
             $table->enum('status', ['active', 'inactive']);
             $table->timestamps();
+            
+            // Indexes
+            $table->index('status', 'idx_devices_status');
         });
     }
 

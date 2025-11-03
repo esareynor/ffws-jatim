@@ -12,7 +12,7 @@ class MasSensor extends Model
 
     protected $fillable = [
         'device_id',
-        'sensor_code',
+        'code',
         'parameter',
         'unit',
         'description',

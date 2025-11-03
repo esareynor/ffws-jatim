@@ -31,7 +31,7 @@ class DataActualFactory extends Factory
 
         return [
             'mas_sensor_id' => $sensor->id,
-            'mas_sensor_code' => $sensor->sensor_code,
+            'mas_sensor_code' => $sensor->code,
             'value' => $value,
             'received_at' => $this->faker->dateTimeThisMonth(),
             'threshold_status' => $status,

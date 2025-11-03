@@ -11,6 +11,16 @@ use App\Http\Controllers\Admin\MasModelController;
 use App\Http\Controllers\Admin\DataActualController;
 use App\Http\Controllers\Admin\DataPredictionController;
 use App\Http\Controllers\Admin\GeojsonFileController;
+use App\Http\Controllers\Admin\DeviceParameterController;
+use App\Http\Controllers\Admin\DeviceValueController;
+use App\Http\Controllers\Admin\DeviceCctvController;
+use App\Http\Controllers\Admin\DeviceMediaController;
+use App\Http\Controllers\Admin\SensorParameterController;
+use App\Http\Controllers\Admin\RatingCurveController;
+use App\Http\Controllers\Admin\ScalerController;
+use App\Http\Controllers\Admin\ThresholdController;
+use App\Http\Controllers\Admin\WhatsappNumberController;
+use App\Http\Controllers\Admin\UserByRoleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -131,6 +141,88 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::put('/{geojsonFile}', [GeojsonFileController::class, 'update'])->name('update');
         Route::delete('/{geojsonFile}', [GeojsonFileController::class, 'destroy'])->name('destroy');
         Route::get('/{geojsonFile}/download', [GeojsonFileController::class, 'download'])->name('download');
+    });
+
+    // Device Parameters
+    Route::prefix('device-parameters')->name('device-parameters.')->group(function () {
+        Route::get('/', [DeviceParameterController::class, 'index'])->name('index');
+        Route::post('/', [DeviceParameterController::class, 'store'])->name('store');
+        Route::put('/{id}', [DeviceParameterController::class, 'update'])->name('update');
+        Route::delete('/{id}', [DeviceParameterController::class, 'destroy'])->name('destroy');
+    });
+
+    // Device Values
+    Route::prefix('device-values')->name('device-values.')->group(function () {
+        Route::get('/', [DeviceValueController::class, 'index'])->name('index');
+        Route::get('/create', [DeviceValueController::class, 'create'])->name('create');
+        Route::post('/', [DeviceValueController::class, 'store'])->name('store');
+        Route::get('/{deviceValue}/edit', [DeviceValueController::class, 'edit'])->name('edit');
+        Route::put('/{deviceValue}', [DeviceValueController::class, 'update'])->name('update');
+        Route::delete('/{deviceValue}', [DeviceValueController::class, 'destroy'])->name('destroy');
+    });
+
+    // Device CCTV
+    Route::prefix('device-cctv')->name('device-cctv.')->group(function () {
+        Route::get('/', [DeviceCctvController::class, 'index'])->name('index');
+        Route::post('/', [DeviceCctvController::class, 'store'])->name('store');
+        Route::put('/{id}', [DeviceCctvController::class, 'update'])->name('update');
+        Route::delete('/{id}', [DeviceCctvController::class, 'destroy'])->name('destroy');
+    });
+
+    // Device Media
+    Route::prefix('device-media')->name('device-media.')->group(function () {
+        Route::get('/', [DeviceMediaController::class, 'index'])->name('index');
+        Route::post('/', [DeviceMediaController::class, 'store'])->name('store');
+        Route::put('/{id}', [DeviceMediaController::class, 'update'])->name('update');
+        Route::delete('/{id}', [DeviceMediaController::class, 'destroy'])->name('destroy');
+    });
+
+    // Sensor Parameters
+    Route::prefix('sensor-parameters')->name('sensor-parameters.')->group(function () {
+        Route::get('/', [SensorParameterController::class, 'index'])->name('index');
+        Route::post('/', [SensorParameterController::class, 'store'])->name('store');
+        Route::put('/{id}', [SensorParameterController::class, 'update'])->name('update');
+        Route::delete('/{id}', [SensorParameterController::class, 'destroy'])->name('destroy');
+    });
+
+    // Rating Curves
+    Route::prefix('rating-curves')->name('rating-curves.')->group(function () {
+        Route::get('/', [RatingCurveController::class, 'index'])->name('index');
+        Route::get('/create', [RatingCurveController::class, 'create'])->name('create');
+        Route::post('/', [RatingCurveController::class, 'store'])->name('store');
+        Route::get('/{ratingCurve}/edit', [RatingCurveController::class, 'edit'])->name('edit');
+        Route::put('/{ratingCurve}', [RatingCurveController::class, 'update'])->name('update');
+        Route::delete('/{ratingCurve}', [RatingCurveController::class, 'destroy'])->name('destroy');
+    });
+
+    // Scalers
+    Route::prefix('scalers')->name('scalers.')->group(function () {
+        Route::get('/', [ScalerController::class, 'index'])->name('index');
+        Route::post('/', [ScalerController::class, 'store'])->name('store');
+        Route::put('/{id}', [ScalerController::class, 'update'])->name('update');
+        Route::delete('/{id}', [ScalerController::class, 'destroy'])->name('destroy');
+    });
+
+    // Thresholds
+    Route::prefix('thresholds')->name('thresholds.')->group(function () {
+        Route::get('/', [ThresholdController::class, 'index'])->name('index');
+        Route::post('/', [ThresholdController::class, 'store'])->name('store');
+        Route::put('/{id}', [ThresholdController::class, 'update'])->name('update');
+        Route::delete('/{id}', [ThresholdController::class, 'destroy'])->name('destroy');
+    });
+
+    // WhatsApp Numbers
+    Route::prefix('whatsapp-numbers')->name('whatsapp-numbers.')->group(function () {
+        Route::get('/', [WhatsappNumberController::class, 'index'])->name('index');
+        Route::post('/', [WhatsappNumberController::class, 'store'])->name('store');
+        Route::put('/{id}', [WhatsappNumberController::class, 'update'])->name('update');
+        Route::delete('/{id}', [WhatsappNumberController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/toggle-status', [WhatsappNumberController::class, 'toggleStatus'])->name('toggle-status');
+    });
+
+    // User by Role
+    Route::prefix('user-by-role')->name('user-by-role.')->group(function () {
+        Route::get('/', [UserByRoleController::class, 'index'])->name('index');
     });
 
     // Profile & Account

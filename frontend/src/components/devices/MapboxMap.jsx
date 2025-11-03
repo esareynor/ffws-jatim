@@ -133,7 +133,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
       'ws-bengawan-solo': { filename: 'WSBengawanSolo.json', color: '#FF7F50' },
       'ws-bondoyudo-bedadung': { filename: 'WSBondoyudoBedadung.json', color: '#00CED1' },
       'ws-brantas': { filename: 'WSBrantas.json', color: '#FF4500' },
-      'ws-pekalen-sampean': { filename: 'WSPekalenSampean.json', color: '#FF69B4' },
+      'ws-pekalen-sampean': { filename: 'WSPekalenSampean.json', color: '#ff69b45b' },
       'ws-welang-rejoso': { filename: 'WSWelangRejoso.json', color: '#FF00FF' },
       'ws-madura-bawean': { filename: 'WSMaduraBawean.json', color: '#FFD700' },
       // Tambahkan lainnya sesuai kebutuhan

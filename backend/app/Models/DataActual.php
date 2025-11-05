@@ -12,15 +12,21 @@ class DataActual extends Model
     use HasFactory;
 
     protected $fillable = [
+        'mas_sensor_id',
         'mas_sensor_code',
+        'mas_device_code',
         'value',
         'received_at',
-        'threshold_status'
+        'threshold_status',
+        'status',
+        'source',
+        'fetched_at'
     ];
 
     protected $casts = [
         'value' => 'double',
         'received_at' => 'datetime',
+        'fetched_at' => 'datetime',
     ];
 
     /**

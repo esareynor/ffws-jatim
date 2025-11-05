@@ -67,3 +67,8 @@ Thumbs.db
 !README.md
 
 verify_system.py
+
+# Large data files that exceed GitHub file size limits
+frontend/src/data/welang_debit_10.json
+frontend/src/data/welang_debit_100.json
+frontend/src/data/welang_debit_18.json

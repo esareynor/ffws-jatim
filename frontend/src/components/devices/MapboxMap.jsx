@@ -9,6 +9,7 @@ import GoogleMapsSearchbar from "../common/GoogleMapsSearchbar";
 const MapTooltip = lazy(() => import("./maptooltip"));
 const FilterPanel = lazy(() => import("/src/components/common/FilterPanel.jsx"));
 const StationDetail = lazy(() => import("../StationDetail.jsx"));
+const CoordinateDebugger = lazy(() => import("./CoordinateDebugger.jsx"));
 
 mapboxgl.accessToken = "pk.eyJ1IjoiZGl0b2ZhdGFoaWxsYWgxIiwiYSI6ImNtZjNveGloczAwNncya3E1YzdjcTRtM3MifQ.kIf5rscGYOzvvBcZJ41u8g";
 
@@ -25,6 +26,10 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
   const [autoSwitchActive, setAutoSwitchActive] = useState(false);
   const [currentStationIndex, setCurrentStationIndex] = useState(0);
   const [selectedStationCoords, setSelectedStationCoords] = useState(null);
+  const [showDebugger, setShowDebugger] = useState(false);
+  const [showZoomDebug, setShowZoomDebug] = useState(false);
+  const [markerDebugInfo, setMarkerDebugInfo] = useState([]);
+  const lastLoggedZoom = useRef(0); // Track last logged zoom to reduce spam
 
   // ✅ State untuk active layers — termasuk wilayah legenda
   const [activeLayers, setActiveLayers] = useState({
@@ -32,6 +37,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     'flood-risk': false,
     rainfall: false,
     administrative: false,
+    'test-map-debit-100': true, // ✅ AUTO-LOAD saat web dibuka
     // Wilayah-wilayah dari legenda peta — akan ditambahkan dinamis
   });
 
@@ -66,6 +72,49 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
       try {
         const devicesData = await fetchDevices();
         setDevices(devicesData);
+        
+        // 🔍 Log statistik koordinat
+        const stats = {
+          total: devicesData.length,
+          withCoords: devicesData.filter(d => d.latitude && d.longitude).length,
+          missing: devicesData.filter(d => !d.latitude || !d.longitude).length,
+          invalid: devicesData.filter(d => {
+            if (!d.latitude || !d.longitude) return false;
+            const lat = parseFloat(d.latitude);
+            const lng = parseFloat(d.longitude);
+            return lat < -9 || lat > -6 || lng < 110 || lng > 115;
+          }).length
+        };
+        
+        console.log('📊 Devices Coordinate Statistics:', stats);
+        
+        if (stats.missing > 0) {
+          const missingDevices = devicesData
+            .filter(d => !d.latitude || !d.longitude)
+            .slice(0, 3)
+            .map(d => ({ id: d.id, name: d.name, lat: d.latitude, lng: d.longitude }));
+          console.warn(`⚠️ ${stats.missing} devices missing coordinates. Sample:`, missingDevices);
+        }
+        
+        if (stats.invalid > 0) {
+          const invalidDevices = devicesData
+            .filter(d => {
+              if (!d.latitude || !d.longitude) return false;
+              const lat = parseFloat(d.latitude);
+              const lng = parseFloat(d.longitude);
+              return lat < -9 || lat > -6 || lng < 110 || lng > 115;
+            })
+            .slice(0, 3)
+            .map(d => ({ 
+              id: d.id, 
+              name: d.name, 
+              lat: d.latitude, 
+              lng: d.longitude,
+              parsed: [parseFloat(d.longitude), parseFloat(d.latitude)]
+            }));
+          console.warn(`⚠️ ${stats.invalid} devices with invalid Jawa Timur coordinates. Sample:`, invalidDevices);
+        }
+        
       } catch (error) {
         console.error("Failed to fetch devices:", error);
       }
@@ -92,9 +141,71 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     }
   };
 
+  // 🎯 Fungsi untuk mendapatkan ukuran marker berdasarkan zoom level
+  const getMarkerSize = (zoomLevel) => {
+    // Marker lebih kecil saat zoom out, lebih besar saat zoom in
+    if (zoomLevel < 8) return 18; // Zoom out - marker kecil
+    if (zoomLevel < 10) return 24; // Medium
+    if (zoomLevel < 12) return 28; // Medium-large
+    return 32; // Zoom in - marker besar
+  };
+
+  // 🎯 Fungsi untuk validasi apakah koordinat masuk akal
+  const validateCoordinates = (lng, lat, stationName) => {
+    const issues = [];
+    
+    // Check Jawa Timur bounds
+    if (lat < -9 || lat > -6) {
+      issues.push(`Latitude ${lat.toFixed(4)} di luar range Jawa Timur (-9 to -6)`);
+    }
+    if (lng < 110 || lng > 115) {
+      issues.push(`Longitude ${lng.toFixed(4)} di luar range Jawa Timur (110 to 115)`);
+    }
+    
+    // Check for swapped coordinates
+    if (lng < 0 && lat > 100) {
+      issues.push('⚠️ KOORDINAT KEMUNGKINAN TERTUKAR! (lat/lng swap detected)');
+    }
+    
+    // Check for zero or null
+    if (lng === 0 || lat === 0) {
+      issues.push('Koordinat bernilai 0 (kemungkinan data tidak valid)');
+    }
+    
+    return {
+      isValid: issues.length === 0,
+      issues,
+      severity: issues.some(i => i.includes('TERTUKAR')) ? 'critical' : 
+                issues.length > 1 ? 'high' : 
+                issues.length === 1 ? 'medium' : 'none'
+    };
+  };
+
   const getStationCoordinates = (stationName) => {
     if (!devices?.length) return null;
     const device = devices.find(d => d.name === stationName);
+    
+    // 🔍 Debug logging untuk memeriksa koordinat
+    if (device) {
+      const lat = parseFloat(device.latitude);
+      const lng = parseFloat(device.longitude);
+      
+      // Validasi koordinat Jawa Timur (approx: Lat -6.5 to -8.5, Lng 111 to 114.5)
+      const isValidLat = lat >= -9 && lat <= -6;
+      const isValidLng = lng >= 110 && lng <= 115;
+      
+      if (!isValidLat || !isValidLng) {
+        console.warn(`⚠️ Koordinat ${stationName} di luar Jawa Timur:`, {
+          name: stationName,
+          latitude: device.latitude,
+          longitude: device.longitude,
+          parsed: [lng, lat],
+          isValidLat,
+          isValidLng
+        });
+      }
+    }
+    
     return device?.latitude && device.longitude ? [parseFloat(device.longitude), parseFloat(device.latitude)] : null;
   };
 
@@ -136,6 +247,11 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
       'ws-pekalen-sampean': { filename: 'WSPekalenSampean.json', color: '#ff69b45b' },
       'ws-welang-rejoso': { filename: 'WSWelangRejoso.json', color: '#FF00FF' },
       'ws-madura-bawean': { filename: 'WSMaduraBawean.json', color: '#FFD700' },
+      'test-map-debit-100': { 
+        filename: 'welang_debit_100.json', 
+        color: '#00CED1', // Fallback color jika GeoJSON tidak punya atribut 'color'
+        opacity: 1.0 // ✅ Opacity 25% untuk visibility optimal dengan outline hitam
+      },
       // Tambahkan lainnya sesuai kebutuhan
     };
 
@@ -152,6 +268,13 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         if (!response.ok) throw new Error(`${config.filename} not found`);
         const geojson = await response.json();
 
+        // 🎨 Log informasi warna dari GeoJSON untuk debugging
+        const colorInfo = geojson.features?.map(f => ({
+          name: f.properties?.name || f.properties?.id || 'unnamed',
+          color: f.properties?.color || 'not set'
+        }));
+        console.log(`🎨 Color attributes in ${config.filename}:`, colorInfo?.slice(0, 5) || 'No features');
+
         // Tambahkan source
         if (!map.current.getSource(sourceId)) {
           map.current.addSource(sourceId, { type: 'geojson', data: geojson });
@@ -163,10 +286,12 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
             id: layerId,
             type: 'fill',
             source: sourceId,
+            filter: ['==', ['geometry-type'], 'Polygon'],
             paint: {
-              'fill-color': config.color,
-              'fill-opacity': 0.5,
-              'fill-outline-color': '#4B5563'
+              // ✅ Gunakan atribut 'color' dari GeoJSON properties, fallback ke config.color jika tidak ada
+              'fill-color': ['coalesce', ['get', 'color'], config.color],
+              'fill-opacity': config.opacity || 1.0, // ✅ Default 0.25 untuk visibility yang lebih baik
+              'fill-outline-color': 'transparent'
             }
           });
         }
@@ -199,8 +324,8 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
   const handleLayerToggle = (layerId) => {
     console.log("🔄 MapboxMap: Toggle layer received:", layerId);
 
-    // Jika layerId adalah wilayah (misal: ws-baru-bajul-mati)
-    if (layerId.startsWith('ws-')) {
+    // Jika layerId adalah wilayah (misal: ws-baru-bajul-mati) atau test-map-debit-100
+    if (layerId.startsWith('ws-') || layerId === 'test-map-debit-100') {
       setActiveLayers(prev => {
         const newState = { ...prev, [layerId]: !prev[layerId] };
         console.log("🆕 New activeLayers state:", newState);
@@ -235,13 +360,35 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
       }
 
       map.current.addControl(new mapboxgl.ScaleControl(), "bottom-left");
-      map.current.on("zoom", () => map.current && setZoomLevel(map.current.getZoom()));
+      map.current.on("zoom", () => {
+        if (map.current) {
+          const newZoom = map.current.getZoom();
+          setZoomLevel(newZoom);
+          
+          // 🔍 Debug zoom level changes (only log if zoom changed by >= 0.5 to reduce spam)
+          if (showZoomDebug && Math.abs(newZoom - lastLoggedZoom.current) >= 0.5) {
+            console.log(`🔍 Zoom level changed: ${newZoom.toFixed(2)}`);
+            lastLoggedZoom.current = newZoom;
+          }
+          
+          // Update marker sizes based on zoom
+          updateMarkerSizes(newZoom);
+        }
+      });
       map.current.on('load', () => setMapLoaded(true));
     } catch (error) {
       console.error('Error initializing map:', error);
     }
     return () => { if (map.current) { map.current.remove(); map.current = null; } };
   }, []);
+
+  // ✅ Auto-load layer welang_debit_100 saat map selesai dimuat
+  useEffect(() => {
+    if (mapLoaded && activeLayers['test-map-debit-100']) {
+      console.log("🚀 Auto-loading welang_debit_100.json dengan color mapping...");
+      handleRegionLayerToggle('test-map-debit-100', true);
+    }
+  }, [mapLoaded]); // Hanya jalankan sekali saat map loaded
 
   // ✅ Perbaikan: Gunakan useEffect untuk memperbarui marker hanya saat tickerData atau devices berubah
   useEffect(() => {
@@ -251,20 +398,78 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     markersRef.current.forEach(marker => marker?.remove?.());
     markersRef.current = [];
 
+    const debugInfo = [];
+    const markerSize = getMarkerSize(zoomLevel);
+
     tickerData.forEach(station => {
       const coordinates = getStationCoordinates(station.name);
       if (coordinates) {
+        const [lng, lat] = coordinates;
+        const validation = validateCoordinates(lng, lat, station.name);
+        
+        // Simpan debug info
+        debugInfo.push({
+          name: station.name,
+          coordinates: [lng, lat],
+          validation,
+          zoom: zoomLevel
+        });
+
+        // Log koordinat bermasalah (only when zoom debug is active)
+        if (showZoomDebug && !validation.isValid) {
+          console.warn(`⚠️ [Zoom ${zoomLevel.toFixed(1)}] ${station.name}:`, {
+            coordinates: [lng, lat],
+            issues: validation.issues,
+            severity: validation.severity
+          });
+        }
+
         try {
           const markerEl = document.createElement("div");
           markerEl.className = "custom-marker";
+          markerEl.setAttribute('data-station', station.name);
+          markerEl.setAttribute('data-lat', lat);
+          markerEl.setAttribute('data-lng', lng);
+          markerEl.setAttribute('data-valid', validation.isValid);
+          
+          // Warna border untuk menandai koordinat bermasalah
+          const borderColor = validation.isValid ? 'white' : 
+                            validation.severity === 'critical' ? '#EF4444' : 
+                            validation.severity === 'high' ? '#F59E0B' : '#FCD34D';
+          
           markerEl.style.cssText = `
-            width: 24px; height: 24px; border-radius: 50%; 
+            width: ${markerSize}px; 
+            height: ${markerSize}px; 
+            border-radius: 50%; 
             background-color: ${getStatusColor(station.status)}; 
-            border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); 
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            border: 2px solid ${borderColor}; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3); 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
             position: relative;
+            transition: all 0.3s ease;
           `;
           markerEl.innerHTML = getStatusIcon(station.status);
+          
+          // Tambah visual indicator untuk koordinat bermasalah
+          if (!validation.isValid) {
+            const warningBadge = document.createElement("div");
+            warningBadge.style.cssText = `
+              position: absolute;
+              top: -4px;
+              right: -4px;
+              width: 12px;
+              height: 12px;
+              background-color: ${validation.severity === 'critical' ? '#EF4444' : '#F59E0B'};
+              border-radius: 50%;
+              border: 2px solid white;
+              z-index: 10;
+            `;
+            markerEl.appendChild(warningBadge);
+          }
+          
           if (station.status === "alert") {
             const pulseEl = document.createElement("div");
             pulseEl.style.cssText = `
@@ -274,19 +479,57 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
             `;
             markerEl.appendChild(pulseEl);
           }
+          
           const marker = new mapboxgl.Marker(markerEl).setLngLat(coordinates).addTo(map.current);
           markersRef.current.push(marker);
+          
           markerEl.addEventListener("click", (e) => {
             e.stopPropagation();
             if (autoSwitchActive) setAutoSwitchActive(false);
             handleMarkerClick(station, coordinates);
           });
+          
+          // Hover effect untuk debugging
+          markerEl.addEventListener("mouseenter", () => {
+            if (showZoomDebug) {
+              console.log(`🎯 Hover marker:`, {
+                station: station.name,
+                coordinates: [lng, lat],
+                zoom: zoomLevel.toFixed(2),
+                markerSize: `${markerSize}px`,
+                validation
+              });
+            }
+          });
+          
         } catch (error) {
           console.error("Error creating marker:", error);
         }
       }
     });
-  }, [tickerData, devices]); // ✅ Hanya perbarui saat tickerData atau devices berubah
+    
+    setMarkerDebugInfo(debugInfo);
+    
+    // Log summary (only when zoom debug is active and has invalid markers)
+    const invalidMarkers = debugInfo.filter(m => !m.validation.isValid);
+    if (showZoomDebug && invalidMarkers.length > 0) {
+      console.warn(`📊 [Zoom ${zoomLevel.toFixed(1)}] ${invalidMarkers.length}/${debugInfo.length} markers with invalid coordinates`);
+    }
+    
+  }, [tickerData, devices]); // ✅ Hapus zoomLevel dari dependency - marker size akan diupdate via updateMarkerSizes
+
+  // 🎯 Fungsi untuk update ukuran marker saat zoom berubah
+  const updateMarkerSizes = (newZoom) => {
+    const newSize = getMarkerSize(newZoom);
+    
+    markersRef.current.forEach(marker => {
+      const el = marker.getElement();
+      if (el) {
+        el.style.width = `${newSize}px`;
+        el.style.height = `${newSize}px`;
+      }
+    });
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -513,8 +756,40 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         </Suspense>
       )}
 
-      {/* Tombol Filter */}
-      <div className="absolute top-4 right-4 z-[80]">
+      {/* Tombol Filter & Debug */}
+      <div className="absolute top-4 right-4 z-[80] flex gap-2">
+        {/* Tombol Zoom Debug */}
+        <button
+          onClick={() => setShowZoomDebug(!showZoomDebug)}
+          className={`relative inline-flex items-center justify-center w-12 h-12 rounded-full transition-colors shadow-md ${
+            showZoomDebug ? 'bg-green-500 text-white' : 'bg-white hover:bg-green-50 text-green-600'
+          }`}
+          title="Toggle Zoom Debug Mode"
+          aria-label="Zoom Debug"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="relative z-10 w-6 h-6">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            <line x1="11" y1="8" x2="11" y2="14"></line>
+            <line x1="8" y1="11" x2="14" y2="11"></line>
+          </svg>
+        </button>
+        
+        {/* Tombol Debug Koordinat */}
+        <button
+          onClick={() => setShowDebugger(true)}
+          className="relative inline-flex items-center justify-center w-12 h-12 rounded-full bg-white hover:bg-purple-50 transition-colors shadow-md"
+          title="Debug Koordinat Station"
+          aria-label="Debug Koordinat"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="relative z-10 w-6 h-6 text-purple-600">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+        </button>
+        
+        {/* Tombol Filter */}
         <button
           onClick={() => setShowFilterSidebar(true)}
           className="relative inline-flex items-center justify-center w-12 h-12 rounded-full bg-white hover:bg-blue-50 transition-colors shadow-md"
@@ -526,6 +801,84 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
           </svg>
         </button>
       </div>
+
+      {/* Zoom Level Indicator */}
+      {showZoomDebug && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[80] bg-black bg-opacity-80 text-white px-4 py-2 rounded-lg shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="text-sm font-mono">
+              <span className="text-gray-300">Zoom:</span>{' '}
+              <span className="text-green-400 font-bold">{zoomLevel.toFixed(2)}</span>
+            </div>
+            <div className="h-4 w-px bg-gray-600"></div>
+            <div className="text-sm font-mono">
+              <span className="text-gray-300">Markers:</span>{' '}
+              <span className="text-blue-400 font-bold">{markersRef.current.length}</span>
+            </div>
+            <div className="h-4 w-px bg-gray-600"></div>
+            <div className="text-sm font-mono">
+              <span className="text-gray-300">Invalid:</span>{' '}
+              <span className="text-red-400 font-bold">
+                {markerDebugInfo.filter(m => !m.validation.isValid).length}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Marker Size Guide */}
+      {showZoomDebug && (
+        <div className="absolute bottom-20 right-4 z-[80] bg-white rounded-lg shadow-lg p-4 max-w-xs">
+          <h3 className="text-sm font-bold text-gray-800 mb-2">🎯 Zoom Guide</h3>
+          <div className="space-y-1 text-xs text-gray-600">
+            <div className="flex items-center justify-between">
+              <span>Zoom {'<'} 8:</span>
+              <span className="font-mono text-blue-600">18px (Small)</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Zoom 8-10:</span>
+              <span className="font-mono text-blue-600">24px (Medium)</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Zoom 10-12:</span>
+              <span className="font-mono text-blue-600">28px (Large)</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Zoom {'>'} 12:</span>
+              <span className="font-mono text-blue-600">32px (XL)</span>
+            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-gray-200">
+            <div className="text-xs text-gray-700 font-semibold mb-1">Border Colors:</div>
+            <div className="flex items-center gap-2 text-xs">
+              <div className="w-3 h-3 rounded-full border-2 border-white bg-gray-400"></div>
+              <span>Valid</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <div className="w-3 h-3 rounded-full border-2 border-yellow-400 bg-gray-400"></div>
+              <span>Medium Issue</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <div className="w-3 h-3 rounded-full border-2 border-orange-500 bg-gray-400"></div>
+              <span>High Issue</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <div className="w-3 h-3 rounded-full border-2 border-red-500 bg-gray-400"></div>
+              <span>Critical (Swapped)</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Coordinate Debugger */}
+      <Suspense fallback={null}>
+        <CoordinateDebugger
+          tickerData={tickerData}
+          devices={devices}
+          isVisible={showDebugger}
+          onClose={() => setShowDebugger(false)}
+        />
+      </Suspense>
     </div>
   );
 };

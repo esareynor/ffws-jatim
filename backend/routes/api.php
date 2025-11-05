@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\Admin\DischargeController;
 use App\Http\Controllers\Api\Admin\RatingCurveController;
 use App\Http\Controllers\Api\DischargeCalculationController;
 use App\Http\Controllers\Api\PredictionDischargeCalculationController;
+use App\Http\Controllers\Api\ApiDataSourceController;
+use App\Http\Controllers\Api\SensorApiMappingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -195,5 +197,29 @@ Route::middleware('auth:sanctum')->group(function () {
         // Get future predictions (forecast visualization)
         Route::get('/future', [PredictionDischargeCalculationController::class, 'getFuturePredictions']);
     });
-});
 
+    // API Data Source Management Routes
+    Route::prefix('api-data-sources')->group(function () {
+        Route::get('/', [ApiDataSourceController::class, 'index']);
+        Route::post('/', [ApiDataSourceController::class, 'store']);
+        Route::get('/{code}', [ApiDataSourceController::class, 'show']);
+        Route::put('/{code}', [ApiDataSourceController::class, 'update']);
+        Route::delete('/{code}', [ApiDataSourceController::class, 'destroy']);
+
+        // Additional actions
+        Route::post('/{code}/test-connection', [ApiDataSourceController::class, 'testConnection']);
+        Route::post('/{code}/trigger-fetch', [ApiDataSourceController::class, 'triggerFetch']);
+        Route::get('/{code}/fetch-logs', [ApiDataSourceController::class, 'fetchLogs']);
+        Route::get('/{code}/statistics', [ApiDataSourceController::class, 'statistics']);
+    });
+
+    // Sensor API Mapping Routes
+    Route::prefix('sensor-api-mappings')->group(function () {
+        Route::get('/', [SensorApiMappingController::class, 'index']);
+        Route::post('/', [SensorApiMappingController::class, 'store']);
+        Route::post('/bulk', [SensorApiMappingController::class, 'bulkCreate']);
+        Route::get('/{id}', [SensorApiMappingController::class, 'show']);
+        Route::put('/{id}', [SensorApiMappingController::class, 'update']);
+        Route::delete('/{id}', [SensorApiMappingController::class, 'destroy']);
+    });
+});

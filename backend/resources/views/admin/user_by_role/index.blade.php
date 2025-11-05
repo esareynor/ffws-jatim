@@ -10,211 +10,159 @@
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">User Role Management</h1>
             <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Manage user roles and UPT assignments</p>
         </div>
-        <button @click="openModal()" class="btn btn-primary">
+        <x-admin.button type="button" variant="primary" @click="openModal()">
             <i class="fas fa-plus mr-2"></i>
             Add User Role
-        </button>
+        </x-admin.button>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <input type="text" x-model="filters.search" @input="applyFilters" placeholder="Search..."
-                class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-            
-            <select x-model="filters.role" @change="applyFilters"
-                class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                <option value="">All Roles</option>
-                <option value="admin">Admin</option>
-                <option value="moderator">Moderator</option>
-                <option value="user">User</option>
-            </select>
+    @php
+        $filterConfig = [
+            [
+                'type' => 'text',
+                'name' => 'search',
+                'label' => 'Cari',
+                'placeholder' => 'Cari berdasarkan phone number, bio, atau UPT...'
+            ],
+            [
+                'type' => 'select',
+                'name' => 'role',
+                'label' => 'Role',
+                'empty_option' => 'Semua Role',
+                'options' => [
+                    ['value' => 'admin', 'label' => 'Admin'],
+                    ['value' => 'moderator', 'label' => 'Moderator'],
+                    ['value' => 'user', 'label' => 'User']
+                ]
+            ],
+            [
+                'type' => 'select',
+                'name' => 'status',
+                'label' => 'Status',
+                'empty_option' => 'Semua Status',
+                'options' => [
+                    ['value' => 'active', 'label' => 'Aktif'],
+                    ['value' => 'inactive', 'label' => 'Non-aktif'],
+                    ['value' => 'pending', 'label' => 'Pending']
+                ]
+            ],
+            [
+                'type' => 'select',
+                'name' => 'upt_code',
+                'label' => 'UPT',
+                'empty_option' => 'Semua UPT',
+                'options' => $upts->map(function($upt) {
+                    return ['value' => $upt->code, 'label' => $upt->name];
+                })->toArray()
+            ]
+        ];
+    @endphp
 
-            <select x-model="filters.status" @change="applyFilters"
-                class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                <option value="">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="pending">Pending</option>
-            </select>
-
-            <select x-model="filters.upt_code" @change="applyFilters"
-                class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                <option value="">All UPTs</option>
-                <template x-for="upt in upts" :key="upt.code">
-                    <option :value="upt.code" x-text="upt.name"></option>
-                </template>
-            </select>
-        </div>
-    </div>
+    <x-filter-bar 
+        title="Filter & Pencarian User Roles"
+        :filters="$filterConfig"
+        :action="route('admin.user-by-role.index')"
+        gridCols="md:grid-cols-4"
+    />
 
     <!-- User Roles Table -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-900">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Phone Number
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            UPT
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Role
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Status
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Bio
-                        </th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Actions
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    <template x-for="userRole in filteredUserRoles" :key="userRole.id">
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <i class="fas fa-phone text-gray-400 mr-2"></i>
-                                    <span class="text-sm text-gray-900 dark:text-white" x-text="userRole.phone_number || '-'"></span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900 dark:text-white" x-text="userRole.upt?.name || '-'"></div>
-                                <div class="text-xs text-gray-500" x-text="userRole.upt?.code || '-'"></div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span :class="{
-                                    'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300': userRole.role === 'admin',
-                                    'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300': userRole.role === 'moderator',
-                                    'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300': userRole.role === 'user'
-                                }" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
-                                    <span x-text="userRole.role.charAt(0).toUpperCase() + userRole.role.slice(1)"></span>
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span :class="{
-                                    'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300': userRole.status === 'active',
-                                    'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300': userRole.status === 'inactive',
-                                    'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300': userRole.status === 'pending'
-                                }" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
-                                    <span x-text="userRole.status.charAt(0).toUpperCase() + userRole.status.slice(1)"></span>
-                                </span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate" x-text="userRole.bio || '-'"></div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <button @click="editUserRole(userRole)" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-3">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button @click="deleteUserRole(userRole.id)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    </template>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Empty State -->
-        <div x-show="filteredUserRoles.length === 0" class="text-center py-12">
-            <i class="fas fa-user-tag text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
-            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No User Roles</h3>
-            <p class="text-gray-500 dark:text-gray-400">No user roles found matching your criteria</p>
-        </div>
-    </div>
+    <x-table
+        title="Daftar User Roles"
+        :headers="$tableHeaders"
+        :rows="$userRoles"
+        searchable
+        searchPlaceholder="Cari user roles..."
+    >
+        <x-slot:actions>
+            <x-admin.button type="button" variant="primary" @click="openModal()">
+                <i class="fas fa-plus mr-2"></i>
+                Add User Role
+            </x-admin.button>
+        </x-slot:actions>
+    </x-table>
 
     <!-- Modal -->
-    <div x-show="showModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
-        <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showModal = false"></div>
-            
-            <div class="relative bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full p-6">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                    <span x-text="editingUserRole ? 'Edit User Role' : 'Add User Role'"></span>
-                </h3>
-                
-                <form @submit.prevent="saveUserRole">
-                    <div class="space-y-4">
-                        <!-- Phone Number -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Phone Number
-                            </label>
-                            <input type="text" x-model="form.phone_number"
-                                placeholder="+62..."
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
+    <x-admin.modal 
+        size="lg"
+        name="user-role-modal">
+        <x-slot name="title">
+            <span x-text="editingUserRole ? 'Edit User Role' : 'Add User Role'"></span>
+        </x-slot>
+        
+        <form @submit.prevent="saveUserRole">
+            <div class="space-y-4">
+                <!-- Phone Number -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Phone Number
+                    </label>
+                    <input type="text" x-model="form.phone_number"
+                        placeholder="+62..."
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
 
-                        <!-- UPT -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                UPT
-                            </label>
-                            <select x-model="form.upt_code"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                <option value="">Select UPT</option>
-                                <template x-for="upt in upts" :key="upt.code">
-                                    <option :value="upt.code" x-text="upt.name + ' (' + upt.code + ')'"></option>
-                                </template>
-                            </select>
-                        </div>
+                <!-- UPT -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        UPT
+                    </label>
+                    <select x-model="form.upt_code"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select UPT</option>
+                        <template x-for="upt in upts" :key="upt.code">
+                            <option :value="upt.code" x-text="upt.name + ' (' + upt.code + ')'"></option>
+                        </template>
+                    </select>
+                </div>
 
-                        <!-- Role -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Role <span class="text-red-500">*</span>
-                            </label>
-                            <select x-model="form.role" required
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                <option value="user">User</option>
-                                <option value="moderator">Moderator</option>
-                                <option value="admin">Admin</option>
-                            </select>
-                        </div>
+                <!-- Role -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Role <span class="text-red-500">*</span>
+                    </label>
+                    <select x-model="form.role" required
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="user">User</option>
+                        <option value="moderator">Moderator</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
 
-                        <!-- Status -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Status <span class="text-red-500">*</span>
-                            </label>
-                            <select x-model="form.status" required
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                                <option value="pending">Pending</option>
-                            </select>
-                        </div>
+                <!-- Status -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Status <span class="text-red-500">*</span>
+                    </label>
+                    <select x-model="form.status" required
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="pending">Pending</option>
+                    </select>
+                </div>
 
-                        <!-- Bio -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Bio
-                            </label>
-                            <textarea x-model="form.bio" rows="3"
-                                placeholder="User description or notes..."
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
-                        </div>
-                    </div>
-
-                    <div class="mt-6 flex justify-end space-x-3">
-                        <button type="button" @click="showModal = false" class="btn btn-secondary">
-                            Cancel
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            <span x-text="editingUserRole ? 'Update' : 'Create'"></span>
-                        </button>
-                    </div>
-                </form>
+                <!-- Bio -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Bio
+                    </label>
+                    <textarea x-model="form.bio" rows="3"
+                        placeholder="User description or notes..."
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
             </div>
-        </div>
-    </div>
+
+            <x-slot name="footer">
+                <x-admin.button type="button" variant="secondary" @click="$dispatch('close-modal', 'user-role-modal')">
+                    Cancel
+                </x-admin.button>
+                <x-admin.button type="submit" variant="primary">
+                    <span x-text="editingUserRole ? 'Update' : 'Create'"></span>
+                </x-admin.button>
+            </x-slot>
+        </form>
+    </x-admin.modal>
 </div>
 
 <script>
@@ -222,7 +170,6 @@ function userRoleManager() {
     return {
         userRoles: @json($userRoles->items()),
         upts: @json($upts),
-        showModal: false,
         editingUserRole: null,
         filters: {
             search: '',
@@ -262,7 +209,7 @@ function userRoleManager() {
                 status: 'active',
                 bio: ''
             };
-            this.showModal = true;
+            this.$dispatch('open-modal', 'user-role-modal');
         },
         
         editUserRole(userRole) {
@@ -274,7 +221,7 @@ function userRoleManager() {
                 status: userRole.status,
                 bio: userRole.bio || ''
             };
-            this.showModal = true;
+            this.$dispatch('open-modal', 'user-role-modal');
         },
         
         async saveUserRole() {
@@ -296,29 +243,21 @@ function userRoleManager() {
                 const data = await response.json();
                 
                 if (data.success) {
-                    Swal.fire('Success', data.message, 'success');
-                    this.showModal = false;
-                    location.reload();
+                    window.AdminUtils?.toastSuccess(data.message || 'User role saved successfully');
+                    this.$dispatch('close-modal', 'user-role-modal');
+                    setTimeout(() => location.reload(), 1000);
                 } else {
-                    Swal.fire('Error', data.message, 'error');
+                    window.AdminUtils?.toastError(data.message || 'Failed to save user role');
                 }
             } catch (error) {
-                Swal.fire('Error', 'Failed to save user role', 'error');
+                window.AdminUtils?.toastError('Failed to save user role');
             }
         },
         
         async deleteUserRole(id) {
-            const result = await Swal.fire({
-                title: 'Are you sure?',
-                text: "This will delete the user role",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
-            });
+            const confirmed = await window.AdminUtils?.confirmDelete('User role ini akan dihapus. Lanjutkan?');
             
-            if (result.isConfirmed) {
+            if (confirmed) {
                 try {
                     const response = await fetch(`/admin/user-by-role/${id}`, {
                         method: 'DELETE',
@@ -330,13 +269,13 @@ function userRoleManager() {
                     const data = await response.json();
                     
                     if (data.success) {
-                        Swal.fire('Deleted!', data.message, 'success');
-                        location.reload();
+                        window.AdminUtils?.toastSuccess(data.message || 'User role deleted successfully');
+                        setTimeout(() => location.reload(), 1000);
                     } else {
-                        Swal.fire('Error', data.message, 'error');
+                        window.AdminUtils?.toastError(data.message || 'Failed to delete user role');
                     }
                 } catch (error) {
-                    Swal.fire('Error', 'Failed to delete user role', 'error');
+                    window.AdminUtils?.toastError('Failed to delete user role');
                 }
             }
         },

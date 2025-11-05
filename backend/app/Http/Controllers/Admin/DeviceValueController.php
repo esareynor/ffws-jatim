@@ -62,11 +62,76 @@ class DeviceValueController extends Controller
         $riverBasins = MasRiverBasin::select('id', 'code', 'name')->orderBy('name')->get();
         $deviceParameters = MasDeviceParameter::select('id', 'code', 'name')->orderBy('name')->get();
 
+        // Prepare table headers
+        $tableHeaders = [
+            ['key' => 'device', 'label' => 'Device'],
+            ['key' => 'location', 'label' => 'Location'],
+            ['key' => 'installation_date', 'label' => 'Installation', 'format' => 'date'],
+            ['key' => 'maintenance', 'label' => 'Maintenance'],
+            ['key' => 'status', 'label' => 'Status', 'format' => 'status'],
+            ['key' => 'actions', 'label' => 'Actions', 'format' => 'actions']
+        ];
+
+        // Format rows data
+        $deviceValues->getCollection()->transform(function ($deviceValue) {
+            // Format device name with icon
+            $deviceValue->formatted_device = $deviceValue->name ?? $deviceValue->device->name;
+            $deviceValue->formatted_device_code = $deviceValue->device->code;
+            
+            // Format location
+            if ($deviceValue->latitude && $deviceValue->longitude) {
+                $deviceValue->formatted_location = number_format($deviceValue->latitude, 6) . ', ' . number_format($deviceValue->longitude, 6);
+                if ($deviceValue->elevation) {
+                    $deviceValue->formatted_location .= ' (Elevation: ' . $deviceValue->elevation . 'm)';
+                }
+            } else {
+                $deviceValue->formatted_location = 'Not set';
+            }
+            
+            // Format maintenance
+            if ($deviceValue->next_maintenance) {
+                $daysUntil = $deviceValue->daysUntilMaintenance();
+                $deviceValue->formatted_maintenance = $deviceValue->next_maintenance->format('M d, Y');
+                $deviceValue->formatted_maintenance_status = $daysUntil !== null && $daysUntil < 0 ? 'overdue' : ($daysUntil !== null && $daysUntil <= 7 ? 'upcoming' : 'normal');
+                $deviceValue->formatted_maintenance_days = $daysUntil;
+            } else {
+                $deviceValue->formatted_maintenance = 'Not scheduled';
+                $deviceValue->formatted_maintenance_status = null;
+            }
+            
+            // Format threshold status
+            $deviceValue->formatted_threshold_status = $deviceValue->status;
+            
+            // Prepare actions
+            $deviceValue->actions = [
+                [
+                    'type' => 'link',
+                    'label' => 'Edit',
+                    'icon' => 'edit',
+                    'color' => 'blue',
+                    'url' => route('admin.device-values.edit', $deviceValue->id),
+                    'title' => 'Edit'
+                ],
+                [
+                    'type' => 'delete',
+                    'label' => 'Delete',
+                    'icon' => 'trash',
+                    'color' => 'red',
+                    'url' => route('admin.device-values.destroy', $deviceValue->id),
+                    'title' => 'Delete',
+                    'confirm' => 'Are you sure you want to delete this device configuration?'
+                ]
+            ];
+            
+            return $deviceValue;
+        });
+
         return view('admin.device_values.index', compact(
             'deviceValues',
             'devices',
             'riverBasins',
-            'deviceParameters'
+            'deviceParameters',
+            'tableHeaders'
         ));
     }
 

@@ -11,14 +11,14 @@
             <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Manage device photos, videos, and CCTV streams</p>
         </div>
         <div class="flex space-x-3">
-            <button @click="openUploadModal()" class="btn btn-primary">
+            <x-admin.button type="button" variant="primary" @click="openUploadModal()">
                 <i class="fas fa-upload mr-2"></i>
                 Upload Media
-            </button>
-            <a href="{{ route('admin.device-cctv.index') }}" class="btn btn-secondary">
+            </x-admin.button>
+            <x-admin.button href="{{ route('admin.device-cctv.index') }}" variant="secondary">
                 <i class="fas fa-video mr-2"></i>
                 CCTV Config
-            </a>
+            </x-admin.button>
         </div>
     </div>
 
@@ -74,40 +74,54 @@
     </div>
 
     <!-- Filters -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-        <form method="GET" class="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search media..."
-                class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-            
-            <select name="media_type" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                <option value="">All Types</option>
-                <option value="image" {{ request('media_type') == 'image' ? 'selected' : '' }}>Images</option>
-                <option value="video" {{ request('media_type') == 'video' ? 'selected' : '' }}>Videos</option>
-                <option value="document" {{ request('media_type') == 'document' ? 'selected' : '' }}>Documents</option>
-                <option value="cctv_snapshot" {{ request('media_type') == 'cctv_snapshot' ? 'selected' : '' }}>CCTV Snapshots</option>
-            </select>
+    @php
+        $filterConfig = [
+            [
+                'type' => 'text',
+                'name' => 'search',
+                'label' => 'Cari',
+                'placeholder' => 'Cari media...'
+            ],
+            [
+                'type' => 'select',
+                'name' => 'media_type',
+                'label' => 'Tipe Media',
+                'empty_option' => 'Semua Tipe',
+                'options' => [
+                    ['value' => 'image', 'label' => 'Images'],
+                    ['value' => 'video', 'label' => 'Videos'],
+                    ['value' => 'document', 'label' => 'Documents'],
+                    ['value' => 'cctv_snapshot', 'label' => 'CCTV Snapshots']
+                ]
+            ],
+            [
+                'type' => 'select',
+                'name' => 'device_code',
+                'label' => 'Device',
+                'empty_option' => 'Semua Device',
+                'options' => $devices->map(function($device) {
+                    return ['value' => $device->code, 'label' => $device->name];
+                })->toArray()
+            ],
+            [
+                'type' => 'select',
+                'name' => 'visibility',
+                'label' => 'Visibility',
+                'empty_option' => 'Semua Visibility',
+                'options' => [
+                    ['value' => 'public', 'label' => 'Public'],
+                    ['value' => 'private', 'label' => 'Private']
+                ]
+            ]
+        ];
+    @endphp
 
-            <select name="device_code" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                <option value="">All Devices</option>
-                @foreach($devices as $device)
-                <option value="{{ $device->code }}" {{ request('device_code') == $device->code ? 'selected' : '' }}>
-                    {{ $device->name }}
-                </option>
-                @endforeach
-            </select>
-
-            <select name="visibility" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                <option value="">All Visibility</option>
-                <option value="public" {{ request('visibility') == 'public' ? 'selected' : '' }}>Public</option>
-                <option value="private" {{ request('visibility') == 'private' ? 'selected' : '' }}>Private</option>
-            </select>
-
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-search mr-2"></i>
-                Filter
-            </button>
-        </form>
-    </div>
+    <x-filter-bar 
+        title="Filter & Pencarian Device Media"
+        :filters="$filterConfig"
+        :action="route('admin.device-media.index')"
+        gridCols="md:grid-cols-4"
+    />
 
     <!-- Media Grid -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
@@ -156,18 +170,18 @@
 
                     <!-- Actions -->
                     <div class="flex space-x-2">
-                        <button @click="viewMedia({{ json_encode($item) }})" class="flex-1 btn btn-sm btn-secondary">
+                        <x-admin.button type="button" variant="secondary" size="sm" @click="viewMedia({{ json_encode($item) }})" class="flex-1">
                             <i class="fas fa-eye"></i>
-                        </button>
-                        <button @click="editMedia({{ json_encode($item) }})" class="flex-1 btn btn-sm btn-primary">
+                        </x-admin.button>
+                        <x-admin.button type="button" variant="primary" size="sm" @click="editMedia({{ json_encode($item) }})" class="flex-1">
                             <i class="fas fa-edit"></i>
-                        </button>
-                        <a href="{{ route('admin.device-media.download', $item->id) }}" class="flex-1 btn btn-sm btn-success">
+                        </x-admin.button>
+                        <x-admin.button href="{{ route('admin.device-media.download', $item->id) }}" variant="success" size="sm" class="flex-1">
                             <i class="fas fa-download"></i>
-                        </a>
-                        <button @click="deleteMedia({{ $item->id }})" class="flex-1 btn btn-sm btn-danger">
+                        </x-admin.button>
+                        <x-admin.button type="button" variant="danger" size="sm" @click="deleteMedia({{ $item->id }})" class="flex-1">
                             <i class="fas fa-trash"></i>
-                        </button>
+                        </x-admin.button>
                     </div>
                 </div>
 
@@ -189,223 +203,214 @@
         <div class="text-center py-12">
             <i class="fas fa-photo-video text-5xl text-gray-300 mb-4"></i>
             <p class="text-gray-500">No media files found</p>
-            <button @click="openUploadModal()" class="mt-4 btn btn-primary">
+            <x-admin.button type="button" variant="primary" @click="openUploadModal()" class="mt-4">
                 <i class="fas fa-upload mr-2"></i>
                 Upload Your First Media
-            </button>
+            </x-admin.button>
         </div>
         @endif
     </div>
 
     <!-- Upload Modal -->
-    <div x-show="showUploadModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
-        <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75" @click="showUploadModal = false"></div>
+    <x-admin.modal 
+        size="lg"
+        name="upload-media-modal">
+        <x-slot name="title">
+            Upload Media
+        </x-slot>
+        
+        <form action="{{ route('admin.device-media.store') }}" method="POST" enctype="multipart/form-data">
+            @csrf
             
-            <div class="relative bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full p-6">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Upload Media</h3>
-                
-                <form action="{{ route('admin.device-media.store') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Device <span class="text-red-500">*</span>
-                            </label>
-                            <select name="mas_device_code" required
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                <option value="">Select Device</option>
-                                @foreach($devices as $device)
-                                <option value="{{ $device->code }}">{{ $device->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Device <span class="text-red-500">*</span>
+                    </label>
+                    <select name="mas_device_code" required
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select Device</option>
+                        @foreach($devices as $device)
+                        <option value="{{ $device->code }}">{{ $device->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Media Type <span class="text-red-500">*</span>
-                            </label>
-                            <select name="media_type" required
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                <option value="image">Image</option>
-                                <option value="video">Video</option>
-                                <option value="document">Document</option>
-                                <option value="cctv_snapshot">CCTV Snapshot</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Media Type <span class="text-red-500">*</span>
+                    </label>
+                    <select name="media_type" required
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="image">Image</option>
+                        <option value="video">Video</option>
+                        <option value="document">Document</option>
+                        <option value="cctv_snapshot">CCTV Snapshot</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Captured At
-                            </label>
-                            <input type="datetime-local" name="captured_at"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Captured At
+                    </label>
+                    <input type="datetime-local" name="captured_at"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
 
-                        <div class="col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Title
-                            </label>
-                            <input type="text" name="title"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Title
+                    </label>
+                    <input type="text" name="title"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
 
-                        <div class="col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Description
-                            </label>
-                            <textarea name="description" rows="3"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
-                        </div>
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Description
+                    </label>
+                    <textarea name="description" rows="3"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
 
-                        <div class="col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                File <span class="text-red-500">*</span>
-                            </label>
-                            <input type="file" name="file" required
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                            <p class="text-xs text-gray-500 mt-1">Max size: 50MB</p>
-                        </div>
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        File <span class="text-red-500">*</span>
+                    </label>
+                    <input type="file" name="file" required
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <p class="text-xs text-gray-500 mt-1">Max size: 50MB</p>
+                </div>
 
-                        <div class="col-span-2 flex space-x-4">
-                            <label class="flex items-center">
-                                <input type="checkbox" name="is_primary" value="1" class="rounded">
-                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Set as Primary</span>
-                            </label>
+                <div class="col-span-2 flex space-x-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="is_primary" value="1" class="rounded">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Set as Primary</span>
+                    </label>
 
-                            <label class="flex items-center">
-                                <input type="checkbox" name="is_public" value="1" checked class="rounded">
-                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Public</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="mt-6 flex justify-end space-x-3">
-                        <button type="button" @click="showUploadModal = false" class="btn btn-secondary">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Upload</button>
-                    </div>
-                </form>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="is_public" value="1" checked class="rounded">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Public</span>
+                    </label>
+                </div>
             </div>
-        </div>
-    </div>
+
+            <x-slot name="footer">
+                <x-admin.button type="button" variant="secondary" @click="$dispatch('close-modal', 'upload-media-modal')">Cancel</x-admin.button>
+                <x-admin.button type="submit" variant="primary">Upload</x-admin.button>
+            </x-slot>
+        </form>
+    </x-admin.modal>
 
     <!-- Edit Modal -->
-    <div x-show="showEditModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
-        <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75" @click="showEditModal = false"></div>
+    <x-admin.modal 
+        size="md"
+        name="edit-media-modal">
+        <x-slot name="title">
+            Edit Media
+        </x-slot>
+        
+        <form :action="'/admin/device-media/' + editingId" method="POST">
+            @csrf
+            @method('PUT')
             
-            <div class="relative bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Edit Media</h3>
-                
-                <form :action="'/admin/device-media/' + editingId" method="POST">
-                    @csrf
-                    @method('PUT')
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
-                            <input type="text" name="title" x-model="editForm.title"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                    <input type="text" name="title" x-model="editForm.title"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-                            <textarea name="description" x-model="editForm.description" rows="3"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
-                        </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                    <textarea name="description" x-model="editForm.description" rows="3"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Captured At</label>
-                            <input type="datetime-local" name="captured_at" x-model="editForm.captured_at"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Captured At</label>
+                    <input type="datetime-local" name="captured_at" x-model="editForm.captured_at"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
 
-                        <div class="flex space-x-4">
-                            <label class="flex items-center">
-                                <input type="checkbox" name="is_primary" x-model="editForm.is_primary" value="1" class="rounded">
-                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Set as Primary</span>
-                            </label>
+                <div class="flex space-x-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="is_primary" x-model="editForm.is_primary" value="1" class="rounded">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Set as Primary</span>
+                    </label>
 
-                            <label class="flex items-center">
-                                <input type="checkbox" name="is_public" x-model="editForm.is_public" value="1" class="rounded">
-                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Public</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="mt-6 flex justify-end space-x-3">
-                        <button type="button" @click="showEditModal = false" class="btn btn-secondary">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Update</button>
-                    </div>
-                </form>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="is_public" x-model="editForm.is_public" value="1" class="rounded">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Public</span>
+                    </label>
+                </div>
             </div>
-        </div>
-    </div>
+
+            <x-slot name="footer">
+                <x-admin.button type="button" variant="secondary" @click="$dispatch('close-modal', 'edit-media-modal')">Cancel</x-admin.button>
+                <x-admin.button type="submit" variant="primary">Update</x-admin.button>
+            </x-slot>
+        </form>
+    </x-admin.modal>
 
     <!-- View Modal -->
-    <div x-show="showViewModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
-        <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75" @click="showViewModal = false"></div>
-            
-            <div class="relative bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full p-6">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4" x-text="viewingMedia.title || viewingMedia.file_name"></h3>
-                
-                <div class="mb-4">
-                    <template x-if="viewingMedia.media_type === 'image' || viewingMedia.media_type === 'cctv_snapshot'">
-                        <img :src="viewingMedia.url" :alt="viewingMedia.title" class="w-full rounded-lg">
-                    </template>
-                    <template x-if="viewingMedia.media_type === 'video'">
-                        <video controls class="w-full rounded-lg">
-                            <source :src="viewingMedia.url" :type="viewingMedia.mime_type">
-                        </video>
-                    </template>
-                </div>
+    <x-admin.modal 
+        size="xl"
+        name="view-media-modal">
+        <x-slot name="title">
+            <span x-text="viewingMedia.title || viewingMedia.file_name"></span>
+        </x-slot>
+        
+        <div class="mb-4">
+            <template x-if="viewingMedia.media_type === 'image' || viewingMedia.media_type === 'cctv_snapshot'">
+                <img :src="viewingMedia.url" :alt="viewingMedia.title" class="w-full rounded-lg">
+            </template>
+            <template x-if="viewingMedia.media_type === 'video'">
+                <video controls class="w-full rounded-lg">
+                    <source :src="viewingMedia.url" :type="viewingMedia.mime_type">
+                </video>
+            </template>
+        </div>
 
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                        <span class="text-gray-500">Device:</span>
-                        <span class="font-medium" x-text="viewingMedia.device?.name"></span>
-                    </div>
-                    <div>
-                        <span class="text-gray-500">Type:</span>
-                        <span class="font-medium" x-text="viewingMedia.media_type_label"></span>
-                    </div>
-                    <div>
-                        <span class="text-gray-500">Size:</span>
-                        <span class="font-medium" x-text="viewingMedia.file_size_human"></span>
-                    </div>
-                    <div>
-                        <span class="text-gray-500">Uploaded:</span>
-                        <span class="font-medium" x-text="viewingMedia.created_at"></span>
-                    </div>
-                </div>
-
-                <div class="mt-4" x-show="viewingMedia.description">
-                    <p class="text-sm text-gray-600 dark:text-gray-400" x-text="viewingMedia.description"></p>
-                </div>
-
-                <div class="mt-6 flex justify-end">
-                    <button type="button" @click="showViewModal = false" class="btn btn-secondary">Close</button>
-                </div>
+        <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+                <span class="text-gray-500">Device:</span>
+                <span class="font-medium" x-text="viewingMedia.device?.name"></span>
+            </div>
+            <div>
+                <span class="text-gray-500">Type:</span>
+                <span class="font-medium" x-text="viewingMedia.media_type_label"></span>
+            </div>
+            <div>
+                <span class="text-gray-500">Size:</span>
+                <span class="font-medium" x-text="viewingMedia.file_size_human"></span>
+            </div>
+            <div>
+                <span class="text-gray-500">Uploaded:</span>
+                <span class="font-medium" x-text="viewingMedia.created_at"></span>
             </div>
         </div>
-    </div>
+
+        <div class="mt-4" x-show="viewingMedia.description">
+            <p class="text-sm text-gray-600 dark:text-gray-400" x-text="viewingMedia.description"></p>
+        </div>
+
+        <x-slot name="footer">
+            <x-admin.button type="button" variant="secondary" @click="$dispatch('close-modal', 'view-media-modal')">Close</x-admin.button>
+        </x-slot>
+    </x-admin.modal>
 </div>
 
 <script>
 function deviceMediaManager() {
     return {
-        showUploadModal: false,
-        showEditModal: false,
-        showViewModal: false,
         editingId: null,
         editForm: {},
         viewingMedia: {},
         
         openUploadModal() {
-            this.showUploadModal = true;
+            this.$dispatch('open-modal', 'upload-media-modal');
         },
         
         editMedia(media) {
@@ -417,26 +422,18 @@ function deviceMediaManager() {
                 is_primary: media.is_primary,
                 is_public: media.is_public
             };
-            this.showEditModal = true;
+            this.$dispatch('open-modal', 'edit-media-modal');
         },
         
         viewMedia(media) {
             this.viewingMedia = media;
-            this.showViewModal = true;
+            this.$dispatch('open-modal', 'view-media-modal');
         },
         
         async deleteMedia(id) {
-            const result = await Swal.fire({
-                title: 'Are you sure?',
-                text: "This will permanently delete the media file",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
-            });
+            const confirmed = await window.AdminUtils?.confirmDelete('File media ini akan dihapus secara permanen. Lanjutkan?');
             
-            if (result.isConfirmed) {
+            if (confirmed) {
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = `/admin/device-media/${id}`;

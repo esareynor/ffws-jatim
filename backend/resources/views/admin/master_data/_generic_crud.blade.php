@@ -10,10 +10,10 @@
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $title }}</h1>
             <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ $description }}</p>
         </div>
-        <button @click="openModal()" class="btn btn-primary">
+        <x-admin.button type="button" variant="primary" @click="openModal()">
             <i class="fas fa-plus mr-2"></i>
             Add {{ $singular }}
-        </button>
+        </x-admin.button>
     </div>
 
     <!-- Search -->
@@ -96,10 +96,10 @@
                     </div>
 
                     <div class="mt-6 flex justify-end space-x-3">
-                        <button type="button" @click="showModal = false" class="btn btn-secondary">Cancel</button>
-                        <button type="submit" class="btn btn-primary">
+                        <x-admin.button type="button" variant="secondary" @click="showModal = false">Cancel</x-admin.button>
+                        <x-admin.button type="submit" variant="primary">
                             <span x-text="editingItem ? 'Update' : 'Create'"></span>
-                        </button>
+                        </x-admin.button>
                     </div>
                 </form>
             </div>
@@ -172,30 +172,22 @@ function masterDataManager(endpoint, singular, plural, fields) {
                 const data = await response.json();
                 
                 if (response.ok) {
-                    Swal.fire('Success', data.message || 'Saved successfully', 'success');
+                    window.AdminUtils?.toastSuccess(data.message || 'Data saved successfully');
                     this.showModal = false;
-                    location.reload();
+                    setTimeout(() => location.reload(), 1000);
                 } else {
-                    Swal.fire('Error', data.message || 'Failed to save', 'error');
+                    window.AdminUtils?.toastError(data.message || 'Failed to save data');
                 }
             } catch (error) {
                 console.error('Save error:', error);
-                Swal.fire('Error', 'Failed to save data', 'error');
+                window.AdminUtils?.toastError('Failed to save data');
             }
         },
         
         async deleteItem(id) {
-            const result = await Swal.fire({
-                title: 'Are you sure?',
-                text: "This action cannot be undone",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
-            });
+            const confirmed = await window.AdminUtils?.confirmDelete('Tindakan ini tidak dapat dibatalkan. Lanjutkan?');
             
-            if (result.isConfirmed) {
+            if (confirmed) {
                 try {
                     const response = await fetch(`/api/admin/${this.endpoint}/${id}`, {
                         method: 'DELETE',
@@ -208,14 +200,14 @@ function masterDataManager(endpoint, singular, plural, fields) {
                     const data = await response.json();
                     
                     if (response.ok) {
-                        Swal.fire('Deleted!', data.message || 'Deleted successfully', 'success');
-                        location.reload();
+                        window.AdminUtils?.toastSuccess(data.message || 'Data deleted successfully');
+                        setTimeout(() => location.reload(), 1000);
                     } else {
-                        Swal.fire('Error', data.message || 'Failed to delete', 'error');
+                        window.AdminUtils?.toastError(data.message || 'Failed to delete data');
                     }
                 } catch (error) {
                     console.error('Delete error:', error);
-                    Swal.fire('Error', 'Failed to delete data', 'error');
+                    window.AdminUtils?.toastError('Failed to delete data');
                 }
             }
         },

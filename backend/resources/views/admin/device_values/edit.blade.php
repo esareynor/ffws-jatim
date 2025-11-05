@@ -316,14 +316,14 @@
 
         <!-- Actions -->
         <div class="flex justify-end space-x-3">
-            <a href="{{ route('admin.device-values.index') }}" class="btn btn-secondary">
+            <x-admin.button href="{{ route('admin.device-values.index') }}" variant="secondary">
                 <i class="fas fa-times mr-2"></i>
                 Cancel
-            </a>
-            <button type="submit" class="btn btn-primary">
+            </x-admin.button>
+            <x-admin.button type="submit" variant="primary">
                 <i class="fas fa-save mr-2"></i>
                 Update Configuration
-            </button>
+            </x-admin.button>
         </div>
     </form>
 </div>

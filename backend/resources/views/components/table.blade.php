@@ -238,7 +238,16 @@
                                             @break
                                         @default
                                             @if(isset($row->{'formatted_' . $header['key']}))
-                                                {{ $row->{'formatted_' . $header['key']} }}
+                                                @php
+                                                    $formattedValue = is_array($row) ? $row['formatted_' . $header['key']] : $row->{'formatted_' . $header['key']};
+                                                    // Check if formatted value should be rendered as raw HTML (contains HTML tags or Alpine.js directives)
+                                                    $needsRawRender = is_string($formattedValue) && (strpos($formattedValue, '<') !== false || strpos($formattedValue, '@click') !== false || strpos($formattedValue, 'x-') !== false);
+                                                @endphp
+                                                @if($needsRawRender)
+                                                    {!! $formattedValue !!}
+                                                @else
+                                                    {{ $formattedValue }}
+                                                @endif
                                             @else
                                                 @php
                                                     // Handle both array and object access
@@ -256,7 +265,16 @@
                                     @endswitch
                                 @else
                                     @if(isset($row->{'formatted_' . $header['key']}))
-                                        {{ $row->{'formatted_' . $header['key']} }}
+                                        @php
+                                            $formattedValue = is_array($row) ? $row['formatted_' . $header['key']] : $row->{'formatted_' . $header['key']};
+                                            // Check if formatted value should be rendered as raw HTML (contains HTML tags or Alpine.js directives)
+                                            $needsRawRender = is_string($formattedValue) && (strpos($formattedValue, '<') !== false || strpos($formattedValue, '@click') !== false || strpos($formattedValue, 'x-') !== false);
+                                        @endphp
+                                        @if($needsRawRender)
+                                            {!! $formattedValue !!}
+                                        @else
+                                            {{ $formattedValue }}
+                                        @endif
                                     @else
                                         @php
                                             // Handle both array and object access

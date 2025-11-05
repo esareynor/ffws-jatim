@@ -27,6 +27,39 @@ class DeviceParameterController extends Controller
 
         $parameters = $query->orderBy('name')->paginate(20);
 
+        // Prepare table headers
+        $tableHeaders = [
+            ['key' => 'code', 'label' => 'Code'],
+            ['key' => 'name', 'label' => 'Name'],
+            ['key' => 'created_at', 'label' => 'Created At', 'format' => 'date'],
+            ['key' => 'actions', 'label' => 'Actions', 'format' => 'actions']
+        ];
+
+        // Format rows data
+        $parameters->getCollection()->transform(function ($parameter) {
+            // Prepare actions with Alpine.js
+            $parameter->actions = [
+                [
+                    'type' => 'button',
+                    'label' => 'Edit',
+                    'icon' => 'edit',
+                    'color' => 'blue',
+                    'onclick' => 'editParameter(' . json_encode($parameter) . ')',
+                    'title' => 'Edit'
+                ],
+                [
+                    'type' => 'button',
+                    'label' => 'Delete',
+                    'icon' => 'trash',
+                    'color' => 'red',
+                    'onclick' => 'deleteParameter(' . $parameter->id . ')',
+                    'title' => 'Delete'
+                ]
+            ];
+            
+            return $parameter;
+        });
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
@@ -34,7 +67,7 @@ class DeviceParameterController extends Controller
             ]);
         }
 
-        return view('admin.device_parameters.index', compact('parameters'));
+        return view('admin.device_parameters.index', compact('parameters', 'tableHeaders'));
     }
 
     /**

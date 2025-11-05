@@ -10,10 +10,10 @@
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">WhatsApp Notification Management</h1>
             <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Manage WhatsApp numbers for flood warning notifications</p>
         </div>
-        <button @click="openCreateModal()" class="btn btn-primary">
+        <x-admin.button type="button" variant="primary" @click="openCreateModal()">
             <i class="fab fa-whatsapp mr-2"></i>
             Add Number
-        </button>
+        </x-admin.button>
     </div>
 
     <!-- Stats Cards -->
@@ -56,99 +56,59 @@
     </div>
 
     <!-- Filters -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-        <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name or number..."
-                class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-            
-            <select name="status" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                <option value="">All Status</option>
-                <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
-                <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
-            </select>
+    @php
+        $filterConfig = [
+            [
+                'type' => 'text',
+                'name' => 'search',
+                'label' => 'Cari',
+                'placeholder' => 'Cari nama atau nomor...'
+            ],
+            [
+                'type' => 'select',
+                'name' => 'status',
+                'label' => 'Status',
+                'empty_option' => 'Semua Status',
+                'options' => [
+                    ['value' => 'active', 'label' => 'Aktif'],
+                    ['value' => 'inactive', 'label' => 'Non-aktif']
+                ]
+            ],
+            [
+                'type' => 'select',
+                'name' => 'per_page',
+                'label' => 'Per Halaman',
+                'options' => [
+                    ['value' => '15', 'label' => '15'],
+                    ['value' => '25', 'label' => '25'],
+                    ['value' => '50', 'label' => '50']
+                ]
+            ]
+        ];
+    @endphp
 
-            <select name="per_page" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                <option value="15" {{ request('per_page') == '15' ? 'selected' : '' }}>15 per page</option>
-                <option value="25" {{ request('per_page') == '25' ? 'selected' : '' }}>25 per page</option>
-                <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>50 per page</option>
-            </select>
-
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-search mr-2"></i>
-                Filter
-            </button>
-        </form>
-    </div>
+    <x-filter-bar 
+        title="Filter & Pencarian WhatsApp Numbers"
+        :filters="$filterConfig"
+        :action="route('admin.whatsapp-numbers.index')"
+        gridCols="md:grid-cols-3"
+    />
 
     <!-- Table -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-900">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Phone Number</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Added</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                    @forelse($numbers as $number)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0 h-10 w-10">
-                                    <div class="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                                        <i class="fab fa-whatsapp text-green-600 dark:text-green-400"></i>
-                                    </div>
-                                </div>
-                                <div class="ml-4">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $number->name }}</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="text-sm font-mono text-gray-900 dark:text-white">{{ $number->formatted_number }}</span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <button @click="toggleStatus({{ $number->id }}, {{ $number->is_active ? 'true' : 'false' }})"
-                                class="px-2 py-1 text-xs rounded-full {{ $number->is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' }}">
-                                {{ $number->status_label }}
-                            </button>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ $number->created_at->format('d M Y') }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button @click="testNumber({{ $number->id }})" class="text-green-600 hover:text-green-900 mr-3" title="Test">
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
-                            <button @click="editNumber({{ json_encode($number) }})" class="text-blue-600 hover:text-blue-900 mr-3">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button @click="deleteNumber({{ $number->id }})" class="text-red-600 hover:text-red-900">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="5" class="px-6 py-12 text-center">
-                            <i class="fab fa-whatsapp text-5xl text-gray-300 mb-4"></i>
-                            <p class="text-gray-500">No WhatsApp numbers configured</p>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination -->
-        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-            {{ $numbers->links() }}
-        </div>
-    </div>
+    <x-table
+        title="Daftar WhatsApp Numbers"
+        :headers="$tableHeaders"
+        :rows="$numbers"
+        searchable
+        searchPlaceholder="Cari WhatsApp numbers..."
+    >
+        <x-slot:actions>
+            <x-admin.button type="button" variant="primary" @click="openCreateModal()">
+                <i class="fab fa-whatsapp mr-2"></i>
+                Add Number
+            </x-admin.button>
+        </x-slot:actions>
+    </x-table>
 
     <!-- Features Info -->
     <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -174,64 +134,59 @@
     </div>
 
     <!-- Create/Edit Modal -->
-    <div x-show="showModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
-        <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75" @click="showModal = false"></div>
+    <x-admin.modal 
+        size="md"
+        name="whatsapp-modal">
+        <x-slot name="title">
+            <span x-text="editingId ? 'Edit WhatsApp Number' : 'Add WhatsApp Number'"></span>
+        </x-slot>
+        
+        <form :action="editingId ? '{{ url('admin/whatsapp-numbers') }}/' + editingId : '{{ route('admin.whatsapp-numbers.store') }}'" 
+              method="POST">
+            @csrf
+            <input type="hidden" name="_method" x-bind:value="editingId ? 'PUT' : 'POST'">
             
-            <div class="relative bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                    <span x-text="editingId ? 'Edit WhatsApp Number' : 'Add WhatsApp Number'"></span>
-                </h3>
-                
-                <form :action="editingId ? '{{ url('admin/whatsapp-numbers') }}/' + editingId : '{{ route('admin.whatsapp-numbers.store') }}'" 
-                      method="POST">
-                    @csrf
-                    <input type="hidden" name="_method" x-bind:value="editingId ? 'PUT' : 'POST'">
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Name <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text" name="name" x-model="form.name" required
-                                placeholder="e.g., Budi Santoso"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Name <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" name="name" x-model="form.name" required
+                        placeholder="e.g., Budi Santoso"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Phone Number <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text" name="number" x-model="form.number" required
-                                placeholder="e.g., 081234567890 or 6281234567890"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                            <p class="text-xs text-gray-500 mt-1">Indonesian format: 08xx or 628xx</p>
-                        </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Phone Number <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" name="number" x-model="form.number" required
+                        placeholder="e.g., 081234567890 or 6281234567890"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <p class="text-xs text-gray-500 mt-1">Indonesian format: 08xx or 628xx</p>
+                </div>
 
-                        <div>
-                            <label class="flex items-center">
-                                <input type="checkbox" name="is_active" x-model="form.is_active" value="1" class="rounded">
-                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Active (will receive notifications)</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="mt-6 flex justify-end space-x-3">
-                        <button type="button" @click="showModal = false" class="btn btn-secondary">Cancel</button>
-                        <button type="submit" class="btn btn-primary">
-                            <span x-text="editingId ? 'Update' : 'Create'"></span>
-                        </button>
-                    </div>
-                </form>
+                <div>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="is_active" x-model="form.is_active" value="1" class="rounded">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Active (will receive notifications)</span>
+                    </label>
+                </div>
             </div>
-        </div>
-    </div>
+
+            <x-slot name="footer">
+                <x-admin.button type="button" variant="secondary" @click="$dispatch('close-modal', 'whatsapp-modal')">Cancel</x-admin.button>
+                <x-admin.button type="submit" variant="primary">
+                    <span x-text="editingId ? 'Update' : 'Create'"></span>
+                </x-admin.button>
+            </x-slot>
+        </form>
+    </x-admin.modal>
 </div>
 
 <script>
 function whatsappManager() {
     return {
-        showModal: false,
         editingId: null,
         form: {
             name: '',
@@ -246,7 +201,7 @@ function whatsappManager() {
                 number: '',
                 is_active: true
             };
-            this.showModal = true;
+            this.$dispatch('open-modal', 'whatsapp-modal');
         },
         
         editNumber(number) {
@@ -256,21 +211,13 @@ function whatsappManager() {
                 number: number.number,
                 is_active: number.is_active
             };
-            this.showModal = true;
+            this.$dispatch('open-modal', 'whatsapp-modal');
         },
         
         async deleteNumber(id) {
-            const result = await Swal.fire({
-                title: 'Are you sure?',
-                text: "This number will no longer receive notifications",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
-            });
+            const confirmed = await window.AdminUtils?.confirmDelete('Nomor WhatsApp ini akan dihapus dan tidak akan menerima notifikasi lagi. Lanjutkan?');
             
-            if (result.isConfirmed) {
+            if (confirmed) {
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = `/admin/whatsapp-numbers/${id}`;
@@ -296,12 +243,13 @@ function whatsappManager() {
                 const data = await response.json();
                 
                 if (data.success) {
-                    Swal.fire('Success', data.message, 'success').then(() => location.reload());
+                    window.AdminUtils?.toastSuccess(data.message || 'Status updated successfully');
+                    setTimeout(() => location.reload(), 1000);
                 } else {
-                    Swal.fire('Error', 'Failed to update status', 'error');
+                    window.AdminUtils?.toastError(data.message || 'Failed to update status');
                 }
             } catch (error) {
-                Swal.fire('Error', 'Failed to update status', 'error');
+                window.AdminUtils?.toastError('Failed to update status');
             }
         },
         
@@ -318,12 +266,12 @@ function whatsappManager() {
                 const data = await response.json();
                 
                 if (data.success) {
-                    Swal.fire('Test', data.message, 'info');
+                    window.AdminUtils?.toastInfo(data.message || 'Test connection initiated');
                 } else {
-                    Swal.fire('Error', 'Failed to test connection', 'error');
+                    window.AdminUtils?.toastError(data.message || 'Failed to test connection');
                 }
             } catch (error) {
-                Swal.fire('Error', 'Failed to test connection', 'error');
+                window.AdminUtils?.toastError('Failed to test connection');
             }
         }
     }

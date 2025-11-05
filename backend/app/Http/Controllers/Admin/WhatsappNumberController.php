@@ -39,7 +39,76 @@ class WhatsappNumberController extends Controller
             'inactive' => MasWhatsappNumber::where('is_active', false)->count(),
         ];
 
-        return view('admin.whatsapp_numbers.index', compact('numbers', 'stats'));
+        // Prepare table headers
+        $tableHeaders = [
+            ['key' => 'name', 'label' => 'Name'],
+            ['key' => 'formatted_number', 'label' => 'Phone Number'],
+            ['key' => 'formatted_status', 'label' => 'Status'],
+            ['key' => 'created_at', 'label' => 'Added', 'format' => 'date'],
+            ['key' => 'actions', 'label' => 'Actions', 'format' => 'actions']
+        ];
+
+        // Format rows data
+        $numbers->getCollection()->transform(function ($number) {
+            // Format name with icon
+            $number->formatted_name = sprintf(
+                '<div class="flex items-center">
+                    <div class="flex-shrink-0 h-10 w-10">
+                        <div class="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                            <i class="fab fa-whatsapp text-green-600 dark:text-green-400"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900 dark:text-white">%s</div>
+                    </div>
+                </div>',
+                e($number->name)
+            );
+            
+            // Format status dengan Alpine.js button
+            $statusClass = $number->is_active 
+                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+            $number->formatted_status = sprintf(
+                '<button @click="toggleStatus(%d, %s)" class="px-2 py-1 text-xs rounded-full %s">%s</button>',
+                $number->id,
+                $number->is_active ? 'true' : 'false',
+                $statusClass,
+                e($number->status_label)
+            );
+            
+            // Prepare actions
+            $number->actions = [
+                [
+                    'type' => 'button',
+                    'label' => 'Test',
+                    'icon' => 'paper-plane',
+                    'color' => 'green',
+                    'onclick' => 'testNumber(' . $number->id . ')',
+                    'title' => 'Test'
+                ],
+                [
+                    'type' => 'button',
+                    'label' => 'Edit',
+                    'icon' => 'edit',
+                    'color' => 'blue',
+                    'onclick' => 'editNumber(' . json_encode($number) . ')',
+                    'title' => 'Edit'
+                ],
+                [
+                    'type' => 'button',
+                    'label' => 'Delete',
+                    'icon' => 'trash',
+                    'color' => 'red',
+                    'onclick' => 'deleteNumber(' . $number->id . ')',
+                    'title' => 'Delete'
+                ]
+            ];
+            
+            return $number;
+        });
+
+        return view('admin.whatsapp_numbers.index', compact('numbers', 'stats', 'tableHeaders'));
     }
 
     /**

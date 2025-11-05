@@ -47,7 +47,95 @@ class UserByRoleController extends Controller
         $userRoles = $query->paginate(20);
         $upts = MasUpt::select('id', 'code', 'name')->orderBy('name')->get();
 
-        return view('admin.user_by_role.index', compact('userRoles', 'upts'));
+        // Prepare table headers
+        $tableHeaders = [
+            ['key' => 'formatted_phone_number', 'label' => 'Phone Number'],
+            ['key' => 'upt_name', 'label' => 'UPT'],
+            ['key' => 'formatted_role', 'label' => 'Role'],
+            ['key' => 'formatted_status', 'label' => 'Status'],
+            ['key' => 'formatted_bio', 'label' => 'Bio'],
+            ['key' => 'actions', 'label' => 'Actions', 'format' => 'actions']
+        ];
+
+        // Format rows data
+        $userRoles->getCollection()->transform(function ($userRole) {
+            // Format phone number dengan icon
+            $userRole->formatted_phone_number = sprintf(
+                '<div class="flex items-center">
+                    <i class="fas fa-phone text-gray-400 mr-2"></i>
+                    <span class="text-sm text-gray-900 dark:text-white">%s</span>
+                </div>',
+                e($userRole->phone_number ?: '-')
+            );
+            
+            // Format UPT
+            if ($userRole->upt) {
+                $userRole->upt_name = sprintf(
+                    '<div class="text-sm text-gray-900 dark:text-white">%s</div>
+                    <div class="text-xs text-gray-500">%s</div>',
+                    e($userRole->upt->name),
+                    e($userRole->upt->code)
+                );
+            } else {
+                $userRole->upt_name = '-';
+            }
+            
+            // Format role untuk status badge
+            $roleColors = [
+                'admin' => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
+                'moderator' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+                'user' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+            ];
+            $roleClass = $roleColors[$userRole->role] ?? 'bg-gray-100 text-gray-800';
+            $userRole->formatted_role = sprintf(
+                '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full %s">%s</span>',
+                $roleClass,
+                e(ucfirst($userRole->role))
+            );
+            
+            // Format status untuk status badge
+            $statusColors = [
+                'active' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+                'inactive' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+                'pending' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
+            ];
+            $statusClass = $statusColors[$userRole->status] ?? 'bg-gray-100 text-gray-800';
+            $userRole->formatted_status = sprintf(
+                '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full %s">%s</span>',
+                $statusClass,
+                e(ucfirst($userRole->status))
+            );
+            
+            // Format bio
+            $userRole->formatted_bio = sprintf(
+                '<div class="text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate">%s</div>',
+                e($userRole->bio ?: '-')
+            );
+            
+            // Prepare actions
+            $userRole->actions = [
+                [
+                    'type' => 'button',
+                    'label' => 'Edit',
+                    'icon' => 'edit',
+                    'color' => 'blue',
+                    'onclick' => 'editUserRole(' . json_encode($userRole) . ')',
+                    'title' => 'Edit'
+                ],
+                [
+                    'type' => 'button',
+                    'label' => 'Delete',
+                    'icon' => 'trash',
+                    'color' => 'red',
+                    'onclick' => 'deleteUserRole(' . $userRole->id . ')',
+                    'title' => 'Delete'
+                ]
+            ];
+            
+            return $userRole;
+        });
+
+        return view('admin.user_by_role.index', compact('userRoles', 'upts', 'tableHeaders'));
     }
 
     /**

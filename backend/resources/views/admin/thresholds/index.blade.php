@@ -10,10 +10,10 @@
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Threshold Management</h1>
             <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Manage dynamic threshold templates, levels, and sensor assignments</p>
         </div>
-        <button @click="openTemplateModal()" class="btn btn-primary">
+        <x-admin.button type="button" variant="primary" @click="openTemplateModal()">
             <i class="fas fa-plus mr-2"></i>
             New Template
-        </button>
+        </x-admin.button>
     </div>
 
     <!-- Tabs -->
@@ -126,10 +126,10 @@
             <i class="fas fa-layer-group text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
             <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No Templates Yet</h3>
             <p class="text-gray-500 dark:text-gray-400 mb-4">Create your first threshold template to get started</p>
-            <button @click="openTemplateModal()" class="btn btn-primary">
+            <x-admin.button type="button" variant="primary" @click="openTemplateModal()">
                 <i class="fas fa-plus mr-2"></i>
                 Create Template
-            </button>
+            </x-admin.button>
         </div>
     </div>
 
@@ -142,10 +142,10 @@
                     <input type="text" x-model="assignmentSearch" placeholder="Search sensor..."
                         class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
                 </div>
-                <button @click="openAssignmentModal()" class="btn btn-primary">
+                <x-admin.button type="button" variant="primary" @click="openAssignmentModal()">
                     <i class="fas fa-plus mr-2"></i>
                     Assign Template
-                </button>
+                </x-admin.button>
             </div>
 
             <!-- Assignments Table -->
@@ -210,10 +210,10 @@
                 <i class="fas fa-link text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
                 <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No Assignments Yet</h3>
                 <p class="text-gray-500 dark:text-gray-400 mb-4">Assign threshold templates to sensors</p>
-                <button @click="openAssignmentModal()" class="btn btn-primary">
+                <x-admin.button type="button" variant="primary" @click="openAssignmentModal()">
                     <i class="fas fa-plus mr-2"></i>
                     Create Assignment
-                </button>
+                </x-admin.button>
             </div>
         </div>
     </div>
@@ -270,12 +270,12 @@
                     </div>
 
                     <div class="mt-6 flex justify-end space-x-3">
-                        <button type="button" @click="showTemplateModal = false" class="btn btn-secondary">
+                        <x-admin.button type="button" variant="secondary" @click="showTemplateModal = false">
                             Cancel
-                        </button>
-                        <button type="submit" class="btn btn-primary">
+                        </x-admin.button>
+                        <x-admin.button type="submit" variant="primary">
                             <span x-text="editingTemplate ? 'Update' : 'Create'"></span>
-                        </button>
+                        </x-admin.button>
                     </div>
                 </form>
             </div>
@@ -292,9 +292,9 @@
                     <h3 class="text-lg font-medium text-gray-900 dark:text-white">
                         Manage Levels: <span x-text="currentTemplate?.name"></span>
                     </h3>
-                    <button @click="addLevel()" class="btn btn-sm btn-primary">
+                    <x-admin.button type="button" variant="primary" size="sm" @click="addLevel()">
                         <i class="fas fa-plus mr-2"></i> Add Level
-                    </button>
+                    </x-admin.button>
                 </div>
 
                 <!-- Levels List -->
@@ -349,12 +349,12 @@
                 </div>
 
                 <div class="flex justify-end space-x-3">
-                    <button type="button" @click="showLevelsModal = false" class="btn btn-secondary">
+                    <x-admin.button type="button" variant="secondary" @click="showLevelsModal = false">
                         Cancel
-                    </button>
-                    <button @click="saveLevels()" class="btn btn-primary">
+                    </x-admin.button>
+                    <x-admin.button type="button" variant="primary" @click="saveLevels()">
                         Save Levels
-                    </button>
+                    </x-admin.button>
                 </div>
             </div>
         </div>
@@ -423,12 +423,12 @@
                     </div>
 
                     <div class="mt-6 flex justify-end space-x-3">
-                        <button type="button" @click="showAssignmentModal = false" class="btn btn-secondary">
+                        <x-admin.button type="button" variant="secondary" @click="showAssignmentModal = false">
                             Cancel
-                        </button>
-                        <button type="submit" class="btn btn-primary">
+                        </x-admin.button>
+                        <x-admin.button type="submit" variant="primary">
                             <span x-text="editingAssignment ? 'Update' : 'Assign'"></span>
-                        </button>
+                        </x-admin.button>
                     </div>
                 </form>
             </div>
@@ -532,29 +532,21 @@ function thresholdManager() {
                 const data = await response.json();
                 
                 if (data.success) {
-                    Swal.fire('Success', data.message, 'success');
+                    window.AdminUtils?.toastSuccess(data.message || 'Template saved successfully');
                     this.showTemplateModal = false;
-                    location.reload();
+                    setTimeout(() => location.reload(), 1000);
                 } else {
-                    Swal.fire('Error', data.message, 'error');
+                    window.AdminUtils?.toastError(data.message || 'Failed to save template');
                 }
             } catch (error) {
-                Swal.fire('Error', 'Failed to save template', 'error');
+                window.AdminUtils?.toastError('Failed to save template');
             }
         },
         
         async deleteTemplate(id) {
-            const result = await Swal.fire({
-                title: 'Are you sure?',
-                text: "This will delete the template and all its levels",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
-            });
+            const confirmed = await window.AdminUtils?.confirmDelete('Template ini akan dihapus beserta semua levelnya. Lanjutkan?');
             
-            if (result.isConfirmed) {
+            if (confirmed) {
                 try {
                     const response = await fetch(`/admin/thresholds/templates/${id}`, {
                         method: 'DELETE',
@@ -566,13 +558,13 @@ function thresholdManager() {
                     const data = await response.json();
                     
                     if (data.success) {
-                        Swal.fire('Deleted!', data.message, 'success');
-                        location.reload();
+                        window.AdminUtils?.toastSuccess(data.message || 'Template deleted successfully');
+                        setTimeout(() => location.reload(), 1000);
                     } else {
-                        Swal.fire('Error', data.message, 'error');
+                        window.AdminUtils?.toastError(data.message || 'Failed to delete template');
                     }
                 } catch (error) {
-                    Swal.fire('Error', 'Failed to delete template', 'error');
+                    window.AdminUtils?.toastError('Failed to delete template');
                 }
             }
         },
@@ -630,11 +622,11 @@ function thresholdManager() {
                     });
                 }
                 
-                Swal.fire('Success', 'Levels saved successfully', 'success');
+                window.AdminUtils?.toastSuccess('Levels saved successfully');
                 this.showLevelsModal = false;
-                location.reload();
+                setTimeout(() => location.reload(), 1000);
             } catch (error) {
-                Swal.fire('Error', 'Failed to save levels', 'error');
+                window.AdminUtils?.toastError('Failed to save levels');
             }
         },
         
@@ -683,29 +675,21 @@ function thresholdManager() {
                 const data = await response.json();
                 
                 if (data.success) {
-                    Swal.fire('Success', data.message, 'success');
+                    window.AdminUtils?.toastSuccess(data.message || 'Assignment saved successfully');
                     this.showAssignmentModal = false;
                     this.loadAssignments();
                 } else {
-                    Swal.fire('Error', data.message, 'error');
+                    window.AdminUtils?.toastError(data.message || 'Failed to save assignment');
                 }
             } catch (error) {
-                Swal.fire('Error', 'Failed to save assignment', 'error');
+                window.AdminUtils?.toastError('Failed to save assignment');
             }
         },
         
         async deleteAssignment(id) {
-            const result = await Swal.fire({
-                title: 'Are you sure?',
-                text: "This will remove the threshold assignment",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
-            });
+            const confirmed = await window.AdminUtils?.confirmDelete('Threshold assignment ini akan dihapus. Lanjutkan?');
             
-            if (result.isConfirmed) {
+            if (confirmed) {
                 try {
                     const response = await fetch(`/admin/thresholds/assignments/${id}`, {
                         method: 'DELETE',
@@ -717,13 +701,13 @@ function thresholdManager() {
                     const data = await response.json();
                     
                     if (data.success) {
-                        Swal.fire('Deleted!', data.message, 'success');
+                        window.AdminUtils?.toastSuccess(data.message || 'Assignment deleted successfully');
                         this.loadAssignments();
                     } else {
-                        Swal.fire('Error', data.message, 'error');
+                        window.AdminUtils?.toastError(data.message || 'Failed to delete assignment');
                     }
                 } catch (error) {
-                    Swal.fire('Error', 'Failed to delete assignment', 'error');
+                    window.AdminUtils?.toastError('Failed to delete assignment');
                 }
             }
         },

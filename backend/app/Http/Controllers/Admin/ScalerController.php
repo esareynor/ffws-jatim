@@ -51,7 +51,68 @@ class ScalerController extends Controller
         $models = MasModel::select('code', 'name')->get();
         $sensors = MasSensor::select('code', 'description')->get();
 
-        return view('admin.scalers.index', compact('scalers', 'models', 'sensors'));
+        // Prepare table headers
+        $tableHeaders = [
+            ['key' => 'code', 'label' => 'Code'],
+            ['key' => 'name', 'label' => 'Name'],
+            ['key' => 'technique_label', 'label' => 'Technique'],
+            ['key' => 'axis_label', 'label' => 'Axis'],
+            ['key' => 'model_name', 'label' => 'Model'],
+            ['key' => 'sensor_description', 'label' => 'Sensor'],
+            ['key' => 'formatted_status_label', 'label' => 'Status'],
+            ['key' => 'actions', 'label' => 'Actions', 'format' => 'actions']
+        ];
+
+        // Format rows data
+        $scalers->getCollection()->transform(function ($scaler) {
+            // Format model and sensor
+            $scaler->model_name = $scaler->model->name ?? '-';
+            $scaler->sensor_description = $scaler->sensor->description ?? '-';
+            
+            // Format status dengan Alpine.js button
+            $statusClass = $scaler->is_active 
+                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+            $scaler->formatted_status_label = sprintf(
+                '<button @click="toggleStatus(%d, %s)" class="px-2 py-1 text-xs rounded-full %s">%s</button>',
+                $scaler->id,
+                $scaler->is_active ? 'true' : 'false',
+                $statusClass,
+                e($scaler->status_label)
+            );
+            
+            // Prepare actions
+            $scaler->actions = [
+                [
+                    'type' => 'link',
+                    'label' => 'Download',
+                    'icon' => 'download',
+                    'color' => 'green',
+                    'url' => route('admin.scalers.download', $scaler->id),
+                    'title' => 'Download'
+                ],
+                [
+                    'type' => 'button',
+                    'label' => 'Edit',
+                    'icon' => 'edit',
+                    'color' => 'blue',
+                    'onclick' => 'editScaler(' . json_encode($scaler) . ')',
+                    'title' => 'Edit'
+                ],
+                [
+                    'type' => 'button',
+                    'label' => 'Delete',
+                    'icon' => 'trash',
+                    'color' => 'red',
+                    'onclick' => 'deleteScaler(' . $scaler->id . ')',
+                    'title' => 'Delete'
+                ]
+            ];
+            
+            return $scaler;
+        });
+
+        return view('admin.scalers.index', compact('scalers', 'models', 'sensors', 'tableHeaders'));
     }
 
     /**

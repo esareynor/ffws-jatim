@@ -5,13 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DataActual extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'mas_sensor_id',
         'mas_sensor_code',
         'value',
         'received_at',
@@ -28,7 +28,15 @@ class DataActual extends Model
      */
     public function sensor(): BelongsTo
     {
-        return $this->belongsTo(MasSensor::class, 'mas_sensor_id');
+        return $this->belongsTo(MasSensor::class, 'mas_sensor_code', 'code');
+    }
+
+    /**
+     * Get calculated discharges for this data actual
+     */
+    public function calculatedDischarges(): HasMany
+    {
+        return $this->hasMany(CalculatedDischarge::class, 'data_actual_id');
     }
 
     /**
@@ -71,5 +79,29 @@ class DataActual extends Model
     public function scopeByDateRange($query, $startDate, $endDate)
     {
         return $query->whereBetween('received_at', [$startDate, $endDate]);
+    }
+
+    /**
+     * Calculate threshold status based on sensor thresholds
+     */
+    public function calculateThresholdStatus($sensor): string
+    {
+        if (!$sensor) {
+            return 'safe';
+        }
+
+        // Get thresholds from sensor
+        $thresholdSafe = $sensor->threshold_safe ?? 1.0;
+        $thresholdWarning = $sensor->threshold_warning ?? 2.0;
+        $thresholdDanger = $sensor->threshold_danger ?? 3.0;
+
+        // Determine status based on value
+        if ($this->value >= $thresholdDanger) {
+            return 'danger';
+        } elseif ($this->value >= $thresholdWarning) {
+            return 'warning';
+        } else {
+            return 'safe';
+        }
     }
 }

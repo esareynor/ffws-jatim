@@ -128,16 +128,18 @@ class MasSensorController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'device_id' => 'required|exists:mas_devices,id',
+            'mas_device_code' => 'required|string|max:100|exists:mas_devices,code',
             'code' => 'required|string|max:100|unique:mas_sensors,code',
             'parameter' => 'required|in:water_level,rainfall',
             'unit' => 'required|string|max:50',
             'description' => 'nullable|string|max:500',
-            'mas_model_id' => 'nullable|exists:mas_models,id',
+            'mas_model_code' => 'nullable|string|max:100|exists:mas_models,code',
             'threshold_safe' => 'nullable|numeric|min:0',
             'threshold_warning' => 'nullable|numeric|min:0',
             'threshold_danger' => 'nullable|numeric|min:0',
             'status' => 'required|in:active,inactive',
+            'forecasting_status' => 'nullable|in:stopped,running,paused',
+            'is_active' => 'nullable|boolean',
             'last_seen' => 'nullable|date',
         ]);
 
@@ -178,16 +180,18 @@ class MasSensorController extends Controller
     public function update(Request $request, MasSensor $sensor): RedirectResponse
     {
         $validated = $request->validate([
-            'device_id' => 'required|exists:mas_devices,id',
+            'mas_device_code' => 'required|string|max:100|exists:mas_devices,code',
             'code' => 'required|string|max:100|unique:mas_sensors,code,' . $sensor->id,
             'parameter' => 'required|in:water_level,rainfall',
             'unit' => 'required|string|max:50',
             'description' => 'nullable|string|max:500',
-            'mas_model_id' => 'nullable|exists:mas_models,id',
+            'mas_model_code' => 'nullable|string|max:100|exists:mas_models,code',
             'threshold_safe' => 'nullable|numeric|min:0',
             'threshold_warning' => 'nullable|numeric|min:0',
             'threshold_danger' => 'nullable|numeric|min:0',
             'status' => 'required|in:active,inactive',
+            'forecasting_status' => 'nullable|in:stopped,running,paused',
+            'is_active' => 'nullable|boolean',
             'last_seen' => 'nullable|date',
         ]);
 

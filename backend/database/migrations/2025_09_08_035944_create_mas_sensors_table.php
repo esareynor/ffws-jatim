@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('mas_sensors', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('device_id')->constrained('mas_devices')->onUpdate('restrict')->onDelete('cascade');
+            $table->string('mas_device_code', 100);
             $table->string('code', 100)->unique();
             $table->enum('parameter', ['water_level', 'rainfall']);
             $table->string('unit', 50);
@@ -22,13 +22,21 @@ return new class extends Migration
             $table->double('threshold_safe')->nullable();
             $table->double('threshold_warning')->nullable();
             $table->double('threshold_danger')->nullable();
-            $table->enum('status', ['active', 'inactive']);
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->dateTime('last_seen')->nullable();
             $table->timestamps();
-            
+
             // Indexes
             $table->index('parameter', 'idx_sensors_parameter');
             $table->index('status', 'idx_sensors_status');
+            $table->index('mas_device_code', 'idx_sensors_device_code');
+
+            // Foreign key
+            $table->foreign('mas_device_code', 'fk_sensors_device_code')
+                ->references('code')
+                ->on('mas_devices')
+                ->onDelete('cascade')
+                ->onUpdate('cascade');
         });
     }
 

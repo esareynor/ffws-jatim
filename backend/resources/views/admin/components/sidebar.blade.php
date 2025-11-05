@@ -99,13 +99,13 @@
          </div>
       </div>
 
-      <!-- MASTER DATA SECTION -->
+      <!-- DEVICES & SENSORS SECTION -->
       <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
          <div class="space-y-1">
-            <!-- Master Data Heading -->
+            <!-- Devices & Sensors Heading -->
             <div class="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider transition-colors duration-200"
                :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0 h-0 py-0 overflow-hidden': !$store.sidebar.open && window.innerWidth >= 1024 }">
-               Master Data</div>
+               Devices & Sensors</div>
 
             <!-- Devices -->
             <a href="{{ route('admin.devices.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
@@ -143,30 +143,6 @@
                   :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Device Values</span>
             </a>
 
-            <!-- Device CCTV -->
-            <a href="{{ route('admin.device-cctv.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
-                              {{ request()->routeIs('admin.device-cctv.*')
-   ? 'active bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-   : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white' }}"
-               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
-               <i class="fas fa-video text-base"
-                  :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
-               <span
-                  :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Device CCTV</span>
-            </a>
-
-            <!-- Device Media -->
-            <a href="{{ route('admin.device-media.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
-                              {{ request()->routeIs('admin.device-media.*')
-   ? 'active bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-   : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white' }}"
-               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
-               <i class="fas fa-photo-film text-base"
-                  :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
-               <span
-                  :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Device Media</span>
-            </a>
-
             <!-- Sensors -->
             <a href="{{ route('admin.sensors.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
                               {{ request()->routeIs('admin.sensors.*')
@@ -193,13 +169,47 @@
          </div>
       </div>
 
-      <!-- DATA SECTION -->
+      <!-- MEDIA & MONITORING SECTION -->
       <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
          <div class="space-y-1">
-            <!-- Data Heading -->
+            <!-- Media & Monitoring Heading -->
             <div class="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider transition-colors duration-200"
                :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0 h-0 py-0 overflow-hidden': !$store.sidebar.open && window.innerWidth >= 1024 }">
-               Data</div>
+               Media & Monitoring</div>
+
+            <!-- Device CCTV -->
+            <a href="{{ route('admin.device-cctv.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
+                              {{ request()->routeIs('admin.device-cctv.*')
+   ? 'active bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+   : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white' }}"
+               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               <i class="fas fa-video text-base"
+                  :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+               <span
+                  :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Device CCTV</span>
+            </a>
+
+            <!-- Device Media -->
+            <a href="{{ route('admin.device-media.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
+                              {{ request()->routeIs('admin.device-media.*')
+   ? 'active bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+   : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white' }}"
+               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               <i class="fas fa-photo-film text-base"
+                  :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+               <span
+                  :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Device Media</span>
+            </a>
+         </div>
+      </div>
+
+      <!-- DATA MANAGEMENT SECTION -->
+      <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
+         <div class="space-y-1">
+            <!-- Data Management Heading -->
+            <div class="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider transition-colors duration-200"
+               :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0 h-0 py-0 overflow-hidden': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               Data Management</div>
 
             <!-- Data Actuals -->
             <a href="{{ route('admin.data-actuals.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
@@ -213,6 +223,18 @@
                   :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Data Actuals</span>
             </a>
 
+            <!-- Sensor Values -->
+            <a href="{{ route('admin.sensor-values.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
+                              {{ request()->routeIs('admin.sensor-values.*')
+   ? 'active bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+   : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white' }}"
+               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               <i class="fas fa-table text-base"
+                  :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+               <span
+                  :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Sensor Values</span>
+            </a>
+
             <!-- Rating Curves -->
             <a href="{{ route('admin.rating-curves.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
                               {{ request()->routeIs('admin.rating-curves.*')
@@ -223,6 +245,42 @@
                   :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
                <span
                   :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Rating Curves</span>
+            </a>
+
+            <!-- Forecasting Control -->
+            <a href="{{ route('admin.forecasting-control.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
+                              {{ request()->routeIs('admin.forecasting-control.*')
+   ? 'active bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+   : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white' }}"
+               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               <i class="fas fa-brain text-base"
+                  :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+               <span
+                  :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Forecasting Control</span>
+            </a>
+
+            <!-- Calculated Discharge -->
+            <a href="{{ route('admin.calculated-discharges.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
+                              {{ request()->routeIs('admin.calculated-discharges.*')
+   ? 'active bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+   : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white' }}"
+               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               <i class="fas fa-water text-base"
+                  :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+               <span
+                  :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Calculated Discharge</span>
+            </a>
+
+            <!-- Predicted Discharge -->
+            <a href="{{ route('admin.predicted-discharges.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
+                              {{ request()->routeIs('admin.predicted-discharges.*')
+   ? 'active bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+   : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white' }}"
+               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               <i class="fas fa-chart-line text-base"
+                  :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+               <span
+                  :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Predicted Discharge</span>
             </a>
 
             <!-- Scalers -->
@@ -251,13 +309,13 @@
          </div>
       </div>
 
-      <!-- FORECASTING SECTION -->
+      <!-- FORECASTING & PREDICTION SECTION -->
       <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
          <div class="space-y-1">
-            <!-- Forecasting Heading -->
+            <!-- Forecasting & Prediction Heading -->
             <div class="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider transition-colors duration-200"
                :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0 h-0 py-0 overflow-hidden': !$store.sidebar.open && window.innerWidth >= 1024 }">
-               Forecasting</div>
+               Forecasting & Prediction</div>
 
             <!-- Models -->
             <a href="{{ route('admin.mas-models.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
@@ -285,13 +343,13 @@
          </div>
       </div>
 
-      <!-- REGION SECTION -->
+      <!-- REGION & TERRITORY SECTION -->
       <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
          <div class="space-y-1">
-            <!-- Region Heading -->
+            <!-- Region & Territory Heading -->
             <div class="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider transition-colors duration-200"
                :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0 h-0 py-0 overflow-hidden': !$store.sidebar.open && window.innerWidth >= 1024 }">
-               Region</div>
+               Region & Territory</div>
 
             <!-- GeoJSON Files -->
             <a href="{{ route('admin.geojson-files.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
@@ -305,7 +363,19 @@
                   :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">GeoJSON Files</span>
             </a>
 
-            <!-- Daerah Aliran Sungai -->
+            <!-- GeoJSON Mapping -->
+            <a href="{{ route('admin.geojson-mappings.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
+                              {{ request()->routeIs('admin.geojson-mappings.*')
+   ? 'active bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+   : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white' }}"
+               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               <i class="fas fa-map-marked-alt text-base"
+                  :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+               <span
+                  :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">GeoJSON Mapping</span>
+            </a>
+
+            <!-- Wilayah Sungai -->
             <a href="{{ route('admin.region.river-basins.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
                             {{ request()->routeIs('admin.region.river-basins.*')
    ? 'active bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
@@ -314,12 +384,36 @@
                <i class="fas fa-water text-base"
                   :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
                <span
-                  :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Daerah Aliran Sungai</span>
+                  :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Wilayah Sungai</span>
             </a>
 
-            <!-- Kabupaten -->
-            <a href="{{ route('admin.region.kabupaten') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
-                          {{ request()->routeIs('admin.region.kabupaten')
+            <!-- River Shapes -->
+            <a href="{{ route('admin.river-shapes.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
+                            {{ request()->routeIs('admin.river-shapes.*')
+   ? 'active bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+   : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white' }}"
+               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               <i class="fas fa-draw-polygon text-base"
+                  :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+               <span
+                  :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">River Shapes</span>
+            </a>
+
+            <!-- Provinsi -->
+            <a href="{{ route('admin.region.provinces.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
+                            {{ request()->routeIs('admin.region.provinces.*')
+   ? 'active bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+   : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white' }}"
+               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               <i class="fas fa-map-marked-alt text-base"
+                  :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+               <span
+                  :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Provinsi</span>
+            </a>
+
+            <!-- Kabupaten (Cities) -->
+            <a href="{{ route('admin.region.cities.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
+                          {{ request()->routeIs('admin.region.cities.*')
    ? 'active bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white' }}"
                :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
@@ -329,9 +423,9 @@
                   :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Kabupaten</span>
             </a>
 
-            <!-- Kecamatan -->
-            <a href="{{ route('admin.region.kecamatan') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
-                          {{ request()->routeIs('admin.region.kecamatan')
+            <!-- Kecamatan (Regencies) -->
+            <a href="{{ route('admin.region.regencies.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
+                          {{ request()->routeIs('admin.region.regencies.*')
    ? 'active bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white' }}"
                :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
@@ -341,9 +435,9 @@
                   :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Kecamatan</span>
             </a>
 
-            <!-- Desa -->
-            <a href="{{ route('admin.region.desa') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
-                          {{ request()->routeIs('admin.region.desa')
+            <!-- Desa (Villages) -->
+            <a href="{{ route('admin.region.villages.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
+                          {{ request()->routeIs('admin.region.villages.*')
    ? 'active bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white' }}"
                :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
@@ -351,6 +445,30 @@
                   :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
                <span
                   :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Desa</span>
+            </a>
+
+            <!-- UPT -->
+            <a href="{{ route('admin.upt.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
+                          {{ request()->routeIs('admin.upt.*')
+   ? 'active bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+   : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white' }}"
+               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               <i class="fas fa-building text-base"
+                  :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+               <span
+                  :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">UPT</span>
+            </a>
+
+            <!-- UPTD -->
+            <a href="{{ route('admin.uptd.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
+                          {{ request()->routeIs('admin.uptd.*')
+   ? 'active bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+   : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white' }}"
+               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               <i class="fas fa-warehouse text-base"
+                  :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+               <span
+                  :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">UPTD</span>
             </a>
          </div>
       </div>

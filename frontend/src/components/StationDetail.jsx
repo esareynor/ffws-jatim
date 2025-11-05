@@ -1,8 +1,10 @@
 // src/components/StationDetail.jsx
 
 import React, { useState, useEffect } from "react";
-import SidebarTemplate from "./layout/SidebarTemplate"; // ✅ Path relatif ke layout
-import { getStatusColor, getStatusBgColor, getStatusText } from "../utils/statusUtils"; // ✅ Path relatif ke utils
+import SidebarTemplate from "@components/layout/SidebarTemplate";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faLocationDot } from '@fortawesome/free-solid-svg-icons';
+import { getStatusColor, getStatusBgColor, getStatusText } from "@/utils/statusUtils";
 
 const StationDetail = ({
     selectedStation,
@@ -31,13 +33,15 @@ const StationDetail = ({
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    // Mengatur animasi visibility saat panel dibuka/ditutup
+    // Mengatur animasi visibility saat panel dibuka/ditutup dengan efek fade
     useEffect(() => {
         if (selectedStation) {
+            // Fade in - delay kecil untuk memicu animasi
             setTimeout(() => {
                 setIsVisible(true);
             }, 10);
         } else {
+            // Fade out - langsung set invisible
             setIsVisible(false);
         }
     }, [selectedStation]);
@@ -119,6 +123,23 @@ const StationDetail = ({
         }, 300); // Sama dengan durasi animasi
     };
 
+    // Handler untuk trigger close dari backdrop - untuk memberikan animasi
+    const handleTriggerClose = () => {
+        handleClose();
+    };
+
+    // Expose method untuk parent component
+    useEffect(() => {
+        // Set up event listener untuk trigger close dari backdrop
+        const triggerClose = (event) => {
+            if (event.detail?.type === 'station-detail') {
+                handleTriggerClose();
+            }
+        };
+        window.addEventListener('triggerCloseStationDetail', triggerClose);
+        return () => window.removeEventListener('triggerCloseStationDetail', triggerClose);
+    }, []);
+
     // Prevent body scroll when mobile panel is open
     useEffect(() => {
         if (isMobile && selectedStation) {
@@ -143,13 +164,13 @@ const StationDetail = ({
         <>
             {/* Panel */}
             <div
-                className={`fixed bg-white shadow-2xl z-[50] transform flex flex-col ${
+                className={`fixed bg-white shadow-2xl z-[50] transform flex flex-col transition-all duration-300 ease-in-out ${
                     isMobile 
                     // h-[60vh] ukuran tinggi modal
                         ? `bottom-0 left-0 right-0 h-[70vh] rounded-t-2xl ${
-                            isVisible ? "opacity-100" : "opacity-0"
+                            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-full"
                           }`
-                        : `top-20 left-0 h-[calc(100vh-5rem)] w-96 transition-all duration-300 ease-in-out ${
+                        : `top-20 left-0 h-[calc(100vh-5rem)] w-96 ${
                             isVisible ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'
                           }`
                 }`}
@@ -162,9 +183,6 @@ const StationDetail = ({
                                 ? "translateY(0)" 
                                 : "translateY(100%)"
                         : undefined,
-                    transition: isMobile && !isDragging 
-                        ? "transform 300ms ease-in-out, opacity 300ms ease-in-out" 
-                        : undefined
                 }}
             >
                 {/* Header */}
@@ -186,7 +204,7 @@ const StationDetail = ({
                         }`}></div>
                     )}
                     
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-1">
                         {/* Desktop close button */}
                         {!isMobile && (
                             <button
@@ -199,17 +217,11 @@ const StationDetail = ({
                             </button>
                         )}
                         <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-gray-900">{stationData.name}</h3>
-                            {/* Mobile instruction */}
-                            {isMobile && (
-                                <p className="text-xs text-gray-400 mt-1">
-                                    {isDragging 
-                                        ? `Geser ${dragOffset > 60 ? 'lebih jauh' : 'lagi'} untuk menutup` 
-                                        : 'Geser ke bawah untuk menutup'
-                                    }
-                                </p>
-                            )}
-                            
+
+                            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                <FontAwesomeIcon icon={faLocationDot} className="text-blue-600 text-sm" />
+                                {stationData.name}
+                            </h3>
                             {/* Arrow button untuk membuka detail panel */}
                             {showArrow && !isDetailPanelOpen && (
                                 <div className="mt-4 pt-4 border-t border-gray-200">
@@ -247,7 +259,7 @@ const StationDetail = ({
                 }`}>
             <div className="p-4 space-y-6 pb-6">
                 {/* Status Card */}
-                <div className={`p-4 rounded-lg border-2 ${getStatusBgColor(stationData.status)}`}>
+                <div className={`p-3 rounded-lg border-2 ${getStatusBgColor(stationData.status)}`}>
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm text-gray-600 mb-1">Status Saat Ini</p>
@@ -256,8 +268,8 @@ const StationDetail = ({
                             </p>
                         </div>
                         <div className="text-right">
-                            <p className="text-3xl font-bold text-gray-900">{stationData.value.toFixed(1)}</p>
-                            <p className="text-sm text-gray-500">{stationData.unit}</p>
+                            <p className="text-3xl font-bold text-gray-600">{stationData.value.toFixed(1)} {stationData.unit}</p>
+                            {/* <p className="text-sm text-gray-500">{stationData.unit}</p> */}
                         </div>
                     </div>
                 </div>

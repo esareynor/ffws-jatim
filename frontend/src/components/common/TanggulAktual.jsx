@@ -108,6 +108,18 @@ const RiverDevelopmentChart = ({ stationData, className = "" }) => {
                     pointRadius: 0,
                     borderWidth: 2,
                 },
+                // ✅ Dataset baru: Tinggi Maksimal Tanggul
+                {
+                    label: "Tinggi Maksimal Tanggul",
+                    data: leveeData.map(() => 5.5), // Tinggi maksimal tanggul
+                    borderColor: "#EF4444", // Merah
+                    backgroundColor: "rgba(239, 68, 68, 0.2)", // Transparan
+                    fill: false,
+                    tension: 0,
+                    pointRadius: 0,
+                    borderWidth: 2,
+                    borderDash: [5, 5], // Garis putus-putus
+                },
             ],
         };
     }, [stationData?.value]);
@@ -129,7 +141,7 @@ const RiverDevelopmentChart = ({ stationData, className = "" }) => {
             },
             y: {
                 min: 0,
-                max: 4,
+                max: 10,
                 title: {
                     display: true,
                     text: "Tinggi Air (m)",

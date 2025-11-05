@@ -3,6 +3,10 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Models\DataActual;
+use App\Models\DataPrediction;
+use App\Observers\DataActualObserver;
+use App\Observers\DataPredictionObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Register observers for automatic discharge calculation
+        DataActual::observe(DataActualObserver::class);
+        DataPrediction::observe(DataPredictionObserver::class);
     }
 }

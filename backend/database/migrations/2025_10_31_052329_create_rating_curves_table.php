@@ -15,10 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('mas_sensor_code', 100);
             $table->string('code', 100)->unique();
-            $table->enum('formula_type', ['power', 'polynomial', 'exponential', 'custom']);
-            $table->decimal('a', 15, 6);
-            $table->decimal('b', 15, 6)->nullable();
-            $table->decimal('c', 15, 6)->nullable();
+            // Updated formula types: added tipe-01, tipe-02, tipe-03 for new UI mockup
+            // Legacy types (power, polynomial, exponential, custom) still supported for backward compatibility
+            $table->enum('formula_type', ['tipe-01', 'tipe-02', 'tipe-03', 'power', 'polynomial', 'exponential', 'custom'])->default('tipe-01');
+            $table->decimal('a', 15, 6)->nullable()->comment('Offset parameter (not used in tipe-02)');
+            $table->decimal('b', 15, 6)->comment('Exponent or width coefficient parameter');
+            $table->decimal('c', 15, 6)->comment('Main coefficient parameter');
             $table->date('effective_date');
             $table->timestamps();
 

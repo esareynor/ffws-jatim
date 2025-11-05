@@ -5,8 +5,7 @@ const FloatingLegend = lazy(() => import("@components/common/FloatingLegend"));
 const FloodRunningBar = lazy(() => import("@/components/common/FloodRunningBar"));
 const StationDetail = lazy(() => import("@/components/StationDetail"));
 const DetailPanel = lazy(() => import("@components/sensors/DetailPanel"));
-const AutoSwitchToggle = lazy(() => import("@/components/devices/AutoSwitchToggle"));
-const FilterPanel = lazy(() => import("@/components/FilterPanel"));
+const FilterPanel = lazy(() => import("@components/common/FilterPanel"));
 const Layout = ({ children }) => {
     const [tickerData, setTickerData] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
@@ -17,6 +16,7 @@ const Layout = ({ children }) => {
     const [isAutoSwitchOn, setIsAutoSwitchOn] = useState(false);
     const mapRef = useRef(null);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [isBackdropVisible, setIsBackdropVisible] = useState(false);
 
     // Memoize event handlers untuk mencegah re-render yang tidak perlu
     const handleSearch = useCallback((query) => {
@@ -123,6 +123,22 @@ const Layout = ({ children }) => {
         [isAutoSwitchOn]
     );
 
+    // Kontrol animasi backdrop fade in/out
+    useEffect(() => {
+        const hasModal = selectedStation || isDetailPanelOpen || isFilterOpen;
+        
+        if (hasModal) {
+            // Fade in backdrop
+            setIsBackdropVisible(true);
+        } else {
+            // Fade out backdrop
+            const timeout = setTimeout(() => {
+                setIsBackdropVisible(false);
+            }, 300); // Sama dengan durasi animasi modal
+            return () => clearTimeout(timeout);
+        }
+    }, [selectedStation, isDetailPanelOpen, isFilterOpen]);
+
     return (
         <div className="h-screen bg-gray-50 relative overflow-hidden">
             {/* Full Screen Map */}
@@ -175,22 +191,7 @@ const Layout = ({ children }) => {
                 </Suspense>
             </div>
 
-            {/* Global Backdrop - tampil ketika ada modal yang terbuka */}
-            {(selectedStation || isDetailPanelOpen || isFilterOpen) && (
-                <div
-                    className="fixed inset-0 bg-black/50 z-[10] transition-opacity duration-300"
-                    onClick={() => {
-                        // Tutup modal yang sedang aktif berdasarkan prioritas
-                        if (isFilterOpen) {
-                            setIsFilterOpen(false);
-                        } else if (isDetailPanelOpen) {
-                            handleCloseDetailPanel();
-                        } else if (selectedStation) {
-                            handleCloseStationDetail();
-                        }
-                    }}
-                />
-            )}
+            {/* Backdrop dihapus sesuai permintaan */}
 
             {/* Station Detail Modal */}
             <Suspense

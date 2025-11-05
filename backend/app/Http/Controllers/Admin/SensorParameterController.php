@@ -26,6 +26,7 @@ class SensorParameterController extends Controller
         }
 
         $parameters = $query->orderBy('name')->paginate(20);
+        $parameterOptions = self::getSensorParameterOptions();
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -34,7 +35,18 @@ class SensorParameterController extends Controller
             ]);
         }
 
-        return view('admin.sensor_parameters.index', compact('parameters'));
+        return view('admin.sensor_parameters.index', compact('parameters', 'parameterOptions'));
+    }
+
+    /**
+     * Get sensor parameter options
+     */
+    public static function getSensorParameterOptions()
+    {
+        return [
+            'rainfall' => 'Rainfall',
+            'water_level' => 'Water Level',
+        ];
     }
 
     /**
@@ -43,7 +55,7 @@ class SensorParameterController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|in:rainfall,water_level',
             'code' => 'required|string|max:100|unique:mas_sensor_parameters,code'
         ]);
 
@@ -87,7 +99,7 @@ class SensorParameterController extends Controller
         $parameter = MasSensorParameter::findOrFail($id);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|in:rainfall,water_level',
             'code' => 'required|string|max:100|unique:mas_sensor_parameters,code,' . $id
         ]);
 

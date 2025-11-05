@@ -7,7 +7,7 @@ import { fetchDevices } from "../../services/devices";
 import GoogleMapsSearchbar from "../common/GoogleMapsSearchbar";
 
 const MapTooltip = lazy(() => import("./maptooltip"));
-const FilterPanel = lazy(() => import("../FilterPanel.jsx"));
+const FilterPanel = lazy(() => import("/src/components/common/FilterPanel.jsx"));
 const StationDetail = lazy(() => import("../StationDetail.jsx"));
 
 mapboxgl.accessToken = "pk.eyJ1IjoiZGl0b2ZhdGFoaWxsYWgxIiwiYSI6ImNtZjNveGloczAwNncya3E1YzdjcTRtM3MifQ.kIf5rscGYOzvvBcZJ41u8g";
@@ -133,7 +133,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
       'ws-bengawan-solo': { filename: 'WSBengawanSolo.json', color: '#FF7F50' },
       'ws-bondoyudo-bedadung': { filename: 'WSBondoyudoBedadung.json', color: '#00CED1' },
       'ws-brantas': { filename: 'WSBrantas.json', color: '#FF4500' },
-      'ws-pekalen-sampean': { filename: 'WSPekalenSampean.json', color: '#FF69B4' },
+      'ws-pekalen-sampean': { filename: 'WSPekalenSampean.json', color: '#ff69b45b' },
       'ws-welang-rejoso': { filename: 'WSWelangRejoso.json', color: '#FF00FF' },
       'ws-madura-bawean': { filename: 'WSMaduraBawean.json', color: '#FFD700' },
       // Tambahkan lainnya sesuai kebutuhan
@@ -148,7 +148,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     if (isActive) {
       // Muat GeoJSON
       try {
-        const response = await fetch(`/${config.filename}`);
+        const response = await fetch(`/src/data/${config.filename}`);
         if (!response.ok) throw new Error(`${config.filename} not found`);
         const geojson = await response.json();
 
@@ -322,7 +322,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         });
       }
     } else {
-      fetch('TestMAP.json')
+      fetch('/src/data/TestMAP.json')
         .then(res => res.ok ? res.json() : Promise.reject('Sungai JSON not found (404)'))
         .then(data => { console.log('✅ Sungai Jawa Timur JSON dimuat'); setRiversGeojson(data); })
         .catch(e => { console.error('❌ Gagal muat GeoJSON Sungai Jawa Timur:', e); setActiveLayers(prev => ({ ...prev, rivers: false })); });
@@ -378,7 +378,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         });
       }
     } else {
-      fetch('/72_peta_4_peta_Wilayah_Sungai.json')
+      fetch('/src/data/72_peta_4_peta_Wilayah_Sungai.json')
         .then(res => res.ok ? res.json() : Promise.reject('JSON not found (404)'))
         .then(data => {
           data.features.forEach((f, i) => {

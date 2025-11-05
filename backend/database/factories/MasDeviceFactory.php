@@ -18,13 +18,13 @@ class MasDeviceFactory extends Factory
     public function definition(): array
     {
         return [
-            'mas_river_basin_id' => MasRiverBasin::inRandomOrder()->first()->id,
-            'name' => $this->faker->word,
-            'code' => $this->faker->unique()->ean8,
-            'latitude' => $this->faker->latitude,
-            'longitude' => $this->faker->longitude,
+            'mas_river_basin_code' => MasRiverBasin::inRandomOrder()->first()->code,
+            'name' => 'AWS ' . $this->faker->city(),
+            'code' => 'DEV-' . strtoupper($this->faker->unique()->bothify('???-###')),
+            'latitude' => $this->faker->latitude(-8.5, -7.0), // Jawa Timur range
+            'longitude' => $this->faker->longitude(111.0, 114.5), // Jawa Timur range
             'elevation_m' => $this->faker->randomFloat(2, 5, 1000),
-            'status' => $this->faker->randomElement(['active', 'inactive']),
+            'status' => $this->faker->randomElement(['active', 'inactive', 'maintenance']),
         ];
     }
 }

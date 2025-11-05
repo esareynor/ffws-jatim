@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\MasModelController;
 use App\Http\Controllers\Admin\DataActualController;
 use App\Http\Controllers\Admin\DataPredictionController;
 use App\Http\Controllers\Admin\GeojsonFileController;
+use App\Http\Controllers\Admin\GeojsonMappingController;
 use App\Http\Controllers\Admin\DeviceParameterController;
 use App\Http\Controllers\Admin\DeviceValueController;
 use App\Http\Controllers\Admin\DeviceCctvController;
@@ -21,6 +22,13 @@ use App\Http\Controllers\Admin\ScalerController;
 use App\Http\Controllers\Admin\ThresholdController;
 use App\Http\Controllers\Admin\WhatsappNumberController;
 use App\Http\Controllers\Admin\UserByRoleController;
+use App\Http\Controllers\Admin\RiverShapeController;
+use App\Http\Controllers\Admin\SensorValueController;
+use App\Http\Controllers\Admin\UptController;
+use App\Http\Controllers\Admin\UptdController;
+use App\Http\Controllers\Admin\ForecastingControlController;
+use App\Http\Controllers\Admin\CalculatedDischargeController;
+use App\Http\Controllers\Admin\PredictedDischargeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,10 +41,10 @@ use App\Http\Controllers\Admin\UserByRoleController;
 */
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
-    
+
     // Dashboard
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
-    
+
     // User Management
     Route::prefix('users')->name('users.')->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('index');
@@ -46,7 +54,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::put('/{user}', [UserController::class, 'update'])->name('update');
         Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
     });
-    
+
     // Settings
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [SettingController::class, 'index'])->name('index');
@@ -58,10 +66,42 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     // Data Region
     Route::prefix('region')->name('region.')->group(function () {
-        // Halaman data region
+        // Halaman data region (redirect views)
         Route::view('/kabupaten', 'admin.region.kabupaten')->name('kabupaten');
         Route::view('/kecamatan', 'admin.region.kecamatan')->name('kecamatan');
         Route::view('/desa', 'admin.region.desa')->name('desa');
+
+        // CRUD Provinces
+        Route::prefix('provinces')->name('provinces.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\ProvinceController::class, 'index'])->name('index');
+            Route::post('/', [\App\Http\Controllers\Admin\ProvinceController::class, 'store'])->name('store');
+            Route::put('/{id}', [\App\Http\Controllers\Admin\ProvinceController::class, 'update'])->name('update');
+            Route::delete('/{id}', [\App\Http\Controllers\Admin\ProvinceController::class, 'destroy'])->name('destroy');
+        });
+
+        // CRUD Cities
+        Route::prefix('cities')->name('cities.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\CityController::class, 'index'])->name('index');
+            Route::post('/', [\App\Http\Controllers\Admin\CityController::class, 'store'])->name('store');
+            Route::put('/{id}', [\App\Http\Controllers\Admin\CityController::class, 'update'])->name('update');
+            Route::delete('/{id}', [\App\Http\Controllers\Admin\CityController::class, 'destroy'])->name('destroy');
+        });
+
+        // CRUD Regencies
+        Route::prefix('regencies')->name('regencies.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\RegencyController::class, 'index'])->name('index');
+            Route::post('/', [\App\Http\Controllers\Admin\RegencyController::class, 'store'])->name('store');
+            Route::put('/{id}', [\App\Http\Controllers\Admin\RegencyController::class, 'update'])->name('update');
+            Route::delete('/{id}', [\App\Http\Controllers\Admin\RegencyController::class, 'destroy'])->name('destroy');
+        });
+
+        // CRUD Villages
+        Route::prefix('villages')->name('villages.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\VillageController::class, 'index'])->name('index');
+            Route::post('/', [\App\Http\Controllers\Admin\VillageController::class, 'store'])->name('store');
+            Route::put('/{id}', [\App\Http\Controllers\Admin\VillageController::class, 'update'])->name('update');
+            Route::delete('/{id}', [\App\Http\Controllers\Admin\VillageController::class, 'destroy'])->name('destroy');
+        });
 
         // CRUD DAS (River Basins) - Menggunakan modal
         Route::prefix('river-basins')->name('river-basins.')->group(function () {
@@ -72,12 +112,29 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         });
     });
 
+    // UPT Management
+    Route::prefix('upt')->name('upt.')->group(function () {
+        Route::get('/', [UptController::class, 'index'])->name('index');
+        Route::post('/', [UptController::class, 'store'])->name('store');
+        Route::put('/{id}', [UptController::class, 'update'])->name('update');
+        Route::delete('/{id}', [UptController::class, 'destroy'])->name('destroy');
+    });
+
+    // UPTD Management
+    Route::prefix('uptd')->name('uptd.')->group(function () {
+        Route::get('/', [UptdController::class, 'index'])->name('index');
+        Route::post('/', [UptdController::class, 'store'])->name('store');
+        Route::put('/{id}', [UptdController::class, 'update'])->name('update');
+        Route::delete('/{id}', [UptdController::class, 'destroy'])->name('destroy');
+        Route::get('/cities-by-upt', [UptdController::class, 'getCitiesByUpt'])->name('cities-by-upt');
+    });
+
     // Data Master (Devices)
     Route::prefix('devices')->name('devices.')->group(function () {
         Route::get('/', [MasDeviceController::class, 'index'])->name('index');
         Route::post('/', [MasDeviceController::class, 'store'])->name('store');
-        Route::put('/{id}', [MasDeviceController::class, 'update'])->name('update');
-        Route::delete('/{id}', [MasDeviceController::class, 'destroy'])->name('destroy');
+        Route::put('/{device}', [MasDeviceController::class, 'update'])->name('update');
+        Route::delete('/{device}', [MasDeviceController::class, 'destroy'])->name('destroy');
     });
 
     // Data Master (Sensors)
@@ -143,6 +200,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::get('/{geojsonFile}/download', [GeojsonFileController::class, 'download'])->name('download');
     });
 
+    // GeoJSON Mapping Management
+    Route::prefix('geojson-mappings')->name('geojson-mappings.')->group(function () {
+        Route::get('/', [GeojsonMappingController::class, 'index'])->name('index');
+        Route::post('/', [GeojsonMappingController::class, 'store'])->name('store');
+        Route::put('/{id}', [GeojsonMappingController::class, 'update'])->name('update');
+        Route::delete('/{id}', [GeojsonMappingController::class, 'destroy'])->name('destroy');
+    });
+
+
     // Device Parameters
     Route::prefix('device-parameters')->name('device-parameters.')->group(function () {
         Route::get('/', [DeviceParameterController::class, 'index'])->name('index');
@@ -190,9 +256,41 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::get('/', [RatingCurveController::class, 'index'])->name('index');
         Route::get('/create', [RatingCurveController::class, 'create'])->name('create');
         Route::post('/', [RatingCurveController::class, 'store'])->name('store');
+        Route::get('/by-sensor/{sensorCode}', [RatingCurveController::class, 'getBySensor'])->name('by-sensor');
         Route::get('/{ratingCurve}/edit', [RatingCurveController::class, 'edit'])->name('edit');
         Route::put('/{ratingCurve}', [RatingCurveController::class, 'update'])->name('update');
         Route::delete('/{ratingCurve}', [RatingCurveController::class, 'destroy'])->name('destroy');
+    });
+
+    // Forecasting Control
+    Route::prefix('forecasting-control')->name('forecasting-control.')->group(function () {
+        Route::get('/', [ForecastingControlController::class, 'index'])->name('index');
+        Route::get('/{id}/edit', [ForecastingControlController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [ForecastingControlController::class, 'update'])->name('update');
+        Route::post('/{id}/status', [ForecastingControlController::class, 'updateStatus'])->name('update-status');
+    });
+
+    // Calculated Discharges
+    Route::prefix('calculated-discharges')->name('calculated-discharges.')->group(function () {
+        Route::get('/', [CalculatedDischargeController::class, 'index'])->name('index');
+        Route::get('/create', [CalculatedDischargeController::class, 'create'])->name('create');
+        Route::post('/', [CalculatedDischargeController::class, 'store'])->name('store');
+        Route::get('/{id}', [CalculatedDischargeController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [CalculatedDischargeController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [CalculatedDischargeController::class, 'update'])->name('update');
+        Route::delete('/{id}', [CalculatedDischargeController::class, 'destroy'])->name('destroy');
+        Route::post('/recalculate', [CalculatedDischargeController::class, 'recalculate'])->name('recalculate');
+    });
+
+    // Predicted Discharges
+    Route::prefix('predicted-discharges')->name('predicted-discharges.')->group(function () {
+        Route::get('/', [PredictedDischargeController::class, 'index'])->name('index');
+        Route::get('/create', [PredictedDischargeController::class, 'create'])->name('create');
+        Route::post('/', [PredictedDischargeController::class, 'store'])->name('store');
+        Route::get('/{id}', [PredictedDischargeController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [PredictedDischargeController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [PredictedDischargeController::class, 'update'])->name('update');
+        Route::delete('/{id}', [PredictedDischargeController::class, 'destroy'])->name('destroy');
     });
 
     // Scalers
@@ -225,6 +323,32 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::get('/', [UserByRoleController::class, 'index'])->name('index');
     });
 
+    // River Shapes
+    Route::prefix('river-shapes')->name('river-shapes.')->group(function () {
+        Route::get('/', [RiverShapeController::class, 'index'])->name('index');
+        Route::get('/create', [RiverShapeController::class, 'create'])->name('create');
+        Route::post('/', [RiverShapeController::class, 'store'])->name('store');
+        Route::get('/{id}', [RiverShapeController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [RiverShapeController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [RiverShapeController::class, 'update'])->name('update');
+        Route::delete('/{id}', [RiverShapeController::class, 'destroy'])->name('destroy');
+        Route::get('/by-sensor/{sensorCode}', [RiverShapeController::class, 'getBySensor'])->name('by-sensor');
+    });
+
+    // Sensor Values
+    Route::prefix('sensor-values')->name('sensor-values.')->group(function () {
+        Route::get('/', [SensorValueController::class, 'index'])->name('index');
+        Route::get('/create', [SensorValueController::class, 'create'])->name('create');
+        Route::post('/', [SensorValueController::class, 'store'])->name('store');
+        Route::get('/active', [SensorValueController::class, 'getActive'])->name('active');
+        Route::get('/{id}', [SensorValueController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [SensorValueController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [SensorValueController::class, 'update'])->name('update');
+        Route::delete('/{id}', [SensorValueController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/update-last-seen', [SensorValueController::class, 'updateLastSeen'])->name('update-last-seen');
+        Route::get('/by-sensor/{sensorCode}', [SensorValueController::class, 'getBySensor'])->name('by-sensor');
+    });
+
     // Profile & Account
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [AdminController::class, 'profile'])->name('index');
@@ -232,7 +356,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::put('/', [AdminController::class, 'updateProfile'])->name('update');
         Route::put('/password', [AdminController::class, 'updatePassword'])->name('password.update');
     });
-    
+
     // Logout
     Route::post('/logout', [AdminController::class, 'logout'])->name('logout');
 });

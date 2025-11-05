@@ -22,7 +22,7 @@
 
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Basic Information</h2>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Device -->
                 <div class="md:col-span-2">
@@ -104,7 +104,7 @@
         <!-- Location Information -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Location Information</h2>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Latitude -->
                 <div>
@@ -147,16 +147,16 @@
         <!-- Geographic Information -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Geographic Information</h2>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- River Basin -->
+                <!-- Wilayah Sungai -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        River Basin
+                        Wilayah Sungai
                     </label>
                     <select name="mas_river_basin_code"
                         class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        <option value="">Select River Basin</option>
+                        <option value="">Pilih Wilayah Sungai</option>
                         @foreach($riverBasins as $basin)
                             <option value="{{ $basin->code }}" {{ old('mas_river_basin_code', $deviceValue->mas_river_basin_code) == $basin->code ? 'selected' : '' }}>
                                 {{ $basin->name }}
@@ -165,14 +165,14 @@
                     </select>
                 </div>
 
-                <!-- Watershed -->
+                <!-- DAS (Daerah Aliran Sungai) -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Watershed
+                        DAS (Daerah Aliran Sungai)
                     </label>
                     <select name="mas_watershed_code"
                         class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        <option value="">Select Watershed</option>
+                        <option value="">Pilih DAS</option>
                         @foreach($watersheds as $watershed)
                             <option value="{{ $watershed->code }}" {{ old('mas_watershed_code', $deviceValue->mas_watershed_code) == $watershed->code ? 'selected' : '' }}>
                                 {{ $watershed->name }}
@@ -266,7 +266,7 @@
         <!-- Maintenance Information -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Maintenance Schedule</h2>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Installation Date -->
                 <div>
@@ -303,7 +303,7 @@
         <!-- Description -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Additional Information</h2>
-            
+
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Description

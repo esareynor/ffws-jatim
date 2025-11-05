@@ -80,12 +80,12 @@
     <div x-show="showModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
         <div class="flex items-center justify-center min-h-screen px-4">
             <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showModal = false"></div>
-            
+
             <div class="relative bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
                 <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
                     <span x-text="editingParameter ? 'Edit Parameter' : 'Add Parameter'"></span>
                 </h3>
-                
+
                 <form @submit.prevent="saveParameter">
                     <div class="space-y-4">
                         <div>
@@ -101,9 +101,13 @@
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Name <span class="text-red-500">*</span>
                             </label>
-                            <input type="text" x-model="form.name" required
-                                placeholder="e.g., Water Level, Rainfall"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <select x-model="form.name" required
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                                <option value="">Pilih Tipe Parameter</option>
+                                @foreach($parameterOptions as $key => $value)
+                                    <option value="{{ $key }}">{{ $value }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
 
@@ -133,34 +137,34 @@ function parameterManager(type) {
             code: '',
             name: ''
         },
-        
+
         get filteredParameters() {
             if (!this.search) return this.parameters;
-            return this.parameters.filter(param => 
+            return this.parameters.filter(param =>
                 param.code.toLowerCase().includes(this.search.toLowerCase()) ||
                 param.name.toLowerCase().includes(this.search.toLowerCase())
             );
         },
-        
+
         openModal() {
             this.editingParameter = null;
             this.form = { code: '', name: '' };
             this.showModal = true;
         },
-        
+
         editParameter(param) {
             this.editingParameter = param;
             this.form = { code: param.code, name: param.name };
             this.showModal = true;
         },
-        
+
         async saveParameter() {
             try {
-                const url = this.editingParameter 
+                const url = this.editingParameter
                     ? `/admin/${this.type}-parameters/${this.editingParameter.id}`
                     : `/admin/${this.type}-parameters`;
                 const method = this.editingParameter ? 'PUT' : 'POST';
-                
+
                 const response = await fetch(url, {
                     method: method,
                     headers: {
@@ -169,9 +173,9 @@ function parameterManager(type) {
                     },
                     body: JSON.stringify(this.form)
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (data.success) {
                     Swal.fire('Success', data.message, 'success');
                     this.showModal = false;
@@ -183,7 +187,7 @@ function parameterManager(type) {
                 Swal.fire('Error', 'Failed to save parameter', 'error');
             }
         },
-        
+
         async deleteParameter(id) {
             const result = await Swal.fire({
                 title: 'Are you sure?',
@@ -194,7 +198,7 @@ function parameterManager(type) {
                 cancelButtonColor: '#3085d6',
                 confirmButtonText: 'Yes, delete it!'
             });
-            
+
             if (result.isConfirmed) {
                 try {
                     const response = await fetch(`/admin/${this.type}-parameters/${id}`, {
@@ -203,9 +207,9 @@ function parameterManager(type) {
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                         }
                     });
-                    
+
                     const data = await response.json();
-                    
+
                     if (data.success) {
                         Swal.fire('Deleted!', data.message, 'success');
                         location.reload();
@@ -217,11 +221,11 @@ function parameterManager(type) {
                 }
             }
         },
-        
+
         applySearch() {
             // Search is reactive
         },
-        
+
         formatDate(date) {
             if (!date) return '-';
             return new Date(date).toLocaleDateString();

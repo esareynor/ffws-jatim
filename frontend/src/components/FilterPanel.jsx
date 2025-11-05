@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Sliders, ToggleRight, Layers, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
+import { fetchGeojsonFiles } from "@/services/api";
 
 const FilterPanel = ({
   isOpen,
@@ -23,6 +24,8 @@ const FilterPanel = ({
   const [isVisible, setIsVisible] = useState(false);
   const [showLayers, setShowLayers] = useState(false); // ✅ Collapsible Map Layers
   const [showLegend, setShowLegend] = useState(false); // ✅ Collapsible Legenda Peta
+  const [geojsonFiles, setGeojsonFiles] = useState([]); // ✅ Dynamic GeoJSON files from API
+  const [loadingGeojson, setLoadingGeojson] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -32,6 +35,51 @@ const FilterPanel = ({
       setIsVisible(false);
     }
   }, [isOpen]);
+
+  // Fetch GeoJSON files from API when panel opens
+  useEffect(() => {
+    if (isOpen && geojsonFiles.length === 0) {
+      loadGeojsonFiles();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  // Load GeoJSON files from API
+  const loadGeojsonFiles = async () => {
+    try {
+      setLoadingGeojson(true);
+      const files = await fetchGeojsonFiles();
+      console.log("📂 GeoJSON files loaded:", files);
+      
+      // Transform API response to match expected format
+      const transformedFiles = files.map((file, index) => ({
+        id: file.id,
+        name: file.label || file.original_name,
+        // Generate colors dynamically or use a predefined palette
+        color: generateColor(file.id),
+        originalName: file.original_name,
+        createdAt: file.created_at,
+      }));
+      
+      setGeojsonFiles(transformedFiles);
+    } catch (error) {
+      console.error("❌ Failed to load GeoJSON files:", error);
+      // Keep the default hardcoded data as fallback
+      setGeojsonFiles([]);
+    } finally {
+      setLoadingGeojson(false);
+    }
+  };
+
+  // Helper function to generate colors
+  const generateColor = (id) => {
+    const colors = [
+      "#00008B", "#8A2BE2", "#00CED1", "#FF7F50", 
+      "#FF4500", "#FFD700", "#FF00FF", "#FF69B4",
+      "#00FF00", "#FFA500", "#800080"
+    ];
+    return colors[id % colors.length];
+  };
 
   // ✅ Hanya kirim layerId
   const handleLayerToggle = (layerId) => {
@@ -195,25 +243,14 @@ const FilterPanel = ({
             {/* Isi Legenda Peta — MUNCUL SAAT showLegend = true */}
             {showLegend && (
               <div className="pl-4 pt-2 pb-4 space-y-3">
-                {/* Data Master */}
+                {/* Data Master - Dynamic from API */}
                 <div>
                   <div className="font-medium text-xs text-gray-600 mb-1">Data Master</div>
-                  <div className="space-y-1 pl-2">
-                    {[
-                      { id: "dinas-pusda", name: "Dinas PUSDA Jatim", color: "#00008B" },
-                      { id: "upt-welang-pekalen", name: "UPT PSDA Welang Pekalen Pasuruan", color: "#00008B" },
-                      { id: "upt-madura", name: "UPT PSDA Madura Pamekasan", color: "#00008B" },
-                      { id: "upt-bengawan-solo", name: "UPT PSDA Bengawan Solo Bojonegoro", color: "#00008B" },
-                      { id: "upt-brantas", name: "UPT PSDA Brantas Kediri", color: "#00008B" },
-                      { id: "upt-sampean", name: "UPT PSDA Sampean Setail Bondowoso", color: "#00008B" },
-                      { id: "ws-baru-bajul-mati", name: "WS Baru Bajul Mati", color: "#8A2BE2" },
-                      { id: "ws-bondoyudo-bedadung", name: "WS Bondoyudo Bedadung", color: "#00CED1" },
-                      { id: "ws-bengawan-solo", name: "WS Bengawan Solo", color: "#FF7F50" },
-                      { id: "ws-brantas", name: "WS Brantas", color: "#FF4500" },
-                      { id: "ws-madura-bawean", name: "WS Madura Bawean", color: "#FFD700" },
-                      { id: "ws-welang-rejoso", name: "WS Welang Rejoso", color: "#FF00FF" },
-                      { id: "ws-pekalen-sampean", name: "WS Pekalen Sampean", color: "#FF69B4" },
-                    ].map((item) => (
+                  {loadingGeojson ? (
+                    <div className="pl-2 py-4 text-xs text-gray-500">Loading GeoJSON files...</div>
+                  ) : geojsonFiles.length > 0 ? (
+                    <div className="space-y-1 pl-2">
+                      {geojsonFiles.map((item) => (
                       <div
                         key={item.id}
                         className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
@@ -240,8 +277,55 @@ const FilterPanel = ({
                           />
                         </button>
                       </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    // Fallback to hardcoded data if API fails
+                    <div className="space-y-1 pl-2">
+                      {[
+                        // { id: "dinas-pusda", name: "Dinas PUSDA Jatim", color: "#00008B" },
+                        // { id: "upt-welang-pekalen", name: "UPT PSDA Welang Pekalen Pasuruan", color: "#00008B" },
+                        // { id: "upt-madura", name: "UPT PSDA Madura Pamekasan", color: "#00008B" },
+                        // { id: "upt-bengawan-solo", name: "UPT PSDA Bengawan Solo Bojonegoro", color: "#00008B" },
+                        // { id: "upt-brantas", name: "UPT PSDA Brantas Kediri", color: "#00008B" },
+                        // { id: "upt-sampean", name: "UPT PSDA Sampean Setail Bondowoso", color: "#00008B" },
+                        // { id: "ws-baru-bajul-mati", name: "WS Baru Bajul Mati", color: "#8A2BE2" },
+                        // { id: "ws-bondoyudo-bedadung", name: "WS Bondoyudo Bedadung", color: "#00CED1" },
+                        // { id: "ws-bengawan-solo", name: "WS Bengawan Solo", color: "#FF7F50" },
+                        // { id: "ws-brantas", name: "WS Brantas", color: "#FF4500" },
+                        // { id: "ws-madura-bawean", name: "WS Madura Bawean", color: "#FFD700" },
+                        // { id: "ws-welang-rejoso", name: "WS Welang Rejoso", color: "#FF00FF" },
+                        // { id: "ws-pekalen-sampean", name: "WS Pekalen Sampean", color: "#FF69B4" },
+                      ].map((item) => (
+                        <div
+                          key={item.id}
+                          className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: item.color }}
+                            ></span>
+                            <span className="text-xs text-gray-700">{item.name}</span>
+                          </div>
+                          <button
+                            onClick={() => handleLayerToggle(item.id)}
+                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                              activeLayers[item.id] ? "bg-blue-600" : "bg-gray-300"
+                            }`}
+                            type="button"
+                            aria-pressed={!!activeLayers[item.id]}
+                          >
+                            <span
+                              className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                                activeLayers[item.id] ? "translate-x-5" : "translate-x-1"
+                              }`}
+                            />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* SIH3 */}

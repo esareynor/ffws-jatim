@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { getStatusText } from "@/utils/statusUtils";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faLocationDot } from '@fortawesome/free-solid-svg-icons';
 
 // Lazy load komponen chart yang berat untuk optimasi bundle
 const MonitoringChart = lazy(() => import("@/components/common/MonitoringDualLinet"));
@@ -226,6 +228,23 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
         }, 300); // Sama dengan durasi animasi
     }, [onClose]);
 
+    // Handler untuk trigger close dari backdrop - untuk memberikan animasi
+    const handleTriggerClose = useCallback(() => {
+        handleClose();
+    }, [handleClose]);
+
+    // Expose method untuk parent component
+    useEffect(() => {
+        // Set up event listener untuk trigger close dari backdrop
+        const triggerClose = (event) => {
+            if (event.detail?.type === 'detail-panel') {
+                handleTriggerClose();
+            }
+        };
+        window.addEventListener('triggerCloseDetailPanel', triggerClose);
+        return () => window.removeEventListener('triggerCloseDetailPanel', triggerClose);
+    }, [handleTriggerClose]);
+
     // Prevent body scroll when mobile panel is open
     useEffect(() => {
         if (isMobile && isOpen) {
@@ -385,26 +404,18 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                             )}
                             <div className="min-w-0">
                                 <h3
-                                    className="text-2xl font-bold text-gray-900 tracking-tight"
+                                    className="text-xl font-bold text-gray-900 tracking-tight"
                                     style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}
                                 >
                                     Detail Informasi
                                 </h3>
                                 <p
-                                    className="text-base text-gray-700 mt-1 font-semibold"
+                                    className="text-base text-gray-700 mt-1 font-semibold flex items-center gap-2"
                                     style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}
                                 >
+                                    <FontAwesomeIcon icon={faLocationDot} className="text-blue-600 text-sm" />
                                     {stationData.name}
                                 </p>
-                                {/* Mobile instruction */}
-                                {isMobile && (
-                                    <p className="text-xs text-gray-400 mt-1">
-                                        {isDragging 
-                                            ? `Geser ${dragOffset > 60 ? 'lebih jauh' : 'lagi'} untuk menutup` 
-                                            : 'Geser ke bawah untuk menutup'
-                                        }
-                                    </p>
-                                )}
                             </div>
                         </div>
 
@@ -418,7 +429,7 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                                     </div>
                                 )}
                                 <div
-                                    className={`text-sm font-bold px-4 py-2 rounded-xl border-2 shadow-lg ${
+                                    className={`text-sm font-bold px-6 py-1 rounded-xl border-2 shadow-lg ${
                                         stationData.status === "safe"
                                             ? "bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300"
                                             : stationData.status === "warning"

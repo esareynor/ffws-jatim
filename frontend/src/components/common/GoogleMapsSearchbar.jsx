@@ -99,6 +99,7 @@ const GoogleMapsSearchbar = ({
         [stationsData, onSearch]
     );
 
+<<<<<<< HEAD
     const executeFlyTo = useCallback(
         (coords) => {
             // Coba akses map via props dulu, lalu fallback ke window
@@ -267,6 +268,45 @@ const GoogleMapsSearchbar = ({
                         </div>
                     )}
                 </form>
+=======
+  return (
+    <div className={`transition-all duration-300 ease-in-out h-full`}>
+      <div className="w-full h-full">
+        <form onSubmit={handleSearch} className="relative h-full">
+          <div className={`bg-white rounded-lg shadow-lg transition-all duration-200 p-1.5 sm:p-2 h-full ${
+            isFocused ? 'shadow-xl ring-2 ring-blue-500' : ''
+          }`}>
+            <div className="flex items-center h-full">
+              {/* Search Icon */}
+              <div className="flex-shrink-0 mr-2">
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                value={searchValue}
+                onChange={handleInputChange}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setTimeout(() => setIsFocused(false), 200)}
+                placeholder={placeholder}
+                className="flex-1 text-gray-900 placeholder-gray-500 bg-transparent border-none outline-none text-sm leading-none"
+              />
+              {searchValue && (
+                <div className="flex-shrink-0 ml-2">
+                  <button
+                    type="button"
+                    onClick={clearSearch}
+                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                    title="Hapus pencarian"
+                  >
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+>>>>>>> b86689dedf9038f83a8013cde8cf1c80a07f3149
             </div>
         </div>
     );

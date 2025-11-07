@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState, lazy, Suspense } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { fetchDevices } from "../../services/devices";
+import { fetchDeviceGeoJSON } from "/src/services/MapGeo"; // ✅ Import fungsi
 import GoogleMapsSearchbar from "../common/GoogleMapsSearchbar";
 
 const MapTooltip = lazy(() => import("./maptooltip"));
@@ -46,6 +47,27 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
   const riversSourceId = 'rivers-jatim-source';
   const riversLayerId = 'rivers-jatim-layer';
   const [hoveredFeature, setHoveredFeature] = useState(null);
+
+  // ✅ Mapping regionId ke deviceId
+  const REGION_ID_TO_DEVICE_ID = {
+    'ws-baru-bajul-mati': 9,  // WSBaruBajulMati.geojson
+    'ws-bengawan-solo': 8,   // WSBengawanSolo.geojson
+    'ws-bondoyudo-bedadung': 5, // WSBondoyudoBedadung.geojson
+    'ws-brantas': 10,        // WSBrantas (1).geojson
+    'ws-pekalen-sampean': 7, // WSPekalenSampean.geojson
+    'ws-welang-rejoso': 6,   // WSWelangRejoso.geojson
+    'ws-madura-bawean': 11,  // WSMaduraBawean (1).geojson
+  };
+
+  const DEVICE_ID_TO_COLOR = {
+    9: '#8A2BE2',
+    8: '#FF7F50',
+    5: '#00CED1',
+    10: '#FF4500',
+    7: '#ff69b45b',
+    6: '#FF00FF',
+    11: '#FFD700',
+  };
 
   const getBBox = (geometry) => {
     const bounds = [[Infinity, Infinity], [-Infinity, -Infinity]];
@@ -124,77 +146,68 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
 
   const handleAutoSwitchToggle = (isActive) => setAutoSwitchActive(isActive);
 
-  // ✅ Fungsi untuk mengelola layer wilayah
-  const handleRegionLayerToggle = async (regionId, isActive) => {
-    if (!map.current || !mapLoaded) return;
+const handleRegionLayerToggle = async (regionId, isActive) => {
+  if (!map.current || !mapLoaded) return;
 
-    const regionConfig = {
-      'ws-baru-bajul-mati': { filename: 'WSBaruBajulMati.json', color: '#8A2BE2' },
-      'ws-bengawan-solo': { filename: 'WSBengawanSolo.json', color: '#FF7F50' },
-      'ws-bondoyudo-bedadung': { filename: 'WSBondoyudoBedadung.json', color: '#00CED1' },
-      'ws-brantas': { filename: 'WSBrantas.json', color: '#FF4500' },
-      'ws-pekalen-sampean': { filename: 'WSPekalenSampean.json', color: '#ff69b45b' },
-      'ws-welang-rejoso': { filename: 'WSWelangRejoso.json', color: '#FF00FF' },
-      'ws-madura-bawean': { filename: 'WSMaduraBawean.json', color: '#FFD700' },
-      // Tambahkan lainnya sesuai kebutuhan
-    };
+  const deviceId = REGION_ID_TO_DEVICE_ID[regionId];
+  if (deviceId === undefined) {
+    console.warn(`❌ Tidak ada deviceId untuk region: ${regionId}`);
+    return;
+  }
 
-    const config = regionConfig[regionId];
-    if (!config) return;
+  const sourceId = `region-${regionId}`;
+  const layerId = `region-${regionId}-fill`;
 
-    const sourceId = `region-${regionId}`;
-    const layerId = `region-${regionId}-fill`;
+  if (isActive) {
+    try {
+      console.log(`🔄 Memuat GeoJSON dari API untuk ID ${deviceId}...`);
+      const geojson = await fetchDeviceGeoJSON(deviceId);
+      console.log(`✅ GeoJSON untuk ID ${deviceId} diterima`, geojson);
 
-    if (isActive) {
-      // Muat GeoJSON
-      try {
-        const response = await fetch(`/src/data/${config.filename}`);
-        if (!response.ok) throw new Error(`${config.filename} not found`);
-        const geojson = await response.json();
-
-        // Tambahkan source
-        if (!map.current.getSource(sourceId)) {
-          map.current.addSource(sourceId, { type: 'geojson', data: geojson });
-        }
-
-        // Tambahkan layer
-        if (!map.current.getLayer(layerId)) {
-          map.current.addLayer({
-            id: layerId,
-            type: 'fill',
-            source: sourceId,
-            paint: {
-              'fill-color': config.color,
-              'fill-opacity': 0.5,
-              'fill-outline-color': '#4B5563'
-            }
-          });
-        }
-
-        // Simpan reference
-        setRegionLayers(prev => ({
-          ...prev,
-          [regionId]: { sourceId, layerId }
-        }));
-
-      } catch (e) {
-        console.error(`❌ Gagal muat ${config.filename}:`, e);
-        setActiveLayers(prev => ({ ...prev, [regionId]: false }));
-      }
-
-    } else {
-      // Hapus layer & source
+      // Hapus dulu jika sudah ada
       if (map.current.getLayer(layerId)) map.current.removeLayer(layerId);
       if (map.current.getSource(sourceId)) map.current.removeSource(sourceId);
 
-      // Hapus reference
-      setRegionLayers(prev => {
-        const newLayers = { ...prev };
-        delete newLayers[regionId];
-        return newLayers;
+      // Tambahkan source baru
+      map.current.addSource(sourceId, { type: 'geojson', data: geojson });
+
+      // Tambahkan layer baru
+      map.current.addLayer({
+        id: layerId,
+        type: 'fill',
+        source: sourceId,
+        paint: {
+          'fill-color': DEVICE_ID_TO_COLOR[deviceId] || '#6B7280',
+          'fill-opacity': 0.5,
+          'fill-outline-color': '#4B5563'
+        }
       });
+
+      setRegionLayers(prev => ({
+        ...prev,
+        [regionId]: { sourceId, layerId, deviceId }
+      }));
+
+    } catch (e) {
+      console.error(`❌ Gagal muat GeoJSON dari API untuk device ID ${deviceId}:`, e);
+      // ❗ Set state aktif menjadi false agar tombol toggle kembali ke posisi off
+      setActiveLayers(prev => ({ ...prev, [regionId]: false }));
+      // 🚫 Jangan biarkan layer tetap aktif jika gagal
     }
-  };
+
+  } else {
+    // Hapus layer & source
+    if (map.current.getLayer(layerId)) map.current.removeLayer(layerId);
+    if (map.current.getSource(sourceId)) map.current.removeSource(sourceId);
+
+    // Hapus reference
+    setRegionLayers(prev => {
+      const newLayers = { ...prev };
+      delete newLayers[regionId];
+      return newLayers;
+    });
+  }
+};
 
   const handleLayerToggle = (layerId) => {
     console.log("🔄 MapboxMap: Toggle layer received:", layerId);
@@ -205,7 +218,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         const newState = { ...prev, [layerId]: !prev[layerId] };
         console.log("🆕 New activeLayers state:", newState);
 
-        // Aktifkan/mematikan layer wilayah
+        // Aktifkan/mematikan layer wilayah dari API
         handleRegionLayerToggle(layerId, newState[layerId]);
 
         return newState;
@@ -258,24 +271,46 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
           const markerEl = document.createElement("div");
           markerEl.className = "custom-marker";
           markerEl.style.cssText = `
-            width: 24px; height: 24px; border-radius: 50%; 
+            position: absolute; /* ✅ Penting! */
+            width: 24px; 
+            height: 24px; 
+            border-radius: 50%; 
             background-color: ${getStatusColor(station.status)}; 
-            border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); 
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-            position: relative;
+            border: 2px solid white; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3); 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            z-index: 1;
+            transform: translate(-50%, -50%); /* ✅ Pastikan pusat marker tepat di titik koordinat */
           `;
           markerEl.innerHTML = getStatusIcon(station.status);
           if (station.status === "alert") {
             const pulseEl = document.createElement("div");
             pulseEl.style.cssText = `
-              position: absolute; width: 100%; height: 100%; border-radius: 50%; 
-              background-color: ${getStatusColor(station.status)}; opacity: 0.7; 
-              animation: alert-pulse 2s infinite; z-index: -1;
+              position: absolute; 
+              width: 100%; 
+              height: 100%; 
+              border-radius: 50%; 
+              background-color: ${getStatusColor(station.status)}; 
+              opacity: 0.7; 
+              animation: alert-pulse 2s infinite; 
+              z-index: -1;
+              transform: translate(0, 0); /* ✅ Agar tidak terpengaruh oleh transform markerEl */
             `;
             markerEl.appendChild(pulseEl);
           }
-          const marker = new mapboxgl.Marker(markerEl).setLngLat(coordinates).addTo(map.current);
+
+          // ✅ Marker dengan anchor dan offset tetap agar tidak bergerak saat zoom
+          const marker = new mapboxgl.Marker({
+            element: markerEl,
+            anchor: 'center', // 🎯 Pusatkan marker
+            offset: [0, 0],   // ✅ Jangan geser
+          }).setLngLat(coordinates).addTo(map.current);
+
           markersRef.current.push(marker);
+
           markerEl.addEventListener("click", (e) => {
             e.stopPropagation();
             if (autoSwitchActive) setAutoSwitchActive(false);

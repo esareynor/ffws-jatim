@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('mas_river_basins', function (Blueprint $table) {
             $table->id(); // bigint, not null, auto_increment, primary
             $table->string('name');
-            $table->string('code');
+            $table->string('code', 100)->unique();
             $table->timestamps(); // created_at, updated_at
         });
     }

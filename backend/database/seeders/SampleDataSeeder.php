@@ -33,7 +33,8 @@ class SampleDataSeeder extends Seeder
         $models = [
             [
                 'name' => 'LSTM Water Level Predictor',
-                'model_type' => 'LSTM',
+                'code' => 'MDL_LSTM_WL_001',
+                'type' => 'LSTM',
                 'version' => '1.0',
                 'description' => 'LSTM model for water level prediction',
                 'file_path' => 'models/water_level_lstm.h5',
@@ -43,7 +44,8 @@ class SampleDataSeeder extends Seeder
             ],
             [
                 'name' => 'GRU Rainfall Predictor',
-                'model_type' => 'GRU',
+                'code' => 'MDL_GRU_RF_001',
+                'type' => 'GRU',
                 'version' => '1.0',
                 'description' => 'GRU model for rainfall prediction',
                 'file_path' => 'models/rainfall_gru.h5',
@@ -54,7 +56,7 @@ class SampleDataSeeder extends Seeder
         ];
 
         foreach ($models as $model) {
-            MasModel::firstOrCreate(['name' => $model['name']], $model);
+            MasModel::firstOrCreate(['code' => $model['code']], $model);
         }
 
         // 3. Create Devices
@@ -115,7 +117,7 @@ class SampleDataSeeder extends Seeder
             // Dhompo Station Sensors
             [
                 'device_id' => 1,
-                'sensor_code' => 'DHM001_WL',
+                'code' => 'DHM001_WL',
                 'parameter' => 'water_level',
                 'unit' => 'meter',
                 'description' => 'Water level sensor at Dhompo station',
@@ -128,7 +130,7 @@ class SampleDataSeeder extends Seeder
             ],
             [
                 'device_id' => 1,
-                'sensor_code' => 'DHM001_RF',
+                'code' => 'DHM001_RF',
                 'parameter' => 'rainfall',
                 'unit' => 'mm/hour',
                 'description' => 'Rainfall sensor at Dhompo station',
@@ -142,7 +144,7 @@ class SampleDataSeeder extends Seeder
             // Purwodadi Station Sensors
             [
                 'device_id' => 2,
-                'sensor_code' => 'PWD001_WL',
+                'code' => 'PWD001_WL',
                 'parameter' => 'water_level',
                 'unit' => 'meter',
                 'description' => 'Water level sensor at Purwodadi station',
@@ -156,7 +158,7 @@ class SampleDataSeeder extends Seeder
             // Surabaya Station Sensors
             [
                 'device_id' => 3,
-                'sensor_code' => 'SBY001_WL',
+                'code' => 'SBY001_WL',
                 'parameter' => 'water_level',
                 'unit' => 'meter',
                 'description' => 'Water level sensor at Surabaya station',
@@ -170,7 +172,7 @@ class SampleDataSeeder extends Seeder
             // Malang Station Sensors
             [
                 'device_id' => 4,
-                'sensor_code' => 'MLG001_WL',
+                'code' => 'MLG001_WL',
                 'parameter' => 'water_level',
                 'unit' => 'meter',
                 'description' => 'Water level sensor at Malang station',
@@ -184,7 +186,7 @@ class SampleDataSeeder extends Seeder
             // Sidoarjo Station Sensors
             [
                 'device_id' => 5,
-                'sensor_code' => 'SDA001_WL',
+                'code' => 'SDA001_WL',
                 'parameter' => 'water_level',
                 'unit' => 'meter',
                 'description' => 'Water level sensor at Sidoarjo station',
@@ -198,7 +200,7 @@ class SampleDataSeeder extends Seeder
         ];
 
         foreach ($sensors as $sensor) {
-            MasSensor::firstOrCreate(['sensor_code' => $sensor['sensor_code']], $sensor);
+            MasSensor::firstOrCreate(['code' => $sensor['code']], $sensor);
         }
 
         // 5. Create Sample Data Actuals (recent data for each sensor)
@@ -238,7 +240,7 @@ class SampleDataSeeder extends Seeder
                 
                 $dataActuals[] = [
                     'mas_sensor_id' => $sensorId,
-                    'mas_sensor_code' => $sensor->sensor_code,
+                    'mas_sensor_code' => $sensor->code,
                     'value' => round($value, 2),
                     'received_at' => $timestamp,
                     'threshold_status' => null, // Will be calculated by API

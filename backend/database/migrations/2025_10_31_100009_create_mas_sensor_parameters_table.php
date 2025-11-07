@@ -11,11 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('mas_whatsapp_numbers', function (Blueprint $table) {
+        Schema::create('mas_sensor_parameters', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('number', 20);
+            $table->string('code', 100)->unique();
             $table->timestamps();
+
+            // Indexes
+            $table->index('name', 'idx_sensor_param_name');
         });
     }
 
@@ -24,6 +27,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('mas_whatsapp_numbers');
+        Schema::dropIfExists('mas_sensor_parameters');
     }
 };
+

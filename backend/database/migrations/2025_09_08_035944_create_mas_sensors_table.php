@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('mas_sensors', function (Blueprint $table) {
             $table->id();
             $table->foreignId('device_id')->constrained('mas_devices')->onUpdate('restrict')->onDelete('cascade');
-            $table->string('sensor_code');
+            $table->string('code', 100)->unique();
             $table->enum('parameter', ['water_level', 'rainfall']);
             $table->string('unit', 50);
             $table->string('description')->nullable();
@@ -25,6 +25,10 @@ return new class extends Migration
             $table->enum('status', ['active', 'inactive']);
             $table->dateTime('last_seen')->nullable();
             $table->timestamps();
+            
+            // Indexes
+            $table->index('parameter', 'idx_sensors_parameter');
+            $table->index('status', 'idx_sensors_status');
         });
     }
 

@@ -134,7 +134,7 @@ class DataActualController extends Controller
             'sensors' => $sensors->map(function($sensor) {
                 return [
                     'id' => $sensor->id,
-                    'sensor_code' => $sensor->sensor_code,
+                    'sensor_code' => $sensor->code,
                     'parameter' => $sensor->parameter,
                     'unit' => $sensor->unit,
                     'device_name' => $sensor->device->name ?? 'N/A',
@@ -161,7 +161,7 @@ class DataActualController extends Controller
             
             $dataActual = DataActual::create([
                 'mas_sensor_id' => $request->mas_sensor_id,
-                'mas_sensor_code' => $sensor->sensor_code,
+                'mas_sensor_code' => $sensor->code,
                 'value' => $request->value,
                 'received_at' => $request->received_at,
                 'threshold_status' => $request->threshold_status
@@ -216,7 +216,7 @@ class DataActualController extends Controller
             'sensors' => $sensors->map(function($sensor) {
                 return [
                     'id' => $sensor->id,
-                    'sensor_code' => $sensor->sensor_code,
+                    'sensor_code' => $sensor->code,
                     'parameter' => $sensor->parameter,
                     'unit' => $sensor->unit,
                     'device_name' => $sensor->device->name ?? 'N/A',

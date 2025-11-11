@@ -27,13 +27,13 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
   const [currentStationIndex, setCurrentStationIndex] = useState(0);
   const [selectedStationCoords, setSelectedStationCoords] = useState(null);
 
-  // ✅ State untuk active layers — termasuk wilayah legenda
+  // ✅ State untuk active layers — termasuk wilayah legenda dan UPT
   const [activeLayers, setActiveLayers] = useState({
     rivers: false,
     'flood-risk': false,
     rainfall: false,
     administrative: false,
-    // Wilayah-wilayah dari legenda peta — akan ditambahkan dinamis
+    // UPT Toggle akan dinamis
   });
 
   // ✅ State untuk menyimpan reference source & layer per wilayah
@@ -112,6 +112,30 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
       case "alert": return `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 7.25V13M12 16.75V16.76M10.29 3.86L1.82 18A2 2 0 0 0 3.55 21H20.45A2 2 0 0 0 22.18 18L13.71 3.86A2 2 0 0 0 10.29 3.86Z" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
       default: return `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="${iconColor}" stroke-width="2"/></svg>`;
     }
+  };
+
+  // ✅ Helper: Ambil UPT ID dari nama stasiun
+  const getUptIdFromStationName = (stationName) => {
+    if (!stationName) return null;
+
+    // Mapping nama stasiun ke UPT ID — sesuaikan dengan data Anda
+    const uptMapping = {
+      "UPT PSDA Welang Pekalen Pasuruan": "upt-welang-pekalen",
+      "UPT PSDA Madura Pamekasan": "upt-madura",
+      "UPT PSDA Bengawan Solo Bojonegoro": "upt-bengawan-solo",
+      "UPT PSDA Brantas Kediri": "upt-brantas",
+      "UPT PSDA Sampean Setail Bondowoso": "upt-sampean",
+      "Dinas PUSDA Jatim": "dinas-pusda",
+      // Tambahkan sesuai kebutuhan
+    };
+
+    for (const [name, id] of Object.entries(uptMapping)) {
+      if (stationName.includes(name)) {
+        return id;
+      }
+    }
+
+    return null; // Jika tidak cocok
   };
 
   const getStationCoordinates = (stationName) => {
@@ -224,7 +248,7 @@ const handleRegionLayerToggle = async (regionId, isActive) => {
         return newState;
       });
     } else {
-      // Untuk layer biasa (rivers, flood-risk, dll)
+      // Untuk layer biasa (rivers, flood-risk, dll) atau UPT
       setActiveLayers(prev => {
         const newState = { ...prev, [layerId]: !prev[layerId] };
         console.log("🆕 New activeLayers state:", newState);
@@ -256,72 +280,78 @@ const handleRegionLayerToggle = async (regionId, isActive) => {
     return () => { if (map.current) { map.current.remove(); map.current = null; } };
   }, []);
 
-  // ✅ Perbaikan: Gunakan useEffect untuk memperbarui marker hanya saat tickerData atau devices berubah
+  // ✅ Perbaikan: Gunakan useEffect untuk memperbarui marker hanya saat tickerData, devices, atau activeLayers berubah
   useEffect(() => {
     if (!map.current || !tickerData || !devices.length) return;
 
-    // Hapus marker lama
+    // Hapus semua marker lama
     markersRef.current.forEach(marker => marker?.remove?.());
     markersRef.current = [];
 
     tickerData.forEach(station => {
       const coordinates = getStationCoordinates(station.name);
-      if (coordinates) {
-        try {
-          const markerEl = document.createElement("div");
-          markerEl.className = "custom-marker";
-          markerEl.style.cssText = `
-            position: absolute; /* ✅ Penting! */
-            width: 24px; 
-            height: 24px; 
+      if (!coordinates) return;
+
+      // ✅ Cek apakah UPT stasiun ini aktif
+      const stationUptId = getUptIdFromStationName(station.name);
+      if (!stationUptId || !activeLayers[stationUptId]) {
+        return; // Skip jika UPT tidak aktif
+      }
+
+      try {
+        const markerEl = document.createElement("div");
+        markerEl.className = "custom-marker";
+        markerEl.style.cssText = `
+          position: absolute; /* ✅ Penting! */
+          width: 24px; 
+          height: 24px; 
+          border-radius: 50%; 
+          background-color: ${getStatusColor(station.status)}; 
+          border: 2px solid white; 
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3); 
+          cursor: pointer; 
+          display: flex; 
+          align-items: center; 
+          justify-content: center;
+          z-index: 1;
+          transform: translate(-50%, -50%); /* ✅ Pastikan pusat marker tepat di titik koordinat */
+        `;
+        markerEl.innerHTML = getStatusIcon(station.status);
+        if (station.status === "alert") {
+          const pulseEl = document.createElement("div");
+          pulseEl.style.cssText = `
+            position: absolute; 
+            width: 100%; 
+            height: 100%; 
             border-radius: 50%; 
             background-color: ${getStatusColor(station.status)}; 
-            border: 2px solid white; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3); 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            z-index: 1;
-            transform: translate(-50%, -50%); /* ✅ Pastikan pusat marker tepat di titik koordinat */
+            opacity: 0.7; 
+            animation: alert-pulse 2s infinite; 
+            z-index: -1;
+            transform: translate(0, 0); /* ✅ Agar tidak terpengaruh oleh transform markerEl */
           `;
-          markerEl.innerHTML = getStatusIcon(station.status);
-          if (station.status === "alert") {
-            const pulseEl = document.createElement("div");
-            pulseEl.style.cssText = `
-              position: absolute; 
-              width: 100%; 
-              height: 100%; 
-              border-radius: 50%; 
-              background-color: ${getStatusColor(station.status)}; 
-              opacity: 0.7; 
-              animation: alert-pulse 2s infinite; 
-              z-index: -1;
-              transform: translate(0, 0); /* ✅ Agar tidak terpengaruh oleh transform markerEl */
-            `;
-            markerEl.appendChild(pulseEl);
-          }
-
-          // ✅ Marker dengan anchor dan offset tetap agar tidak bergerak saat zoom
-          const marker = new mapboxgl.Marker({
-            element: markerEl,
-            anchor: 'center', // 🎯 Pusatkan marker
-            offset: [0, 0],   // ✅ Jangan geser
-          }).setLngLat(coordinates).addTo(map.current);
-
-          markersRef.current.push(marker);
-
-          markerEl.addEventListener("click", (e) => {
-            e.stopPropagation();
-            if (autoSwitchActive) setAutoSwitchActive(false);
-            handleMarkerClick(station, coordinates);
-          });
-        } catch (error) {
-          console.error("Error creating marker:", error);
+          markerEl.appendChild(pulseEl);
         }
+
+        // ✅ Marker dengan anchor dan offset tetap agar tidak bergerak saat zoom
+        const marker = new mapboxgl.Marker({
+          element: markerEl,
+          anchor: 'center', // 🎯 Pusatkan marker
+          offset: [0, 0],   // ✅ Jangan geser
+        }).setLngLat(coordinates).addTo(map.current);
+
+        markersRef.current.push(marker);
+
+        markerEl.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (autoSwitchActive) setAutoSwitchActive(false);
+          handleMarkerClick(station, coordinates);
+        });
+      } catch (error) {
+        console.error("Error creating marker:", error);
       }
     });
-  }, [tickerData, devices]); // ✅ Hanya perbarui saat tickerData atau devices berubah
+  }, [tickerData, devices, activeLayers]); // ✅ Tambahkan activeLayers ke dependency
 
   useEffect(() => {
     const handleClickOutside = (event) => {

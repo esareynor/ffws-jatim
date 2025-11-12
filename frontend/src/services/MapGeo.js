@@ -22,9 +22,20 @@ export const fetchDeviceGeoJSON = async (id) => {
       throw new Error(`Empty response body for device ID ${id}. No content returned.`);
     }
 
+    // ✅ Cek apakah teks adalah JSON valid
+    const trimmedText = text.trim();
+
+    // ✅ Cek apakah dimulai dengan '{' atau '[' — tanda JSON valid
+    if (!trimmedText.startsWith('{') && !trimmedText.startsWith('[')) {
+      console.error(`❌ Response is not valid JSON for device ID ${id}. Raw response:`, text);
+      throw new Error(
+        `Invalid JSON format for device ID ${id}. Expected JSON but got: ${text.substring(0, 200)}...`
+      );
+    }
+
     let geojson;
     try {
-      geojson = JSON.parse(text);
+      geojson = JSON.parse(trimmedText);
     } catch (parseError) {
       console.error(`❌ Failed to parse JSON for device ID ${id}:`, parseError);
       console.error(`Raw response text:`, text); // 👈 Tampilkan isi raw untuk debugging

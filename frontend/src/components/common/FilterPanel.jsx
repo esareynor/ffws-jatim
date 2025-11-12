@@ -217,13 +217,13 @@ const FilterPanel = ({
                       { id: "upt-bengawan-solo", name: "UPT PSDA Bengawan Solo Bojonegoro", color: "#00008B" },
                       { id: "upt-brantas", name: "UPT PSDA Brantas Kediri", color: "#00008B" },
                       { id: "upt-sampean", name: "UPT PSDA Sampean Setail Bondowoso", color: "#00008B" },
-                      { id: "ws-baru-bajul-mati", name: "WS Baru Bajul Mati", color: "#8A2BE2" },
-                      { id: "ws-bondoyudo-bedadung", name: "WS Bondoyudo Bedadung", color: "#00CED1" },
-                      { id: "ws-bengawan-solo", name: "WS Bengawan Solo", color: "#FF7F50" },
                       { id: "ws-brantas", name: "WS Brantas", color: "#FF4500" },
-                      { id: "ws-madura-bawean", name: "WS Madura Bawean", color: "#FFD700" },
+                      { id: "ws-bengawan-solo", name: "WS Bengawan Solo", color: "#FF7F50" },
+                      { id: "ws-bondoyudo-bedadung", name: "WS Bondoyudo Bedadung", color: "#00CED1" },
+                      { id: "ws-baru-bajul-mati", name: "WS Baru Bajul Mati", color: "#8A2BE2" },
                       { id: "ws-welang-rejoso", name: "WS Welang Rejoso", color: "#FF00FF" },
                       { id: "ws-pekalen-sampean", name: "WS Pekalen Sampean", color: "#FF69B4" },
+                      { id: "ws-madura-bawean", name: "WS Madura Bawean", color: "#FFD700" },
                     ].map((item) => (
                       <div
                         key={item.id}
@@ -258,100 +258,6 @@ const FilterPanel = ({
             )}
           </section>
 
-          {/* SECTION 5: WILAYAH SUNGAI */}
-          <section className="mt-4 space-y-4">
-            <div
-              onClick={() => setShowWilayahSungai(!showWilayahSungai)}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
-            >
-              <div className="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
-                </svg>
-                <span className="font-semibold text-gray-700">Wilayah Sungai</span>
-              </div>
-              {showWilayahSungai ? (
-                <ChevronUp className="w-4 h-4 text-gray-600" />
-              ) : (
-                <ChevronDown className="w-4 h-4 text-gray-600" />
-              )}
-            </div>
-
-            {showWilayahSungai && (
-              <div className="pl-4 pt-2 pb-4 space-y-2">
-                <div
-                  className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="w-3 h-3 rounded-full bg-green-500"></span>
-                    <span className="text-xs text-gray-700">Wilayah Sungai Bajul Mati</span>
-                  </div>
-                  <button
-                    onClick={() => handleLayerToggle('wilayah-sungai')}
-                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                      activeLayers['wilayah-sungai'] ? "bg-blue-600" : "bg-gray-300"
-                    }`}
-                    type="button"
-                    aria-pressed={!!activeLayers['wilayah-sungai']}
-                  >
-                    <span
-                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                        activeLayers['wilayah-sungai'] ? "translate-x-5" : "translate-x-1"
-                      }`}
-                    />
-                  </button>
-                </div>
-              </div>
-            )}
-          </section>
-
-          {/* SECTION 6: DAERAH ALIRAN SUNGAI */}
-          <section className="mt-4 space-y-4">
-            <div
-              onClick={() => setShowDaerahAliranSungai(!showDaerahAliranSungai)}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
-            >
-              <div className="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
-                </svg>
-                <span className="font-semibold text-gray-700">Daerah Aliran Sungai</span>
-              </div>
-              {showDaerahAliranSungai ? (
-                <ChevronUp className="w-4 h-4 text-gray-600" />
-              ) : (
-                <ChevronDown className="w-4 h-4 text-gray-600" />
-              )}
-            </div>
-
-            {showDaerahAliranSungai && (
-              <div className="pl-4 pt-2 pb-4 space-y-2">
-                <div
-                  className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="w-3 h-3 rounded-full bg-blue-500"></span>
-                    <span className="text-xs text-gray-700">Daerah Aliran Sungai</span>
-                  </div>
-                  <button
-                    onClick={() => handleLayerToggle('daerah-aliran-sungai')}
-                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                      activeLayers['daerah-aliran-sungai'] ? "bg-blue-600" : "bg-gray-300"
-                    }`}
-                    type="button"
-                    aria-pressed={!!activeLayers['daerah-aliran-sungai']}
-                  >
-                    <span
-                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                        activeLayers['daerah-aliran-sungai'] ? "translate-x-5" : "translate-x-1"
-                      }`}
-                    />
-                  </button>
-                </div>
-              </div>
-            )}
-          </section>
-
           {/* SECTION 10: POS HUJAN */}
           <section className="mt-4 space-y-4">
             <div
@@ -374,7 +280,7 @@ const FilterPanel = ({
             {showPosHujan && (
               <div className="pl-4 pt-2 pb-4 space-y-2">
                 {[
-                  { id: "pos-hujan-ws-brantas", name: "Pos Hujan WS Brantas PJT 1", color: "#FF6347" },
+                  { id: "pos-hujan-ws-brantas-pjt1", name: "Pos Hujan WS Brantas PJT 1", color: "#FF6347" },
                   { id: "pos-hujan-ws-bengawan-solo", name: "Pos Hujan WS Bengawan Solo PJT 1", color: "#FFA500" },
                   { id: "pos-hujan-ws-bbws-solo", name: "Pos Hujan WS BBWS Solo", color: "#4682B4" },
                   { id: "pos-hujan-ws-bbws-brantas", name: "Pos Hujan BBWS Brantas", color: "#008080" },

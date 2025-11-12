@@ -33,6 +33,8 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     'flood-risk': false,
     rainfall: false,
     administrative: false,
+    // Tambahkan ID khusus untuk tombol "Pos Hujan WS Bengawan Solo PJT 1"
+    'pos-hujan-ws-bengawan-solo': false, // 👈 ID ini yang digunakan oleh FilterPanel
     // UPT Toggle akan dinamis
   });
 
@@ -114,34 +116,77 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     }
   };
 
-  // ✅ Helper: Ambil UPT ID dari nama stasiun
-  const getUptIdFromStationName = (stationName) => {
-    if (!stationName) return null;
+ // ✅ Helper: Ambil UPT ID dari nama stasiun — hanya untuk UPT biasa
+const getUptIdFromStationName = (stationName) => {
+  if (!stationName) return null;
 
-    // Mapping nama stasiun ke UPT ID — sesuaikan dengan data Anda
-    const uptMapping = {
-      "UPT PSDA Welang Pekalen Pasuruan": "upt-welang-pekalen",
-      "UPT PSDA Madura Pamekasan": "upt-madura",
-      "UPT PSDA Bengawan Solo Bojonegoro": "upt-bengawan-solo",
-      "UPT PSDA Brantas Kediri": "upt-brantas",
-      "UPT PSDA Sampean Setail Bondowoso": "upt-sampean",
-      "Dinas PUSDA Jatim": "dinas-pusda",
-      // Tambahkan sesuai kebutuhan
-    };
+  // Mapping nama stasiun ke UPT ID — sesuaikan dengan data Anda
+  const uptMapping = {
+    "UPT PSDA Welang Pekalen Pasuruan": "upt-welang-pekalen",
+    "UPT PSDA Madura Pamekasan": "upt-madura",
+    "UPT PSDA Bengawan Solo Bojonegoro": "upt-bengawan-solo",
+    "UPT PSDA Brantas Kediri": "upt-brantas",
+    "UPT PSDA Sampean Setail Bondowoso": "upt-sampean",
+    "Dinas PUSDA Jatim": "dinas-pusda",
 
-    for (const [name, id] of Object.entries(uptMapping)) {
-      if (stationName.includes(name)) {
-        return id;
-      }
-    }
-
-    return null; // Jika tidak cocok
+    // ✅ Tambahkan mapping untuk "Pos Hujan WS Brantas PJT 1"
+    "ARR Wagir": "pos-hujan-ws-brantas-pjt1",
+    "ARR Tangkil": "pos-hujan-ws-brantas-pjt1",
+    "ARR Poncokusumo": "pos-hujan-ws-brantas-pjt1",
+    "ARR Dampit": "pos-hujan-ws-brantas-pjt1",
+    "ARR Sengguruh": "pos-hujan-ws-brantas-pjt1",
+    "ARR Sutami": "pos-hujan-ws-brantas-pjt1",
+    "ARR Tunggorono": "pos-hujan-ws-brantas-pjt1",
+    "ARR Doko": "pos-hujan-ws-brantas-pjt1",
+    "ARR Birowo": "pos-hujan-ws-brantas-pjt1",
+    "ARR Wates Wlingi": "pos-hujan-ws-brantas-pjt1",
+    "Semen ARR": "pos-hujan-ws-brantas-pjt1",
+    "ARR Sumberagung": "pos-hujan-ws-brantas-pjt1",
+    "Bendungan ARR Wlingi": "pos-hujan-ws-brantas-pjt1",
+    "ARR Tugu": "pos-hujan-ws-brantas-pjt1",
+    "ARR Kampak": "pos-hujan-ws-brantas-pjt1",
+    "ARR Bendo": "pos-hujan-ws-brantas-pjt1",
+    "ARR Pagerwojo": "pos-hujan-ws-brantas-pjt1",
+    "ARR Kediri": "pos-hujan-ws-brantas-pjt1",
+    "ARR Tampung": "pos-hujan-ws-brantas-pjt1",
+    "ARR Gunung Sari": "pos-hujan-ws-brantas-pjt1",
+    "ARR Metro": "pos-hujan-ws-brantas-pjt1",
+    "ARR Gemarang": "pos-hujan-ws-brantas-pjt1",
+    "ARR Bendungan": "pos-hujan-ws-brantas-pjt1",
+    "ARR Tawangsari": "pos-hujan-ws-brantas-pjt1",
+    "ARR Sadar": "pos-hujan-ws-brantas-pjt1",
+    "ARR Bogel": "pos-hujan-ws-brantas-pjt1",
+    "ARR Karangpilang": "pos-hujan-ws-brantas-pjt1",
+    "ARR Kedurus": "pos-hujan-ws-brantas-pjt1",
+    "ARR Wonorejo-1": "pos-hujan-ws-brantas-pjt1",
+    "ARR Wonorejo-2": "pos-hujan-ws-brantas-pjt1",
+    "ARR Rejotangan": "pos-hujan-ws-brantas-pjt1",
+    "ARR Kali Biru": "pos-hujan-ws-brantas-pjt1",
+    "ARR Neyama": "pos-hujan-ws-brantas-pjt1",
+    "ARR Selorejo": "pos-hujan-ws-brantas-pjt1",
   };
+
+  for (const [name, id] of Object.entries(uptMapping)) {
+    if (stationName.includes(name)) {
+      return id;
+    }
+  }
+
+  return null; // Jika tidak cocok
+};
 
   const getStationCoordinates = (stationName) => {
     if (!devices?.length) return null;
     const device = devices.find(d => d.name === stationName);
-    return device?.latitude && device.longitude ? [parseFloat(device.longitude), parseFloat(device.latitude)] : null;
+    if (!device) {
+      console.warn(`⚠️ Stasiun "${stationName}" tidak ditemukan di devices.`);
+      return null;
+    }
+    if (!device.latitude || !device.longitude) {
+      console.warn(`⚠️ Stasiun "${stationName}" tidak memiliki koordinat yang valid.`);
+      return null;
+    }
+    return [parseFloat(device.longitude), parseFloat(device.latitude)];
   };
 
   const handleMarkerClick = (station, coordinates) => {
@@ -284,18 +329,38 @@ const handleRegionLayerToggle = async (regionId, isActive) => {
   useEffect(() => {
     if (!map.current || !tickerData || !devices.length) return;
 
+    console.log("📊 tickerData length:", tickerData.length);
+    console.log("📡 devices length:", devices.length);
+
     // Hapus semua marker lama
     markersRef.current.forEach(marker => marker?.remove?.());
     markersRef.current = [];
 
     tickerData.forEach(station => {
       const coordinates = getStationCoordinates(station.name);
-      if (!coordinates) return;
+      if (!coordinates) {
+        console.log(`❌ Marker tidak dibuat untuk "${station.name}" - koordinat tidak valid.`);
+        return;
+      }
 
       // ✅ Cek apakah UPT stasiun ini aktif
       const stationUptId = getUptIdFromStationName(station.name);
-      if (!stationUptId || !activeLayers[stationUptId]) {
-        return; // Skip jika UPT tidak aktif
+
+      // ✅ LOGIKA BARU: Jika tombol "Pos Hujan WS Bengawan Solo PJT 1" aktif, tampilkan semua stasiun yang namanya dimulai dengan "BS"
+      const isBengawanSoloPJT1Active = activeLayers['pos-hujan-ws-bengawan-solo']; // 👈 ID ini yang dikontrol oleh FilterPanel
+      const isBSStation = station.name.startsWith('BS');
+
+      // ✅ Kondisi akhir untuk menampilkan marker:
+      // - Jika bukan stasiun BS: gunakan logika UPT biasa (jika ada UPT ID dan UPT aktif)
+      // - Jika stasiun BS: tampilkan hanya jika tombol "Pos Hujan WS Bengawan Solo PJT 1" aktif
+      const shouldShowMarker = (
+        (!isBSStation && stationUptId && activeLayers[stationUptId]) || // UPT biasa
+        (isBSStation && isBengawanSoloPJT1Active)                     // Stasiun BS
+      );
+
+      if (!shouldShowMarker) {
+        console.log(`⏸️ Marker diabaikan untuk "${station.name}" - tidak memenuhi kondisi tampil.`);
+        return; // Skip jika tidak memenuhi syarat
       }
 
       try {

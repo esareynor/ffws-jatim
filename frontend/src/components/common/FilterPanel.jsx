@@ -316,7 +316,7 @@ const FilterPanel = ({
             )}
           </section>
 
-          {/* SECTION 11: POS DUGA AIR */}
+                   {/* SECTION 11: POS DUGA AIR */}
           <section className="mt-4 space-y-4">
             <div
               onClick={() => setShowPosDugaAir(!showPosDugaAir)}
@@ -338,73 +338,10 @@ const FilterPanel = ({
             {showPosDugaAir && (
               <div className="pl-4 pt-2 pb-4 space-y-2">
                 {[
-                  { id: "pos-duga-air-ws-brantas", name: "Pos Duga Air WS Brantas PJT 1", color: "#FF6347" },
+                  { id: "pos-duga-air-ws-brantas-pjt1", name: "Pos Duga Air WS Brantas PJT 1", color: "#FF6347" },
                   { id: "pos-duga-air-ws-bengawan-solo", name: "Pos Duga Air WS Bengawan Solo PJT 1", color: "#FFA500" },
-                  { id: "pos-duga-air-pu-sda", name: "Pos Duga Air PU SDA", color: "#4682B4" },
                   { id: "pos-duga-air-jam-jam-an", name: "Pos Duga Air Jam-jam an PU SDA", color: "#008080" },
                   { id: "pos-duga-air-bbws-solo", name: "Pos Duga Air BBWS Solo", color: "#8A2BE2" },
-                  { id: "pos-duga-air-bbws-brantas", name: "Pos Duga Air BBWS Brantas", color: "#FF1493" },
-                ].map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: item.color }}
-                      ></span>
-                      <span className="text-xs text-gray-700">{item.name}</span>
-                    </div>
-                    <button
-                      onClick={() => handleLayerToggle(item.id)}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                        activeLayers[item.id] ? "bg-blue-600" : "bg-gray-300"
-                      }`}
-                      type="button"
-                      aria-pressed={!!activeLayers[item.id]}
-                    >
-                      <span
-                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                          activeLayers[item.id] ? "translate-x-5" : "translate-x-1"
-                        }`}
-                      />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* SECTION 12: HUJAN HARIA N */}
-          <section className="mt-4 space-y-4">
-            <div
-              onClick={() => setShowHujanHarian(!showHujanHarian)}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
-            >
-              <div className="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
-                </svg>
-                <span className="font-semibold text-gray-700">Hujan Harian</span>
-              </div>
-              {showHujanHarian ? (
-                <ChevronUp className="w-4 h-4 text-gray-600" />
-              ) : (
-                <ChevronDown className="w-4 h-4 text-gray-600" />
-              )}
-            </div>
-
-            {showHujanHarian && (
-              <div className="pl-4 pt-2 pb-4 space-y-2">
-                {[
-                  { id: "hujan-harian-ws-welang-rejoso", name: "Hujan Harian WS Welang Rejoso (PU SDA)", color: "#FF6347" },
-                  { id: "hujan-harian-ws-pekalen-sampean", name: "Hujan Harian WS Pekalen Sampean (PU SDA)", color: "#FFA500" },
-                  { id: "hujan-harian-ws-madura-bawean", name: "Hujan Harian WS Madura Bawean (PU SDA)", color: "#4682B4" },
-                  { id: "hujan-harian-ws-brantas", name: "Hujan Harian WS Brantas (PU SDA)", color: "#008080" },
-                  { id: "hujan-harian-ws-bondoyudo-bedadung", name: "Hujan Harian WS Bondoyudo Bedadung (PU SDA)", color: "#8A2BE2" },
-                  { id: "hujan-harian-ws-bengawan-solo", name: "Hujan Harian WS Bengawan Solo (PU SDA)", color: "#FF1493" },
-                  { id: "hujan-harian-ws-baru-bajulmati", name: "Hujan Harian WS Baru Bajulmati (PU SDA)", color: "#228B22" },
                 ].map((item) => (
                   <div
                     key={item.id}

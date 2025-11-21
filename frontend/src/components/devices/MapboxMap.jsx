@@ -39,6 +39,8 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     'pos-duga-air-ws-bengawan-solo': false,
     // Tambahkan ID khusus untuk tombol "Pos Duga Air WS Brantas PJT 1"
     'pos-duga-air-ws-brantas-pjt1': false, // 👈 ID ini yang digunakan oleh FilterPanel
+    // Pos Hujan khusus: Hujan Jam-Jam an PU SDA
+    'Hujan Jam-Jam an PU SDA': false,
     // UPT Toggle akan dinamis
   });
 
@@ -70,7 +72,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     8: '#FF7F50',
     5: '#00CED1',
     10: '#FF4500',
-    7: '#ff69b45b',
+    7: '#FF69B4',
     6: '#FF00FF',
     11: '#FFD700',
   };
@@ -87,6 +89,49 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     };
     traverse(geometry.coordinates);
     return bounds;
+  };
+
+  // Helper: point-in-polygon (ray-casting) for Polygon and MultiPolygon
+  const pointInRing = (x, y, ring) => {
+    let inside = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const xi = ring[i][0], yi = ring[i][1];
+      const xj = ring[j][0], yj = ring[j][1];
+      const intersect = ((yi > y) !== (yj > y)) && (x < ((xj - xi) * (y - yi)) / (yj - yi) + xi);
+      if (intersect) inside = !inside;
+    }
+    return inside;
+  };
+
+  const pointInPolygon = (point, polygon) => {
+    // polygon: array of rings (first is outer)
+    const x = point[0], y = point[1];
+    // check outer ring
+    if (!Array.isArray(polygon) || polygon.length === 0) return false;
+    if (pointInRing(x, y, polygon[0]) === false) return false;
+    // if there are holes, ensure point not in any hole
+    for (let i = 1; i < polygon.length; i++) {
+      if (pointInRing(x, y, polygon[i])) return false;
+    }
+    return true;
+  };
+
+  const pointInGeoJSON = (geojson, point) => {
+    if (!geojson || !geojson.type) return false;
+    const coords = point; // [lng, lat]
+    if (geojson.type === 'FeatureCollection') {
+      return geojson.features.some(f => pointInGeoJSON(f, coords));
+    }
+    if (geojson.type === 'Feature') {
+      return pointInGeoJSON(geojson.geometry, coords);
+    }
+    if (geojson.type === 'Polygon') {
+      return pointInPolygon(coords, geojson.coordinates);
+    }
+    if (geojson.type === 'MultiPolygon') {
+      return geojson.coordinates.some(poly => pointInPolygon(coords, poly));
+    }
+    return false;
   };
 
   useEffect(() => {
@@ -145,6 +190,39 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
       icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="white" stroke-width="2"/></svg>`,
       type: "default",
     };
+  };
+
+  // ✅ Per-button style overrides: kembalikan warna/icon khusus ketika tombol tertentu aktif
+  const getButtonStyleOverride = ({ isHujanJamJamActive, isPosDugaJamJamActive, isHujanBrantasActive, isDugaAirBrantasActive, isDugaAirBengawanSoloActive, isBengawanSoloPJT1Active }) => {
+    // Prioritas: Pos Duga Jam-Jam > Hujan Jam-Jam > Hujan Brantas > Duga Air Brantas > Duga Air Bengawan > Bengawan Solo
+    if (isPosDugaJamJamActive) {
+      return {
+        color: '#0369A1', // biru gelap
+        shape: 'rounded-square',
+        // square-ish icon
+        icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="18" height="18" rx="4" fill="white" stroke="#0369A1" stroke-width="2"/></svg>`
+      };
+    }
+    if (isHujanJamJamActive) {
+      return {
+        color: '#1E90FF', // dodger blue
+        shape: 'pin',
+        icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3c-1 2-3 3-3 6 0 3 3 6 3 6s3-3 3-6c0-3-2-4-3-6z" fill="#1E90FF" stroke="white" stroke-width="1"/></svg>`
+      };
+    }
+    if (isHujanBrantasActive) {
+      return { color: '#DC2626', shape: 'circle', icon: `<svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="white" stroke="#DC2626" stroke-width="2"/></svg>` };
+    }
+    if (isDugaAirBrantasActive) {
+      return { color: '#F59E0B', shape: 'diamond', icon: `<svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z" fill="white" stroke="#F59E0B" stroke-width="2"/></svg>` };
+    }
+    if (isDugaAirBengawanSoloActive) {
+      return { color: '#10B981', shape: 'triangle', icon: `<svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 2 L19 21 L12 17 L5 21 Z" fill="white" stroke="#10B981" stroke-width="2"/></svg>` };
+    }
+    if (isBengawanSoloPJT1Active) {
+      return { color: '#7C3AED', shape: 'circle-with-square', icon: `<svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="white" stroke="#7C3AED" stroke-width="2"/><rect x="8" y="12" width="8" height="8" rx="2" fill="#7C3AED"/></svg>` };
+    }
+    return null; // no override
   };
 
   // ✅ Helper: Ambil UPT ID dari nama stasiun — hanya untuk UPT biasa
@@ -264,6 +342,13 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         const geojson = await fetchDeviceGeoJSON(deviceId);
         console.log(`✅ GeoJSON untuk ID ${deviceId} diterima`, geojson);
 
+        // Validasi geojson: harus berisi fitur
+        if (!geojson || !Array.isArray(geojson.features) || geojson.features.length === 0) {
+          console.error(`❌ GeoJSON kosong atau tidak valid untuk device ID ${deviceId}`);
+          setActiveLayers(prev => ({ ...prev, [regionId]: false }));
+          return;
+        }
+
         // Hapus dulu jika sudah ada
         if (map.current.getLayer(layerId)) map.current.removeLayer(layerId);
         if (map.current.getSource(sourceId)) map.current.removeSource(sourceId);
@@ -283,9 +368,32 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
           }
         });
 
+        // Click handler: fit bounds to clicked feature
+        const clickHandler = (e) => {
+          try {
+            const features = e.features || [];
+            if (features.length === 0) return;
+            const geom = features[0].geometry;
+            const bbox = getBBox(geom);
+            if (isFinite(bbox[0][0]) && isFinite(bbox[1][0]) && bbox[0][0] !== Infinity) {
+              map.current.fitBounds(bbox, { padding: 60, maxZoom: 12, duration: 800 });
+            }
+          } catch (err) {
+            console.error('Error on region click handler:', err);
+          }
+        };
+
+        const mouseEnterHandler = () => { if (map.current) map.current.getCanvas().style.cursor = 'pointer'; };
+        const mouseLeaveHandler = () => { if (map.current) map.current.getCanvas().style.cursor = ''; };
+
+        // Register handlers
+        map.current.on('click', layerId, clickHandler);
+        map.current.on('mouseenter', layerId, mouseEnterHandler);
+        map.current.on('mouseleave', layerId, mouseLeaveHandler);
+
         setRegionLayers(prev => ({
           ...prev,
-          [regionId]: { sourceId, layerId, deviceId }
+          [regionId]: { sourceId, layerId, deviceId, geojson, clickHandler, mouseEnterHandler, mouseLeaveHandler }
         }));
 
       } catch (e) {
@@ -297,6 +405,18 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
 
     } else {
       // Hapus layer & source
+      // Remove event handlers if any
+      const existing = regionLayers[regionId];
+      if (existing) {
+        try {
+          if (existing.clickHandler) map.current.off('click', layerId, existing.clickHandler);
+          if (existing.mouseEnterHandler) map.current.off('mouseenter', layerId, existing.mouseEnterHandler);
+          if (existing.mouseLeaveHandler) map.current.off('mouseleave', layerId, existing.mouseLeaveHandler);
+        } catch (err) {
+          console.warn('Error removing handlers for', layerId, err);
+        }
+      }
+
       if (map.current.getLayer(layerId)) map.current.removeLayer(layerId);
       if (map.current.getSource(sourceId)) map.current.removeSource(sourceId);
 
@@ -470,6 +590,21 @@ useEffect(() => {
     const isBengawanSoloPJT1Active = activeLayers['pos-hujan-ws-bengawan-solo'];
     const isBSStation = station.name.startsWith('BS');
 
+    // ✅ LOGIKA BARU: Jika tombol "Hujan Jam-Jam an PU SDA" aktif, tampilkan semua device ARR / Pos Hujan
+    const isHujanJamJamActive = !!activeLayers['Hujan Jam-Jam an PU SDA'];
+    // Trim name once and prepare quoted checks
+    const nameTrim = station.name ? station.name.trim() : '';
+    // Show only devices whose name starts and ends with double quotes ("...")
+    const isDoubleQuotedName = /^".*"$/.test(nameTrim);
+    const isHujanJamJamStation = isDoubleQuotedName;
+
+    // ✅ NEW: Pos Duga Air Jam-Jam an PU SDA — show devices with single quotes at start and end (e.g., '\'Name\'')
+    // This supports both an explicit activeLayers key named exactly 'Pos Duga Air Jam-Jam an PU SDA'
+    // or any active layer key that includes 'pos-duga' (case-insensitive)
+    const isPosDugaJamJamActive = (!!activeLayers['Pos Duga Air Jam-Jam an PU SDA']) ||
+      Object.keys(activeLayers).some(k => k.toLowerCase().includes('pos-duga') && activeLayers[k]);
+    const isSingleQuotedName = /^'.*'$/.test(nameTrim);
+
     // ✅ LOGIKA BARU: Jika tombol "Pos Hujan WS Brantas PJT 1" aktif, tampilkan ARR di daftar brantas
     const isHujanBrantasActive = activeLayers['pos-hujan-ws-brantas-pjt1'];
     const isARRBrantasStation = arrBrantasKeywords.some(keyword =>
@@ -496,8 +631,23 @@ useEffect(() => {
     // ✅ LOGIKA PENAMPILAN MARKER — HANYA SATU KONDISI YANG BOLEH AKTIF
     let shouldShowMarker = false;
 
+    // If any WS region toggles are active, do NOT show markers at all (markers are hidden when region layers active)
+    const activeRegionIds = Object.keys(activeLayers).filter(k => k.startsWith('ws-') && activeLayers[k]);
+    if (activeRegionIds.length > 0) {
+      console.log(`ℹ️ Region layers active (${activeRegionIds.join(',')}) — skipping marker rendering`);
+      return; // skip marker creation entirely while region layers are active
+    }
+
     // 1. Jika ada tombol UPT aktif → tampilkan hanya UPT yang sesuai
     if (isAnyUptActive && stationUptId && activeLayers[stationUptId]) {
+      shouldShowMarker = true;
+    }
+    // Jika tombol Hujan Jam-Jam an PU SDA aktif → tampilkan semua station ARR / POS
+    else if (isHujanJamJamActive && isHujanJamJamStation) {
+      shouldShowMarker = true;
+    }
+    // Jika tombol Pos Duga Air Jam-Jam an PU SDA aktif → tampilkan hanya device yang namanya diawali dan diakhiri dengan tanda petik tunggal (')
+    else if (isPosDugaJamJamActive && isSingleQuotedName) {
       shouldShowMarker = true;
     }
     // 2. Jika tombol Pos Hujan WS Brantas PJT 1 aktif → tampilkan hanya ARR Brantas
@@ -532,14 +682,34 @@ useEffect(() => {
       // ✅ Ambil gaya marker berdasarkan jenis stasiun
       const markerStyle = getMarkerStyle(station.name);
       const bgColor = getStatusColor(station.status); // Warna status (untuk background)
-      const borderColor = markerStyle.color; // Warna jenis (untuk border)
+      // Apply per-button override if present
+      const override = getButtonStyleOverride({
+        isHujanJamJamActive,
+        isPosDugaJamJamActive,
+        isHujanBrantasActive,
+        isDugaAirBrantasActive: isDugaAirBrantasActive,
+        isDugaAirBengawanSoloActive: isDugaAirBengawanSoloActive,
+        isBengawanSoloPJT1Active: isBengawanSoloPJT1Active,
+      });
+      const borderColor = override?.color || markerStyle.color; // Warna jenis (untuk border)
+
+      // Apply override visual styles when present
+      const overrideBg = override?.color || bgColor;
+      let borderRadiusVal = '50%';
+      let extraTransform = '';
+      if (override?.shape === 'rounded-square') borderRadiusVal = '8px';
+      if (override?.shape === 'square') borderRadiusVal = '6px';
+      if (override?.shape === 'diamond') { borderRadiusVal = '6px'; extraTransform = ' rotate(45deg)'; }
+      if (override?.shape === 'triangle') { borderRadiusVal = '4px'; }
+      if (override?.shape === 'pin') { borderRadiusVal = '50% 50% 50% 50%'; }
+      if (override?.shape === 'circle-with-square') borderRadiusVal = '50%';
 
       markerEl.style.cssText = `
         position: absolute; /* ✅ Penting! */
         width: 24px; 
         height: 24px; 
-        border-radius: 50%; 
-        background-color: ${bgColor}; 
+        border-radius: ${borderRadiusVal}; 
+        background-color: ${overrideBg}; 
         border: 2px solid ${borderColor}; 
         box-shadow: 0 2px 4px rgba(0,0,0,0.3); 
         cursor: pointer; 
@@ -547,11 +717,11 @@ useEffect(() => {
         align-items: center; 
         justify-content: center;
         z-index: 1;
-        transform: translate(-50%, -50%); /* ✅ Pastikan pusat marker tepat di titik koordinat */
+        transform: translate(-50%, -50%)${extraTransform};
       `;
       
-      // ✅ Gunakan icon dari getMarkerStyle
-      markerEl.innerHTML = markerStyle.icon;
+      // ✅ Gunakan icon dari override jika ada, otherwise use markerStyle
+      markerEl.innerHTML = override?.icon || markerStyle.icon;
 
       if (station.status === "alert") {
         const pulseEl = document.createElement("div");

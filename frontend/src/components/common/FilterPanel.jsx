@@ -115,17 +115,6 @@ const FilterPanel = ({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-4">
-          {/* Auto Switch */}
-          <section className="space-y-3">
-            <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-              <ToggleRight className="w-4 h-4 text-blue-600" />
-              Device Auto Switch
-            </h3>
-            <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-              {/* AutoSwitchToggle komponen bisa ditambahkan di sini jika dibutuhkan */}
-            </div>
-          </section>
-
           {/* SECTION 1: MAP LAYERS */}
           <section className="mt-4 space-y-4">
             {/* Header Map Layers + Panah */}
@@ -282,8 +271,7 @@ const FilterPanel = ({
                 {[
                   { id: "pos-hujan-ws-brantas-pjt1", name: "Pos Hujan WS Brantas PJT 1", color: "#FF6347" },
                   { id: "pos-hujan-ws-bengawan-solo", name: "Pos Hujan WS Bengawan Solo PJT 1", color: "#FFA500" },
-                  { id: "pos-hujan-ws-bbws-solo", name: "Pos Hujan WS BBWS Solo", color: "#4682B4" },
-                  { id: "pos-hujan-ws-bbws-brantas", name: "Pos Hujan BBWS Brantas", color: "#008080" },
+                  { id: "Hujan Jam-Jam an PU SDA", name: "Hujan Jam-Jam an PU SDA", color: "#FF6347" },
                 ].map((item) => (
                   <div
                     key={item.id}
@@ -316,7 +304,7 @@ const FilterPanel = ({
             )}
           </section>
 
-                   {/* SECTION 11: POS DUGA AIR */}
+          {/* SECTION 11: POS DUGA AIR */}
           <section className="mt-4 space-y-4">
             <div
               onClick={() => setShowPosDugaAir(!showPosDugaAir)}
@@ -341,7 +329,6 @@ const FilterPanel = ({
                   { id: "pos-duga-air-ws-brantas-pjt1", name: "Pos Duga Air WS Brantas PJT 1", color: "#FF6347" },
                   { id: "pos-duga-air-ws-bengawan-solo", name: "Pos Duga Air WS Bengawan Solo PJT 1", color: "#FFA500" },
                   { id: "pos-duga-air-jam-jam-an", name: "Pos Duga Air Jam-jam an PU SDA", color: "#008080" },
-                  { id: "pos-duga-air-bbws-solo", name: "Pos Duga Air BBWS Solo", color: "#8A2BE2" },
                 ].map((item) => (
                   <div
                     key={item.id}

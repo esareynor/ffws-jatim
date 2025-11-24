@@ -1,5 +1,6 @@
 // src/components/common/GoogleMapsSearchbar.jsx
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import cityCoordinates from "./CityCoordinates";
 
 const normalizeString = (str) => {
     return str.trim().toLowerCase();
@@ -271,38 +272,4 @@ const GoogleMapsSearchbar = ({
         </div>
     );
 };
-
-// Daftar kota tetap di luar komponen agar tidak direkompute tiap render
-const cityCoordinates = {
-    jakarta: [106.8456, -6.2088],
-    surabaya: [112.7508, -7.2575],
-    bandung: [107.6191, -6.9175],
-    yogyakarta: [110.3695, -7.7956],
-    semarang: [110.4204, -6.9667],
-    medan: [98.6722, 3.5952],
-    palembang: [104.7458, -2.9765],
-    makassar: [119.4327, -5.1477],
-    denpasar: [115.2126, -8.6705],
-    bali: [115.2126, -8.6705],
-    malang: [112.6308, -7.9831],
-    sidoarjo: [112.7183, -7.4478],
-    probolinggo: [113.7156, -7.7764],
-    pasuruan: [112.6909, -7.6461],
-    mojokerto: [112.4694, -7.4706],
-    lamongan: [112.3333, -7.1167],
-    gresik: [112.5729, -7.1554],
-    tuban: [112.0483, -6.8976],
-    bojonegoro: [111.8816, -7.15],
-    jombang: [112.2333, -7.55],
-    nganjuk: [111.8833, -7.6],
-    kediri: [112.0167, -7.8167],
-    blitar: [112.1667, -8.1],
-    tulungagung: [111.9, -8.0667],
-    bangil: [112.7333, -7.6],
-    lawang: [112.6833, -7.8333],
-    singosari: [112.65, -7.9],
-    wates: [110.3569, -7.9133],
-    lempuyangan: [110.3739, -7.7884],
-};
-
 export default GoogleMapsSearchbar;

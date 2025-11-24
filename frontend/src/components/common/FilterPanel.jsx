@@ -179,9 +179,11 @@ const FilterPanel = ({
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
             >
               <div className="flex items-center gap-2">
-                {/* Ikon legenda — bisa gunakan Layers atau custom */}
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
-                  <path d="M12 2L2 7l10 5 10-5M2 12l10 5 10-5M2 7v10l10 5m0 0v-10M12 12v10l10-5M12 12L2 7m10 5v10"/>
+                {/* Ikon legenda (distinct) */}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <rect x="3" y="4" width="18" height="3" rx="1" stroke="currentColor" />
+                  <rect x="3" y="10.5" width="14" height="3" rx="1" stroke="currentColor" />
+                  <rect x="3" y="17" width="10" height="3" rx="1" stroke="currentColor" />
                 </svg>
                 <span className="font-semibold text-gray-700">Legenda Peta</span>
               </div>
@@ -254,8 +256,10 @@ const FilterPanel = ({
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
             >
               <div className="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                {/* Icon: cloud + rain */}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" strokeWidth="1.6">
+                  <path d="M20 16.58A4 4 0 0 0 16 12h-1.26A6 6 0 1 0 6 17" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M8 19v2M12 19v2M16 19v2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 <span className="font-semibold text-gray-700">Pos Hujan</span>
               </div>
@@ -278,10 +282,10 @@ const FilterPanel = ({
                     className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <span
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: item.color }}
-                      ></span>
+                      {/* droplet icon per-item */}
+                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2C12 2 7 8 7 12.5C7 16.6421 9.85786 19.5 14 19.5C18.1421 19.5 21 16.6421 21 12.5C21 8 16.001 2 16.001 2H12Z" fill={item.color}/>
+                      </svg>
                       <span className="text-xs text-gray-700">{item.name}</span>
                     </div>
                     <button
@@ -311,8 +315,10 @@ const FilterPanel = ({
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
             >
               <div className="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                {/* Icon: water gauge / beaker-like */}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" strokeWidth="1.6">
+                  <path d="M8 2h8l-1 6a4 4 0 0 1-6 0L8 2z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M6 9v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 <span className="font-semibold text-gray-700">Pos Duga Air</span>
               </div>
@@ -335,10 +341,8 @@ const FilterPanel = ({
                     className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <span
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: item.color }}
-                      ></span>
+                      {/* small square indicator */}
+                      <span className="w-3 h-3" style={{ backgroundColor: item.color, borderRadius: 4 }}></span>
                       <span className="text-xs text-gray-700">{item.name}</span>
                     </div>
                     <button

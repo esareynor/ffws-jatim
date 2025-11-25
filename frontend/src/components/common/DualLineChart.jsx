@@ -1,10 +1,5 @@
 import React, { useEffect } from 'react';
 
-/**
- * DualLineChart
- * Chart dengan sumbu X dan Y yang jelas, sesuai desain FFWS
- * Menampilkan data aktual dan prediksi dengan grid dan label yang proper
- */
 const DualLineChart = ({
   actual = [],
   predicted = [],

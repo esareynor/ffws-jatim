@@ -25,8 +25,9 @@ const Layout = ({ children }) => {
 
     const handleStationSelect = useCallback((station) => {
         setSelectedStation(station);
-        setIsSidebarOpen(true);
-    }, []);
+        // If the detail panel is open, don't open the sidebar to prevent duplicate sidebars
+        if (!isDetailPanelOpen) setIsSidebarOpen(true);
+    }, [isDetailPanelOpen]);
 
     const handleAutoSwitchToggle = useCallback((isOn) => {
         console.log('=== LAYOUT: AUTO SWITCH TOGGLE REQUESTED ===');
@@ -64,8 +65,9 @@ const Layout = ({ children }) => {
             // Jika panel terbuka, tutup dengan animasi
             handleCloseDetailPanel();
         } else {
-            // Jika panel tertutup, buka langsung
+            // Jika panel tertutup, buka langsung and close sidebar to avoid duplicates
             setIsDetailPanelOpen(true);
+            setIsSidebarOpen(false);
         }
     }, [isDetailPanelOpen]);
 
@@ -83,8 +85,8 @@ const Layout = ({ children }) => {
         setCurrentStationIndex(index);
         setSelectedStation(station);
         // Auto open sidebar when auto switching
-        setIsSidebarOpen(true);
-    }, []);
+        if (!isDetailPanelOpen) setIsSidebarOpen(true);
+    }, [isDetailPanelOpen]);
 
     const handleStationChange = useCallback(
         (device, index) => {
@@ -102,7 +104,7 @@ const Layout = ({ children }) => {
                 setCurrentStationIndex(index);
                 // Buka panel detail saat auto switch
                 setSelectedStation(device);
-                setIsSidebarOpen(true);
+                if (!isDetailPanelOpen) setIsSidebarOpen(true);
                 // Tutup detail panel jika auto switch sedang berjalan
                 if (isAutoSwitchOn) {
                     setIsDetailPanelOpen(false);
@@ -120,7 +122,7 @@ const Layout = ({ children }) => {
             
             return () => clearTimeout(timeoutId);
         },
-        [isAutoSwitchOn]
+        [isAutoSwitchOn, isDetailPanelOpen]
     );
 
     // Kontrol animasi backdrop fade in/out
@@ -201,16 +203,18 @@ const Layout = ({ children }) => {
                     </div>
                 }
             >
-                <StationDetail
-                    selectedStation={selectedStation}
-                    onClose={handleCloseStationDetail}
-                    tickerData={tickerData}
-                    isAutoSwitchOn={isAutoSwitchOn}
-                    showArrow={true}
-                    onArrowToggle={handleToggleDetailPanel}
-                    isDetailPanelOpen={isDetailPanelOpen}
-                    onCloseDetailPanel={handleCloseDetailPanel}
-                />
+                                {selectedStation && !isDetailPanelOpen && (
+                                    <StationDetail
+                                            selectedStation={selectedStation}
+                                            onClose={handleCloseStationDetail}
+                                            tickerData={tickerData}
+                                            isAutoSwitchOn={isAutoSwitchOn}
+                                            showArrow={true}
+                                            onArrowToggle={handleToggleDetailPanel}
+                                            isDetailPanelOpen={isDetailPanelOpen}
+                                            onCloseDetailPanel={handleCloseDetailPanel}
+                                    />
+                                )}
             </Suspense>
 
             {/* Detail Panel */}

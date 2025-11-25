@@ -6,6 +6,17 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { fetchDevices } from "../../services/devices";
 import { fetchDeviceGeoJSON } from "/src/services/MapGeo"; // ✅ Import fungsi
 import GoogleMapsSearchbar from "../common/GoogleMapsSearchbar";
+import {
+  REGION_ID_TO_DEVICE_ID,
+  DEVICE_ID_TO_COLOR,
+  getBBox,
+  pointInGeoJSON,
+  getStatusColor,
+  getMarkerStyle,
+  getButtonStyleOverride,
+  getUptIdFromStationName,
+  extractKeywords,
+} from "./mapUtils";
 
 const MapTooltip = lazy(() => import("./maptooltip"));
 const FilterPanel = lazy(() => import("/src/components/common/FilterPanel.jsx"));
@@ -56,83 +67,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
   const riversLayerId = 'rivers-jatim-layer';
   const [hoveredFeature, setHoveredFeature] = useState(null);
 
-  // ✅ Mapping regionId ke deviceId
-  const REGION_ID_TO_DEVICE_ID = {
-    'ws-baru-bajul-mati': 9,  // WSBaruBajulMati.geojson
-    'ws-bengawan-solo': 8,   // WSBengawanSolo.geojson
-    'ws-bondoyudo-bedadung': 5, // WSBondoyudoBedadung.geojson
-    'ws-brantas': 10,        // WSBrantas (1).geojson
-    'ws-pekalen-sampean': 7, // WSPekalenSampean.geojson
-    'ws-welang-rejoso': 6,   // WSWelangRejoso.geojson
-    'ws-madura-bawean': 11,  // WSMaduraBawean (1).geojson
-  };
-
-  const DEVICE_ID_TO_COLOR = {
-    9: '#8A2BE2',
-    8: '#FF7F50',
-    5: '#00CED1',
-    10: '#FF4500',
-    7: '#FF69B4',
-    6: '#FF00FF',
-    11: '#FFD700',
-  };
-
-  const getBBox = (geometry) => {
-    const bounds = [[Infinity, Infinity], [-Infinity, -Infinity]];
-    const traverse = (arr) => {
-      if (arr.length === 2 && typeof arr[0] === 'number' && typeof arr[1] === 'number') {
-        bounds[0][0] = Math.min(bounds[0][0], arr[0]);
-        bounds[0][1] = Math.min(bounds[0][1], arr[1]);
-        bounds[1][0] = Math.max(bounds[1][0], arr[0]);
-        bounds[1][1] = Math.max(bounds[1][1], arr[1]);
-      } else arr.forEach(traverse);
-    };
-    traverse(geometry.coordinates);
-    return bounds;
-  };
-
-  // Helper: point-in-polygon (ray-casting) for Polygon and MultiPolygon
-  const pointInRing = (x, y, ring) => {
-    let inside = false;
-    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-      const xi = ring[i][0], yi = ring[i][1];
-      const xj = ring[j][0], yj = ring[j][1];
-      const intersect = ((yi > y) !== (yj > y)) && (x < ((xj - xi) * (y - yi)) / (yj - yi) + xi);
-      if (intersect) inside = !inside;
-    }
-    return inside;
-  };
-
-  const pointInPolygon = (point, polygon) => {
-    // polygon: array of rings (first is outer)
-    const x = point[0], y = point[1];
-    // check outer ring
-    if (!Array.isArray(polygon) || polygon.length === 0) return false;
-    if (pointInRing(x, y, polygon[0]) === false) return false;
-    // if there are holes, ensure point not in any hole
-    for (let i = 1; i < polygon.length; i++) {
-      if (pointInRing(x, y, polygon[i])) return false;
-    }
-    return true;
-  };
-
-  const pointInGeoJSON = (geojson, point) => {
-    if (!geojson || !geojson.type) return false;
-    const coords = point; // [lng, lat]
-    if (geojson.type === 'FeatureCollection') {
-      return geojson.features.some(f => pointInGeoJSON(f, coords));
-    }
-    if (geojson.type === 'Feature') {
-      return pointInGeoJSON(geojson.geometry, coords);
-    }
-    if (geojson.type === 'Polygon') {
-      return pointInPolygon(coords, geojson.coordinates);
-    }
-    if (geojson.type === 'MultiPolygon') {
-      return geojson.coordinates.some(poly => pointInPolygon(coords, poly));
-    }
-    return false;
-  };
+  // Helper utilities are imported from mapUtils.js
 
   useEffect(() => {
     const loadDevices = async () => {
@@ -146,143 +81,15 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     loadDevices();
   }, []);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "safe": return "#10B981";
-      case "warning": return "#F59E0B";
-      case "alert": return "#EF4444";
-      default: return "#6B7280";
-    }
-  };
+  // getStatusColor imported from mapUtils.js
 
   // ✅ Fungsi baru: Tentukan jenis stasiun dan gaya marker-nya
-  const getMarkerStyle = (stationName) => {
-    // Cek jika nama stasiun mengandung "UPT"
-    if (stationName.includes("UPT")) {
-      return {
-        color: "#1F2937", // Biru tua / abu-abu gelap
-        icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7v10l10 5m0 0v-10M12 12L2 7m10 5v10l10-5M12 12L2 7m10 5v10" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-        type: "upt",
-      };
-    }
-
-    // Cek jika nama stasiun mengandung "WS" (Wilayah Sungai)
-    if (stationName.includes("WS") || stationName.startsWith("BS")) {
-      return {
-        color: "#10B981", // Hijau
-        icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-        type: "ws",
-      };
-    }
-
-    // Cek jika nama stasiun mengandung "AWLR"
-    if (stationName.startsWith("AWLR")) {
-      return {
-        color: "#F59E0B", // Orange
-        icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-        type: "awlr",
-      };
-    }
-
-    // Default: Gunakan warna status
-    return {
-      color: getStatusColor("default"),
-      icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="white" stroke-width="2"/></svg>`,
-      type: "default",
-    };
-  };
+  // getMarkerStyle imported from mapUtils.js
 
   // ✅ Per-button style overrides: kembalikan warna/icon khusus ketika tombol tertentu aktif
-  const getButtonStyleOverride = ({ isHujanJamJamActive, isPosDugaJamJamActive, isHujanBrantasActive, isDugaAirBrantasActive, isDugaAirBengawanSoloActive, isBengawanSoloPJT1Active }) => {
-    // Prioritas: Pos Duga Jam-Jam > Hujan Jam-Jam > Hujan Brantas > Duga Air Brantas > Duga Air Bengawan > Bengawan Solo
-    if (isPosDugaJamJamActive) {
-      return {
-        color: '#0369A1', // biru gelap
-        shape: 'rounded-square',
-        // square-ish icon
-        icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="18" height="18" rx="4" fill="white" stroke="#0369A1" stroke-width="2"/></svg>`
-      };
-    }
-    if (isHujanJamJamActive) {
-      return {
-        color: '#1E90FF', // dodger blue
-        shape: 'pin',
-        icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3c-1 2-3 3-3 6 0 3 3 6 3 6s3-3 3-6c0-3-2-4-3-6z" fill="#1E90FF" stroke="white" stroke-width="1"/></svg>`
-      };
-    }
-    if (isHujanBrantasActive) {
-      return { color: '#DC2626', shape: 'circle', icon: `<svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="white" stroke="#DC2626" stroke-width="2"/></svg>` };
-    }
-    if (isDugaAirBrantasActive) {
-      return { color: '#F59E0B', shape: 'diamond', icon: `<svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z" fill="white" stroke="#F59E0B" stroke-width="2"/></svg>` };
-    }
-    if (isDugaAirBengawanSoloActive) {
-      return { color: '#10B981', shape: 'triangle', icon: `<svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 2 L19 21 L12 17 L5 21 Z" fill="white" stroke="#10B981" stroke-width="2"/></svg>` };
-    }
-    if (isBengawanSoloPJT1Active) {
-      return { color: '#7C3AED', shape: 'circle-with-square', icon: `<svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="white" stroke="#7C3AED" stroke-width="2"/><rect x="8" y="12" width="8" height="8" rx="2" fill="#7C3AED"/></svg>` };
-    }
-    return null; // no override
-  };
+  // getButtonStyleOverride imported from mapUtils.js
 
-  // ✅ Helper: Ambil UPT ID dari nama stasiun — hanya untuk UPT biasa
-  const getUptIdFromStationName = (stationName) => {
-    if (!stationName) return null;
-
-    // Mapping nama stasiun ke UPT ID — sesuaikan dengan data Anda
-    const uptMapping = {
-      "UPT PSDA Welang Pekalen Pasuruan": "upt-welang-pekalen",
-      "UPT PSDA Madura Pamekasan": "upt-madura",
-      "UPT PSDA Bengawan Solo Bojonegoro": "upt-bengawan-solo",
-      "UPT PSDA Brantas Kediri": "upt-brantas",
-      "UPT PSDA Sampean Setail Bondowoso": "upt-sampean",
-      "Dinas PUSDA Jatim": "dinas-pusda",
-
-      // ✅ Tambahkan mapping untuk "Pos Hujan WS Brantas PJT 1"
-      "ARR Wagir": "pos-hujan-ws-brantas-pjt1",
-      "ARR Tangkil": "pos-hujan-ws-brantas-pjt1",
-      "ARR Poncokusumo": "pos-hujan-ws-brantas-pjt1",
-      "ARR Dampit": "pos-hujan-ws-brantas-pjt1",
-      "ARR Sengguruh": "pos-hujan-ws-brantas-pjt1",
-      "ARR Sutami": "pos-hujan-ws-brantas-pjt1",
-      "ARR Tunggorono": "pos-hujan-ws-brantas-pjt1",
-      "ARR Doko": "pos-hujan-ws-brantas-pjt1",
-      "ARR Birowo": "pos-hujan-ws-brantas-pjt1",
-      "ARR Wates Wlingi": "pos-hujan-ws-brantas-pjt1",
-      "Semen ARR": "pos-hujan-ws-brantas-pjt1",
-      "ARR Sumberagung": "pos-hujan-ws-brantas-pjt1",
-      "Bendungan ARR Wlingi": "pos-hujan-ws-brantas-pjt1",
-      "ARR Tugu": "pos-hujan-ws-brantas-pjt1",
-      "ARR Kampak": "pos-hujan-ws-brantas-pjt1",
-      "ARR Bendo": "pos-hujan-ws-brantas-pjt1",
-      "ARR Pagerwojo": "pos-hujan-ws-brantas-pjt1",
-      "ARR Kediri": "pos-hujan-ws-brantas-pjt1",
-      "ARR Tampung": "pos-hujan-ws-brantas-pjt1",
-      "ARR Gunung Sari": "pos-hujan-ws-brantas-pjt1",
-      "ARR Metro": "pos-hujan-ws-brantas-pjt1",
-      "ARR Gemarang": "pos-hujan-ws-brantas-pjt1",
-      "ARR Bendungan": "pos-hujan-ws-brantas-pjt1",
-      "ARR Tawangsari": "pos-hujan-ws-brantas-pjt1",
-      "ARR Sadar": "pos-hujan-ws-brantas-pjt1",
-      "ARR Bogel": "pos-hujan-ws-brantas-pjt1",
-      "ARR Karangpilang": "pos-hujan-ws-brantas-pjt1",
-      "ARR Kedurus": "pos-hujan-ws-brantas-pjt1",
-      "ARR Wonorejo-1": "pos-hujan-ws-brantas-pjt1",
-      "ARR Wonorejo-2": "pos-hujan-ws-brantas-pjt1",
-      "ARR Rejotangan": "pos-hujan-ws-brantas-pjt1",
-      "ARR Kali Biru": "pos-hujan-ws-brantas-pjt1",
-      "ARR Neyama": "pos-hujan-ws-brantas-pjt1",
-      "ARR Selorejo": "pos-hujan-ws-brantas-pjt1",
-    };
-
-    for (const [name, id] of Object.entries(uptMapping)) {
-      if (stationName.includes(name)) {
-        return id;
-      }
-    }
-
-    return null; // Jika tidak cocok
-  };
+  // NOTE: getUptIdFromStationName imported from mapUtils.js
 
   const getStationCoordinates = (stationName) => {
     if (!devices?.length) return null;
@@ -559,13 +366,7 @@ useEffect(() => {
     "ARR Selorejo",
   ];
 
-  // ✅ Ekstrak kata kunci dari daftar AWLR
-  const extractKeywords = (list) => {
-    return list.map(name => {
-      const parts = name.split(' ');
-      return parts[parts.length - 1];
-    });
-  };
+  // extractKeywords imported from mapUtils.js
 
   const brantasKeywords = extractKeywords(awlrBrantasList);
   const bengawanKeywords = extractKeywords(awlrBengawanSoloList);
@@ -974,15 +775,7 @@ useEffect(() => {
         />
       </Suspense>
 
-      {selectedStation && onStationSelect && (
-        <Suspense fallback={null}>
-          <StationDetail
-            selectedStation={selectedStation}
-            onClose={() => onStationSelect(null)}
-            tickerData={tickerData}
-          />
-        </Suspense>
-      )}
+      {/* StationDetail is rendered by the top-level Layout to avoid duplicate sidebars */}
 
       {/* Tombol Filter */}
       <div className="absolute top-4 right-4 z-[80]">

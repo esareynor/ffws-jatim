@@ -25,9 +25,9 @@ const Layout = ({ children }) => {
 
     const handleStationSelect = useCallback((station) => {
         setSelectedStation(station);
-        // If the detail panel is open, don't open the sidebar to prevent duplicate sidebars
-        if (!isDetailPanelOpen) setIsSidebarOpen(true);
-    }, [isDetailPanelOpen]);
+        // Always open the sidebar on station select; do not hide it when the detail panel opens
+        setIsSidebarOpen(true);
+    }, []);
 
     const handleAutoSwitchToggle = useCallback((isOn) => {
         console.log('=== LAYOUT: AUTO SWITCH TOGGLE REQUESTED ===');
@@ -43,8 +43,8 @@ const Layout = ({ children }) => {
             // If auto switch is turned off, close sidebar
             if (!isOn) {
                 console.log('Auto switch OFF - closing sidebar');
-                setIsSidebarOpen(false);
-                setSelectedStation(null);
+                // Use centralized close handler so detail panel also closes
+                handleCloseStationDetail();
             } else {
                 console.log('Auto switch ON - closing detail panel');
                 // Jika auto switch diaktifkan, tutup detail panel
@@ -58,6 +58,8 @@ const Layout = ({ children }) => {
     const handleCloseStationDetail = useCallback(() => {
         setSelectedStation(null);
         setIsSidebarOpen(false);
+        // Also close the right-hand detail panel when the sidebar is closed from the sidebar
+        setIsDetailPanelOpen(false);
     }, []);
 
     const handleToggleDetailPanel = useCallback(() => {
@@ -65,11 +67,10 @@ const Layout = ({ children }) => {
             // Jika panel terbuka, tutup dengan animasi
             handleCloseDetailPanel();
         } else {
-            // Jika panel tertutup, buka langsung and close sidebar to avoid duplicates
+            // Jika panel tertutup, buka langsung (do not close sidebar)
             setIsDetailPanelOpen(true);
-            setIsSidebarOpen(false);
         }
-    }, [isDetailPanelOpen]);
+    }, []);
 
     const handleCloseDetailPanel = useCallback(() => {
         setIsDetailPanelOpen(false);
@@ -85,7 +86,7 @@ const Layout = ({ children }) => {
         setCurrentStationIndex(index);
         setSelectedStation(station);
         // Auto open sidebar when auto switching
-        if (!isDetailPanelOpen) setIsSidebarOpen(true);
+        setIsSidebarOpen(true);
     }, [isDetailPanelOpen]);
 
     const handleStationChange = useCallback(
@@ -104,7 +105,7 @@ const Layout = ({ children }) => {
                 setCurrentStationIndex(index);
                 // Buka panel detail saat auto switch
                 setSelectedStation(device);
-                if (!isDetailPanelOpen) setIsSidebarOpen(true);
+                setIsSidebarOpen(true);
                 // Tutup detail panel jika auto switch sedang berjalan
                 if (isAutoSwitchOn) {
                     setIsDetailPanelOpen(false);
@@ -122,7 +123,7 @@ const Layout = ({ children }) => {
             
             return () => clearTimeout(timeoutId);
         },
-        [isAutoSwitchOn, isDetailPanelOpen]
+        [isAutoSwitchOn]
     );
 
     // Kontrol animasi backdrop fade in/out
@@ -160,8 +161,8 @@ const Layout = ({ children }) => {
                         isAutoSwitchOn={isAutoSwitchOn}
                         onCloseSidebar={() => {
                             if (!isAutoSwitchOn) {
-                                setIsSidebarOpen(false);
-                                setSelectedStation(null);
+                                // use the centralized close handler so it also closes the detail panel
+                                handleCloseStationDetail();
                             }
                         }}
                     />
@@ -203,7 +204,7 @@ const Layout = ({ children }) => {
                     </div>
                 }
             >
-                                {selectedStation && !isDetailPanelOpen && (
+                                {selectedStation && (
                                     <StationDetail
                                             selectedStation={selectedStation}
                                             onClose={handleCloseStationDetail}

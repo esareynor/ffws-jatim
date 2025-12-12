@@ -11,16 +11,18 @@ class MasSensor extends Model
     use HasFactory;
 
     protected $fillable = [
-        'device_id',
+        'mas_device_code',
         'code',
         'parameter',
         'unit',
         'description',
-        'mas_model_id',
+        'mas_model_code',
         'threshold_safe',
         'threshold_warning',
         'threshold_danger',
         'status',
+        'forecasting_status',
+        'is_active',
         'last_seen'
     ];
 
@@ -36,7 +38,7 @@ class MasSensor extends Model
      */
     public function device(): BelongsTo
     {
-        return $this->belongsTo(MasDevice::class, 'device_id');
+        return $this->belongsTo(MasDevice::class, 'mas_device_code', 'code');
     }
 
     /**
@@ -44,7 +46,7 @@ class MasSensor extends Model
      */
     public function masModel(): BelongsTo
     {
-        return $this->belongsTo(MasModel::class, 'mas_model_id');
+        return $this->belongsTo(MasModel::class, 'mas_model_code', 'code');
     }
 
     /**
@@ -52,7 +54,7 @@ class MasSensor extends Model
      */
     public function latestData()
     {
-        return $this->hasOne(DataActual::class, 'mas_sensor_id')->latest('received_at');
+        return $this->hasOne(DataActual::class, 'mas_sensor_code', 'code')->latest('received_at');
     }
 
     /**
@@ -60,7 +62,49 @@ class MasSensor extends Model
      */
     public function dataActuals()
     {
-        return $this->hasMany(DataActual::class, 'mas_sensor_id');
+        return $this->hasMany(DataActual::class, 'mas_sensor_code', 'code');
+    }
+
+    /**
+     * Get rating curves for this sensor.
+     */
+    public function ratingCurves()
+    {
+        return $this->hasMany(RatingCurve::class, 'mas_sensor_code', 'code');
+    }
+
+    /**
+     * Get the active rating curve for this sensor.
+     */
+    public function activeRatingCurve()
+    {
+        return $this->hasOne(RatingCurve::class, 'mas_sensor_code', 'code')
+            ->whereDate('effective_date', '<=', now())
+            ->orderBy('effective_date', 'desc');
+    }
+
+    /**
+     * Get calculated discharges for this sensor.
+     */
+    public function calculatedDischarges()
+    {
+        return $this->hasMany(CalculatedDischarge::class, 'mas_sensor_code', 'code');
+    }
+
+    /**
+     * Get data predictions for this sensor.
+     */
+    public function dataPredictions()
+    {
+        return $this->hasMany(DataPrediction::class, 'mas_sensor_code', 'code');
+    }
+
+    /**
+     * Get predicted calculated discharges for this sensor.
+     */
+    public function predictedCalculatedDischarges()
+    {
+        return $this->hasMany(PredictedCalculatedDischarge::class, 'mas_sensor_code', 'code');
     }
 
     /**

@@ -12,15 +12,15 @@ class CalculatedDischarge extends Model
 
     protected $fillable = [
         'mas_sensor_code',
-        'sensor_value',
-        'sensor_discharge',
+        'water_level',
+        'discharge',
         'rating_curve_code',
         'calculated_at'
     ];
 
     protected $casts = [
-        'sensor_value' => 'decimal:4',
-        'sensor_discharge' => 'decimal:4',
+        'water_level' => 'decimal:4',
+        'discharge' => 'decimal:4',
         'calculated_at' => 'datetime',
     ];
 

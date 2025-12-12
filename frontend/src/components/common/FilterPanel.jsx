@@ -245,6 +245,463 @@ const FilterPanel = ({
                     ))}
                   </div>
                 </div>
+<<<<<<< HEAD
+
+                {/* SIH3 */}
+                <div>
+                  <div className="font-medium text-xs text-gray-600 mb-1">SIH3</div>
+                  <div className="space-y-1 pl-2">
+                    {[
+                      { id: "awlr", name: "AWLR", color: "#00FF00" },
+                      { id: "pos-duga-air", name: "Pos Duga Air", color: "#FFA500" },
+                    ].map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: item.color }}
+                          ></span>
+                          <span className="text-xs text-gray-700">{item.name}</span>
+                        </div>
+                        <button
+                          onClick={() => handleLayerToggle(item.id)}
+                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                            activeLayers[item.id] ? "bg-blue-600" : "bg-gray-300"
+                          }`}
+                          type="button"
+                          aria-pressed={!!activeLayers[item.id]}
+                        >
+                          <span
+                            className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                              activeLayers[item.id] ? "translate-x-5" : "translate-x-1"
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* IRIGASI */}
+                <div>
+                  <div className="font-medium text-xs text-gray-600 mb-1">IRIGASI</div>
+                  <div className="space-y-1 pl-2">
+                    {[
+                      { id: "jaringan-irigasi", name: "Jaringan Irigasi", color: "#800080", isLine: true },
+                    ].map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-4 h-1 ${item.isLine ? 'w-full' : ''}`}
+                            style={{ backgroundColor: item.color }}
+                          ></div>
+                          <span className="text-xs text-gray-700">{item.name}</span>
+                        </div>
+                        <button
+                          onClick={() => handleLayerToggle(item.id)}
+                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                            activeLayers[item.id] ? "bg-blue-600" : "bg-gray-300"
+                          }`}
+                          type="button"
+                          aria-pressed={!!activeLayers[item.id]}
+                        >
+                          <span
+                            className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                              activeLayers[item.id] ? "translate-x-5" : "translate-x-1"
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+
+<<<<<<< HEAD
+=======
+          {/* SECTION X: PETA DEBIT 100 (AUTO-LOAD) */}
+          <section className="mt-4 space-y-4">
+            <div
+              onClick={() => setShowPetaGenangan(!showPetaGenangan)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                </svg>
+                <span className="font-semibold text-gray-700">Peta Debit 100 Welang</span>
+              </div>
+              {showPetaGenangan ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {showPetaGenangan && (
+              <div className="pl-4 pt-2 pb-4 space-y-2">
+                <div
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-3 h-3 rounded-full bg-cyan-500"></span>
+                    <span className="text-xs text-gray-700">Debit 100 Welang (Auto)</span>
+                  </div>
+                  <button
+                    onClick={() => handleLayerToggle('test-map-debit-100')}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      activeLayers['test-map-debit-100'] ? "bg-blue-600" : "bg-gray-300"
+                    }`}
+                    type="button"
+                    aria-pressed={!!activeLayers['test-map-debit-100']}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                        activeLayers['test-map-debit-100'] ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+
+>>>>>>> 39c60f841fa3c86ec38e34b2fd05b744dec26bb5
+          {/* SECTION 3: PETA GENANGAN WELANG #1 */}
+          <section className="mt-4 space-y-4">
+            <div
+              onClick={() => setShowPetaGenangan(!showPetaGenangan)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                </svg>
+                <span className="font-semibold text-gray-700">Peta Genangan Welang #1</span>
+              </div>
+              {showPetaGenangan ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {showPetaGenangan && (
+              <div className="pl-4 pt-2 pb-4 space-y-2">
+                <div
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-3 h-3 rounded-full bg-purple-500"></span>
+                    <span className="text-xs text-gray-700">Peta Genangan Welang #1</span>
+                  </div>
+                  <button
+                    onClick={() => handleLayerToggle('peta-genangan-welang')}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      activeLayers['peta-genangan-welang'] ? "bg-blue-600" : "bg-gray-300"
+                    }`}
+                    type="button"
+                    aria-pressed={!!activeLayers['peta-genangan-welang']}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                        activeLayers['peta-genangan-welang'] ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* SECTION 4: KABUPATEN KOTA */}
+          <section className="mt-4 space-y-4">
+            <div
+              onClick={() => setShowKabupatenKota(!showKabupatenKota)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                </svg>
+                <span className="font-semibold text-gray-700">Kabupaten Kota</span>
+              </div>
+              {showKabupatenKota ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {showKabupatenKota && (
+              <div className="pl-4 pt-2 pb-4 space-y-2">
+                <div
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-3 h-3 rounded-full bg-indigo-500"></span>
+                    <span className="text-xs text-gray-700">Kabupaten Kota</span>
+                  </div>
+                  <button
+                    onClick={() => handleLayerToggle('kabupaten-kota')}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      activeLayers['kabupaten-kota'] ? "bg-blue-600" : "bg-gray-300"
+                    }`}
+                    type="button"
+                    aria-pressed={!!activeLayers['kabupaten-kota']}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                        activeLayers['kabupaten-kota'] ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* SECTION 5: WILAYAH SUNGAI */}
+          <section className="mt-4 space-y-4">
+            <div
+              onClick={() => setShowWilayahSungai(!showWilayahSungai)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                </svg>
+                <span className="font-semibold text-gray-700">Wilayah Sungai</span>
+              </div>
+              {showWilayahSungai ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {showWilayahSungai && (
+              <div className="pl-4 pt-2 pb-4 space-y-2">
+                <div
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-3 h-3 rounded-full bg-green-500"></span>
+                    <span className="text-xs text-gray-700">Wilayah Sungai</span>
+                  </div>
+                  <button
+                    onClick={() => handleLayerToggle('wilayah-sungai')}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      activeLayers['wilayah-sungai'] ? "bg-blue-600" : "bg-gray-300"
+                    }`}
+                    type="button"
+                    aria-pressed={!!activeLayers['wilayah-sungai']}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                        activeLayers['wilayah-sungai'] ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* SECTION 6: DAERAH ALIRAN SUNGAI */}
+          <section className="mt-4 space-y-4">
+            <div
+              onClick={() => setShowDaerahAliranSungai(!showDaerahAliranSungai)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                </svg>
+                <span className="font-semibold text-gray-700">Daerah Aliran Sungai</span>
+              </div>
+              {showDaerahAliranSungai ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {showDaerahAliranSungai && (
+              <div className="pl-4 pt-2 pb-4 space-y-2">
+                <div
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-3 h-3 rounded-full bg-blue-500"></span>
+                    <span className="text-xs text-gray-700">Daerah Aliran Sungai</span>
+                  </div>
+                  <button
+                    onClick={() => handleLayerToggle('daerah-aliran-sungai')}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      activeLayers['daerah-aliran-sungai'] ? "bg-blue-600" : "bg-gray-300"
+                    }`}
+                    type="button"
+                    aria-pressed={!!activeLayers['daerah-aliran-sungai']}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                        activeLayers['daerah-aliran-sungai'] ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* SECTION 7: TITIK SAMPLING KUALITAS AIR DINAS PU SDA */}
+          <section className="mt-4 space-y-4">
+            <div
+              onClick={() => setShowSamplingAir(!showSamplingAir)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                </svg>
+                <span className="font-semibold text-gray-700">Titik Sampling Kualitas Air Dinas PU SDA</span>
+              </div>
+              {showSamplingAir ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {showSamplingAir && (
+              <div className="pl-4 pt-2 pb-4 space-y-2">
+                <div
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-3 h-3 rounded-full bg-teal-500"></span>
+                    <span className="text-xs text-gray-700">Titik Sampling Kualitas Air</span>
+                  </div>
+                  <button
+                    onClick={() => handleLayerToggle('sampling-air')}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      activeLayers['sampling-air'] ? "bg-blue-600" : "bg-gray-300"
+                    }`}
+                    type="button"
+                    aria-pressed={!!activeLayers['sampling-air']}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                        activeLayers['sampling-air'] ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* SECTION 8: SENSOR BANJIR BPBD JATIM */}
+          <section className="mt-4 space-y-4">
+            <div
+              onClick={() => setShowSensorBanjir(!showSensorBanjir)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                </svg>
+                <span className="font-semibold text-gray-700">SENSOR BANJIR BPBD JATIM</span>
+              </div>
+              {showSensorBanjir ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {showSensorBanjir && (
+              <div className="pl-4 pt-2 pb-4 space-y-2">
+                <div
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-3 h-3 rounded-full bg-red-500"></span>
+                    <span className="text-xs text-gray-700">SENSOR BANJIR BPBD JATIM</span>
+                  </div>
+                  <button
+                    onClick={() => handleLayerToggle('sensor-banjir')}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      activeLayers['sensor-banjir'] ? "bg-blue-600" : "bg-gray-300"
+                    }`}
+                    type="button"
+                    aria-pressed={!!activeLayers['sensor-banjir']}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                        activeLayers['sensor-banjir'] ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* SECTION 9: POS TINGGI MUKA AIR DAM PROVINSI JAWA TIMUR */}
+          <section className="mt-4 space-y-4">
+            <div
+              onClick={() => setShowPosTinggiMukaAir(!showPosTinggiMukaAir)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                </svg>
+                <span className="font-semibold text-gray-700">Pos Tinggi Muka Air Dam Provinsi Jawa Timur</span>
+              </div>
+              {showPosTinggiMukaAir ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {showPosTinggiMukaAir && (
+              <div className="pl-4 pt-2 pb-4 space-y-2">
+                <div
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-3 h-3 rounded-full bg-orange-500"></span>
+                    <span className="text-xs text-gray-700">Pos Tinggi Muka Air Dam</span>
+                  </div>
+                  <button
+                    onClick={() => handleLayerToggle('pos-tinggi-muka-air')}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      activeLayers['pos-tinggi-muka-air'] ? "bg-blue-600" : "bg-gray-300"
+                    }`}
+                    type="button"
+                    aria-pressed={!!activeLayers['pos-tinggi-muka-air']}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                        activeLayers['pos-tinggi-muka-air'] ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+=======
+>>>>>>> 04957d1903dd26bccf0cfb2e09a31dcd0e49dcf0
               </div>
             )}
           </section>

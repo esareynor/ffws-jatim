@@ -23,9 +23,9 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p storage/models storage/scalers logs
 
-# Expose port
+# Expose port (default 8000, can be overridden by FLASK_PORT env var)
 EXPOSE 8000
 
-# Run with gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "--timeout", "120", "wsgi:gunicorn_app"]
+# Run with gunicorn - uses environment variables for configuration
+CMD sh -c "gunicorn --bind 0.0.0.0:${FLASK_PORT:-8000} --workers ${GUNICORN_WORKERS:-4} --timeout ${GUNICORN_TIMEOUT:-120} wsgi:gunicorn_app"
 

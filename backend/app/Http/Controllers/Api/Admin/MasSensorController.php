@@ -19,12 +19,12 @@ class MasSensorController extends Controller
             $sensors = MasSensor::with(['device', 'masModel'])
                 ->select([
                     'id',
-                    'device_id',
+                    'mas_device_code',
                     'code',
                     'parameter',
                     'unit',
                     'description',
-                    'mas_model_id',
+                    'mas_model_code',
                     'threshold_safe',
                     'threshold_warning',
                     'threshold_danger',
@@ -48,12 +48,12 @@ class MasSensorController extends Controller
             $sensor = MasSensor::with(['device', 'masModel'])
                 ->select([
                     'id',
-                    'device_id',
+                    'mas_device_code',
                     'code',
                     'parameter',
                     'unit',
                     'description',
-                    'mas_model_id',
+                    'mas_model_code',
                     'threshold_safe',
                     'threshold_warning',
                     'threshold_danger',
@@ -73,27 +73,27 @@ class MasSensorController extends Controller
     }
 
     /**
-     * Menampilkan data sensor berdasarkan device ID
+     * Menampilkan data sensor berdasarkan device code
      */
-    public function getByDevice($deviceId)
+    public function getByDevice($deviceCode)
     {
         try {
             $sensors = MasSensor::with(['device', 'masModel'])
                 ->select([
                     'id',
-                    'device_id',
+                    'mas_device_code',
                     'code',
                     'parameter',
                     'unit',
                     'description',
-                    'mas_model_id',
+                    'mas_model_code',
                     'threshold_safe',
                     'threshold_warning',
                     'threshold_danger',
                     'status',
                     'last_seen'
                 ])
-                ->where('device_id', $deviceId)
+                ->where('mas_device_code', $deviceCode)
                 ->get();
 
             return $this->successResponse($sensors, 'Data sensor berdasarkan device berhasil diambil');
@@ -111,12 +111,12 @@ class MasSensorController extends Controller
             $sensors = MasSensor::with(['device', 'masModel'])
                 ->select([
                     'id',
-                    'device_id',
+                    'mas_device_code',
                     'code',
                     'parameter',
                     'unit',
                     'description',
-                    'mas_model_id',
+                    'mas_model_code',
                     'threshold_safe',
                     'threshold_warning',
                     'threshold_danger',
@@ -141,12 +141,12 @@ class MasSensorController extends Controller
             $sensors = MasSensor::with(['device', 'masModel'])
                 ->select([
                     'id',
-                    'device_id',
+                    'mas_device_code',
                     'code',
                     'parameter',
                     'unit',
                     'description',
-                    'mas_model_id',
+                    'mas_model_code',
                     'threshold_safe',
                     'threshold_warning',
                     'threshold_danger',

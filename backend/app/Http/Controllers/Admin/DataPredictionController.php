@@ -19,14 +19,14 @@ class DataPredictionController extends Controller
         $query = DataPrediction::with(['masSensor', 'masModel'])
             ->orderBy('prediction_run_at', 'desc');
 
-        // Filter berdasarkan sensor
-        if ($request->filled('sensor_id')) {
-            $query->where('mas_sensor_id', $request->sensor_id);
+        // Filter berdasarkan sensor (menggunakan sensor code)
+        if ($request->filled('sensor_code')) {
+            $query->where('mas_sensor_code', $request->sensor_code);
         }
 
-        // Filter berdasarkan model
-        if ($request->filled('model_id')) {
-            $query->where('mas_model_id', $request->model_id);
+        // Filter berdasarkan model (menggunakan model code)
+        if ($request->filled('model_code')) {
+            $query->where('mas_model_code', $request->model_code);
         }
 
         // Filter berdasarkan status threshold
@@ -73,9 +73,8 @@ class DataPredictionController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'mas_sensor_id' => 'required|exists:mas_sensors,id',
-            'mas_sensor_code' => 'required|string|max:255',
-            'mas_model_id' => 'required|exists:mas_models,id',
+            'mas_sensor_code' => 'required|string|max:255|exists:mas_sensors,code',
+            'mas_model_code' => 'required|string|max:255|exists:mas_models,code',
             'prediction_run_at' => 'required|date',
             'prediction_for_ts' => 'required|date',
             'predicted_value' => 'required|numeric',
@@ -95,7 +94,7 @@ class DataPredictionController extends Controller
     public function show(DataPrediction $dataPrediction): View
     {
         $dataPrediction->load(['masSensor', 'masModel']);
-        
+
         return view('admin.data_predictions.show', compact('dataPrediction'));
     }
 
@@ -116,9 +115,8 @@ class DataPredictionController extends Controller
     public function update(Request $request, DataPrediction $dataPrediction)
     {
         $validated = $request->validate([
-            'mas_sensor_id' => 'required|exists:mas_sensors,id',
-            'mas_sensor_code' => 'required|string|max:255',
-            'mas_model_id' => 'required|exists:mas_models,id',
+            'mas_sensor_code' => 'required|string|max:255|exists:mas_sensors,code',
+            'mas_model_code' => 'required|string|max:255|exists:mas_models,code',
             'prediction_run_at' => 'required|date',
             'prediction_for_ts' => 'required|date',
             'predicted_value' => 'required|numeric',

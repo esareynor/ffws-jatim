@@ -60,8 +60,8 @@ class RatingCurveController extends Controller
         $validator = Validator::make($request->all(), [
             'mas_sensor_code' => 'required|string|exists:mas_sensors,code',
             'code' => 'required|string|max:100|unique:rating_curves,code',
-            'formula_type' => 'required|in:power,polynomial,exponential,custom',
-            'a' => 'required|numeric',
+            'formula_type' => 'required|in:tipe-01,tipe-02,tipe-03,power,polynomial,exponential,custom',
+            'a' => 'nullable|numeric',
             'b' => 'nullable|numeric',
             'c' => 'nullable|numeric',
             'effective_date' => 'required|date'
@@ -131,8 +131,8 @@ class RatingCurveController extends Controller
         $validator = Validator::make($request->all(), [
             'mas_sensor_code' => 'sometimes|required|string|exists:mas_sensors,code',
             'code' => 'sometimes|required|string|max:100|unique:rating_curves,code,' . $id,
-            'formula_type' => 'sometimes|required|in:power,polynomial,exponential,custom',
-            'a' => 'sometimes|required|numeric',
+            'formula_type' => 'sometimes|required|in:tipe-01,tipe-02,tipe-03,power,polynomial,exponential,custom',
+            'a' => 'nullable|numeric',
             'b' => 'nullable|numeric',
             'c' => 'nullable|numeric',
             'effective_date' => 'sometimes|required|date'
@@ -251,7 +251,7 @@ class RatingCurveController extends Controller
             return $this->serverErrorResponse('Gagal mengambil rating curve: ' . $e->getMessage());
         }
     }
-    
+
     /**
      * Get rating curve history for a sensor.
      * Shows all rating curves with their effective periods.

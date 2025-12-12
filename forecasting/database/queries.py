@@ -18,7 +18,7 @@ class DataFetcher:
         self.db = get_db()
     
     def get_active_models(self):
-        """Get all active forecasting models from database"""
+        """Get all active forecasting models from database including configs"""
         try:
             with self.db.session_scope() as session:
                 models = session.query(MasModel).filter(
@@ -32,14 +32,16 @@ class DataFetcher:
                     'type': m.type,
                     'n_steps_in': m.n_steps_in,
                     'n_steps_out': m.n_steps_out,
-                    'file_path': m.file_path
+                    'file_path': m.file_path,
+                    'architecture_config': m.architecture_config,
+                    'training_config': m.training_config
                 } for m in models]
         except Exception as e:
             logger.error(f"Error fetching active models: {e}")
             return []
     
     def get_model_by_code(self, model_code):
-        """Get model configuration by code"""
+        """Get model configuration by code including architecture and training configs"""
         try:
             with self.db.session_scope() as session:
                 model = session.query(MasModel).filter(
@@ -54,7 +56,9 @@ class DataFetcher:
                         'type': model.type,
                         'n_steps_in': model.n_steps_in,
                         'n_steps_out': model.n_steps_out,
-                        'file_path': model.file_path
+                        'file_path': model.file_path,
+                        'architecture_config': model.architecture_config,  # JSON string or None
+                        'training_config': model.training_config  # JSON string or None
                     }
                 return None
         except Exception as e:

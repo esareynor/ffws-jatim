@@ -13,7 +13,6 @@ class MasUpt extends Model
 
     protected $fillable = [
         'river_basin_code',
-        'cities_code',
         'name',
         'code',
     ];
@@ -26,9 +25,20 @@ class MasUpt extends Model
         return $this->belongsTo(MasRiverBasin::class, 'river_basin_code', 'code');
     }
 
-    public function city()
+    /**
+     * Many-to-many relationship with cities
+     * 1 UPT dapat memiliki beberapa City
+     */
+    public function cities()
     {
-        return $this->belongsTo(MasCity::class, 'cities_code', 'code');
+        return $this->belongsToMany(
+            MasCity::class,
+            'mas_city_upt',
+            'upt_code',
+            'city_code',
+            'code',
+            'code'
+        )->withTimestamps();
     }
 
     public function uptds()

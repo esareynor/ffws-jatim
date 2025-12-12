@@ -15,17 +15,17 @@
 //     const intervalRef = useRef(null);
 //     const stopTimeoutRef = useRef(null);
 //     const tickerDataRef = useRef(tickerData);
-
+    
 //     // Perbarui ref saat tickerData berubah dan urutkan berdasarkan ID
 //     useEffect(() => {
 //         const sortedData = tickerData ? [...tickerData].sort((a, b) => a.id - b.id) : [];
 //         tickerDataRef.current = sortedData;
-
+        
 //         if (sortedData && sortedData.length > 0) {
 //             setCurrentIndex(prev => prev >= sortedData.length ? 0 : prev);
 //         }
 //     }, [tickerData]);
-
+    
 //     // Hentikan auto switch jika data kosong
 //     useEffect(() => {
 //         if (isPlaying && (!tickerData || tickerData.length === 0)) {
@@ -33,7 +33,7 @@
 //             stopAutoSwitchImmediately();
 //         }
 //     }, [tickerData, isPlaying]);
-
+    
 //     const tick = useCallback(() => {
 //         const currentTickerData = tickerDataRef.current;
 //         if (!currentTickerData || currentTickerData.length === 0) {
@@ -53,7 +53,7 @@
 //                 console.log("Auto switching to next station:", nextStation.name);
 //                 try {
 //                     window.mapboxAutoSwitch(nextStation, nextIndex);
-
+                    
 //                     setTimeout(() => {
 //                         setIsAtMarker(true);
 //                     }, 1000);
@@ -77,27 +77,27 @@
 //     // Fungsi untuk menghentikan auto switch segera tanpa delay
 //     const stopAutoSwitchImmediately = useCallback(() => {
 //         console.log("Stopping auto switch immediately");
-
+        
 //         if (intervalRef.current) {
 //             clearInterval(intervalRef.current);
 //             intervalRef.current = null;
 //         }
-
+        
 //         if (stopTimeoutRef.current) {
 //             clearTimeout(stopTimeoutRef.current);
 //             stopTimeoutRef.current = null;
 //         }
-
+        
 //         setIsPlaying(false);
 //         setIsPendingStop(false);
 //         setIsAtMarker(true);
-
+        
 //         document.dispatchEvent(
 //             new CustomEvent("autoSwitchDeactivated", {
 //                 detail: { active: false },
 //             })
 //         );
-
+        
 //         if (onAutoSwitchToggle) {
 //             onAutoSwitchToggle(false);
 //         }
@@ -105,13 +105,13 @@
 
 //     useEffect(() => {
 //         console.log("AutoSwitchToggle effect running, isPlaying:", isPlaying);
-
+        
 //         if (intervalRef.current) {
 //             console.log("Clearing existing interval");
 //             clearInterval(intervalRef.current);
 //             intervalRef.current = null;
 //         }
-
+        
 //         if (isPlaying) {
 //             if (stopTimeoutRef.current) {
 //                 console.log("Clearing pending stop timeout");
@@ -123,14 +123,14 @@
 //             if (tickerDataRef.current && tickerDataRef.current.length > 0) {
 //                 const currentData = tickerDataRef.current;
 //                 const firstStation = currentData[currentIndex];
-
+                
 //                 setIsAtMarker(false);
-
+                
 //                 if (typeof window.mapboxAutoSwitch === 'function' && firstStation) {
 //                     console.log("Initial auto switch to station:", firstStation.name, "at index:", currentIndex);
 //                     try {
 //                         window.mapboxAutoSwitch(firstStation, currentIndex);
-
+                        
 //                         setTimeout(() => {
 //                             setIsAtMarker(true);
 //                         }, 1000);
@@ -142,11 +142,11 @@
 //                     console.warn("Cannot perform initial switch: mapboxAutoSwitch not available or no station data");
 //                     setIsAtMarker(true);
 //                 }
-
+                
 //                 // ✅ Hanya mulai interval — jangan panggil tick() langsung
 //                 console.log(`Starting new interval with ${interval}ms delay`);
 //                 intervalRef.current = setInterval(() => tick(), interval);
-
+                
 //                 document.dispatchEvent(
 //                     new CustomEvent("autoSwitchActivated", {
 //                         detail: { active: true, currentIndex, stationCount: currentData.length },
@@ -161,9 +161,9 @@
 //             if (intervalRef.current) {
 //                 clearInterval(intervalRef.current);
 //                 intervalRef.current = null;
-
+                
 //                 console.log("Auto switch interval cleared due to isPlaying = false");
-
+                
 //                 document.dispatchEvent(
 //                     new CustomEvent("autoSwitchDeactivated", {
 //                         detail: { active: false },
@@ -190,24 +190,24 @@
 //             console.warn("Cannot start auto switch: No ticker data available");
 //             return;
 //         }
-
+        
 //         if (stopTimeoutRef.current) {
 //             clearTimeout(stopTimeoutRef.current);
 //             stopTimeoutRef.current = null;
 //             setIsPendingStop(false);
 //         }
-
+        
 //         console.log("Auto switch starting. Available stations:", currentData.length);
 //         if (currentData.length > 0) {
 //             console.log("Station names:", currentData.map(s => s.name).join(", "));
 //         }
 //         console.log("Starting with station index:", currentIndex);
-
+        
 //         if (typeof window.mapboxAutoSwitch !== 'function') {
 //             console.warn("mapboxAutoSwitch function is not available on window object!");
 //             console.log("Window object functions:", Object.keys(window).filter(key => typeof window[key] === 'function'));
 //         }
-
+        
 //         setIsPlaying(true);
 //     };
 
@@ -216,14 +216,14 @@
 //             console.log("Already pending stop, ignoring stopAutoSwitch call");
 //             return;
 //         }
-
+        
 //         console.log("Auto switch will stop in", stopDelay/1000, "seconds");
 //         setIsPendingStop(true);
-
+        
 //         if (stopTimeoutRef.current) {
 //             clearTimeout(stopTimeoutRef.current);
 //         }
-
+        
 //         stopTimeoutRef.current = setTimeout(() => {
 //             stopAutoSwitchImmediately();
 //         }, stopDelay);
@@ -231,7 +231,7 @@
 
 //     const togglePlayPause = () => {
 //         console.log("Toggle play/pause called. Current state - isPlaying:", isPlaying, "isPendingStop:", isPendingStop);
-
+        
 //         if (isPendingStop) {
 //             if (stopTimeoutRef.current) {
 //                 clearTimeout(stopTimeoutRef.current);
@@ -241,16 +241,16 @@
 //             console.log("Auto switch stop cancelled, continuing");
 //             return;
 //         }
-
+        
 //         const newIsPlaying = !isPlaying;
 //         console.log("Setting isPlaying to:", newIsPlaying);
-
+        
 //         if (newIsPlaying) {
 //             startAutoSwitch();
 //         } else {
 //             stopAutoSwitchImmediately();
 //         }
-
+        
 //         if (onAutoSwitchToggle) {
 //             onAutoSwitchToggle(newIsPlaying);
 //         }
@@ -261,16 +261,16 @@
 //         if (currentStationIndex !== undefined && currentStationIndex !== currentIndex) {
 //             console.log("Syncing with external currentStationIndex:", currentStationIndex);
 //             setCurrentIndex(currentStationIndex);
-
+            
 //             if (isPlaying && tickerDataRef.current && tickerDataRef.current.length > 0) {
 //                 const station = tickerDataRef.current[currentStationIndex];
 //                 if (station && typeof window.mapboxAutoSwitch === 'function') {
 //                     console.log("Auto updating to new index station:", station.name);
-
+                    
 //                     setIsAtMarker(false);
-
+                    
 //                     window.mapboxAutoSwitch(station, currentStationIndex);
-
+                    
 //                     setTimeout(() => {
 //                         setIsAtMarker(true);
 //                     }, 1000);
@@ -286,7 +286,7 @@
 //             if (isPlaying && !isPendingStop) {
 //                 console.log("User interaction detected, starting stop delay:", event.detail);
 //                 stopAutoSwitch();
-
+                
 //                 const filterButton = document.querySelector('[aria-label="Buka Filter"]');
 //                 if (filterButton) {
 //                     filterButton.style.backgroundColor = "white";
@@ -298,31 +298,31 @@
 //         };
 
 //         document.addEventListener("userInteraction", handleUserInteraction);
-
+        
 //         const logAutoSwitchEvent = (event) => {
 //             console.log("Auto switch event received:", event.type, event.detail);
 //         };
-
+        
 //         const handleMapboxReady = (event) => {
 //             console.log("Received mapboxReadyForAutoSwitch event:", event.detail);
-
+            
 //             if (isPlaying && !intervalRef.current && tickerDataRef.current?.length > 0) {
 //                 console.log("Restarting tick interval after mapbox confirmation");
-
+                
 //                 if (intervalRef.current) {
 //                     clearInterval(intervalRef.current);
 //                     intervalRef.current = null;
 //                 }
-
+                
 //                 setIsAtMarker(false);
-
+                
 //                 // ✅ Hanya mulai interval jika isPlaying
 //                 if (isPlaying) {
 //                     intervalRef.current = setInterval(() => tick(), interval);
 //                 }
 //             }
 //         };
-
+        
 //         document.addEventListener("autoSwitchActivated", logAutoSwitchEvent);
 //         document.addEventListener("autoSwitchDeactivated", logAutoSwitchEvent);
 //         document.addEventListener("mapboxReadyForAutoSwitch", handleMapboxReady);
@@ -342,10 +342,14 @@
 //             <div className="flex items-center gap-3 mb-2 sm:mb-0">
 //                 <span className="text-sm font-semibold text-gray-800">Auto Switch</span>
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
                 
 >>>>>>> b86689dedf9038f83a8013cde8cf1c80a07f3149
+=======
+                
+>>>>>>> 39c60f841fa3c86ec38e34b2fd05b744dec26bb5
 //                 <div className="flex items-center gap-2">
 //                     {isPlaying && !isPendingStop && (
 //                         <div className="flex items-center gap-1">
@@ -371,7 +375,7 @@
 //             </div>
 
 //             <button
-//                 onClick={togglePlayPause}
+//                 onClick={togglePlayPause}   
 //                 disabled={!hasData}
 //                 className={`relative inline-flex items-center h-7 rounded-full transition-all duration-200 ease-in-out focus:outline-none select-none ${
 //                     !hasData ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:opacity-90"
@@ -381,7 +385,7 @@
 //             >
 //                 <div
 //                     className={`relative w-12 h-7 rounded-full transition-all duration-200 ease-in-out ${
-//                         isPendingStop ? "bg-yellow-400" :
+//                         isPendingStop ? "bg-yellow-400" : 
 //                         isPlaying ? "bg-green-500" : "bg-gray-300"
 //                     }`}
 //                 >

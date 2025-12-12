@@ -13,6 +13,7 @@ class MasUptd extends Model
 
     protected $fillable = [
         'upt_code',
+        'city_code',
         'name',
         'code',
     ];
@@ -23,6 +24,11 @@ class MasUptd extends Model
     public function upt()
     {
         return $this->belongsTo(MasUpt::class, 'upt_code', 'code');
+    }
+
+    public function city()
+    {
+        return $this->belongsTo(MasCity::class, 'city_code', 'code');
     }
 }
 

@@ -13,17 +13,25 @@ return new class extends Migration
     {
         Schema::create('mas_devices', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('mas_river_basin_id')->constrained('mas_river_basins')->onUpdate('restrict')->onDelete('restrict');
+            $table->string('mas_river_basin_code', 100);
             $table->string('name');
             $table->string('code', 100)->unique();
             $table->double('latitude');
             $table->double('longitude');
-            $table->double('elevation_m');
-            $table->enum('status', ['active', 'inactive']);
+            $table->double('elevation_m')->nullable();
+            $table->enum('status', ['active', 'inactive', 'maintenance'])->default('active');
             $table->timestamps();
-            
+
             // Indexes
             $table->index('status', 'idx_devices_status');
+            $table->index('mas_river_basin_code', 'idx_devices_basin_code');
+
+            // Foreign key
+            $table->foreign('mas_river_basin_code', 'fk_devices_basin_code')
+                ->references('code')
+                ->on('mas_river_basins')
+                ->onDelete('restrict')
+                ->onUpdate('cascade');
         });
     }
 

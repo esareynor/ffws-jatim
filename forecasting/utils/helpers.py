@@ -6,6 +6,7 @@ import pickle
 from pathlib import Path
 from datetime import datetime
 import numpy as np
+from config.settings import MIN_CONFIDENCE, VARIANCE_THRESHOLD
 
 
 def setup_logging(log_level='INFO', log_file=None):
@@ -105,8 +106,8 @@ def calculate_confidence_score(predictions, historical_variance=None):
         # Normalize by historical variance
         confidence = 1.0 - min(pred_variance / historical_variance, 1.0)
     else:
-        # Use a simple heuristic
-        confidence = max(0.5, 1.0 - (pred_variance / 10.0))
+        # Use configurable heuristic
+        confidence = max(MIN_CONFIDENCE, 1.0 - (pred_variance / VARIANCE_THRESHOLD))
     
     return min(max(confidence, 0.0), 1.0)  # Clamp between 0 and 1
 

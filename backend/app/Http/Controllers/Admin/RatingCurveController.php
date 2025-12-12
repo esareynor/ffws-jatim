@@ -25,10 +25,10 @@ class RatingCurveController extends Controller
             // Direct database query instead of API for now
             $ratingCurves = \App\Models\RatingCurve::with('sensor')
                 ->paginate($request->get('per_page', 15));
-            
+
             // Get sensors for filter
             $sensors = \App\Models\MasSensor::select('id', 'code', 'description')
-                ->where('is_active', true)
+                ->where('status', 'active')
                 ->get();
 
             // Prepare table headers
@@ -90,7 +90,7 @@ class RatingCurveController extends Controller
             Log::error('Error fetching rating curves: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             // Return empty view instead of redirecting back
             return view('admin.rating_curves.index', [
                 'ratingCurves' => collect([]),
@@ -115,17 +115,27 @@ class RatingCurveController extends Controller
     public function create(Request $request)
     {
         try {
-            $token = $request->user()->createToken('admin-access')->plainTextToken;
-            
-            // Get sensors
-            $sensorsResponse = Http::withToken($token)
-                ->get(config('app.url') . '/api/sensors');
-            $sensors = $sensorsResponse->successful() ? $sensorsResponse->json('data') : [];
+            // Get water level sensors only
+            $sensors = \App\Models\MasSensor::where('parameter', 'water_level')
+                ->where('status', 'active')
+                ->select('code', 'description')
+                ->orderBy('description')
+                ->get()
+                ->map(fn($s) => [
+                    'value' => $s->code,
+                    'label' => $s->description . ' (' . $s->code . ')'
+                ]);
+
+            // Get formula types
+            $formulaTypes = \App\Models\RatingCurve::getFormulaTypes();
 
             return view('admin.rating_curves.create', [
-                'sensors' => collect($sensors)->map(fn($s) => [
-                    'value' => $s['code'],
-                    'label' => $s['name'] . ' (' . $s['code'] . ')'
+                'sensors' => $sensors,
+                'formulaTypes' => collect($formulaTypes)->map(fn($type) => [
+                    'value' => $type['value'],
+                    'label' => $type['label'],
+                    'description' => $type['description'],
+                    'parameters' => $type['parameters']
                 ])
             ]);
 
@@ -142,7 +152,7 @@ class RatingCurveController extends Controller
     {
         try {
             $token = $request->user()->createToken('admin-access')->plainTextToken;
-            
+
             $response = Http::withToken($token)
                 ->post($this->apiBaseUrl, $request->all());
 
@@ -167,7 +177,7 @@ class RatingCurveController extends Controller
     {
         try {
             $token = $request->user()->createToken('admin-access')->plainTextToken;
-            
+
             // Get rating curve
             $response = Http::withToken($token)
                 ->get($this->apiBaseUrl . '/' . $id);
@@ -177,17 +187,29 @@ class RatingCurveController extends Controller
             }
 
             $ratingCurve = $response->json('data');
-            
-            // Get sensors
-            $sensorsResponse = Http::withToken($token)
-                ->get(config('app.url') . '/api/sensors');
-            $sensors = $sensorsResponse->successful() ? $sensorsResponse->json('data') : [];
+
+            // Get water level sensors directly from database
+            $sensors = \App\Models\MasSensor::where('parameter', 'water_level')
+                ->where('status', 'active')
+                ->select('code', 'description')
+                ->orderBy('description')
+                ->get()
+                ->map(fn($s) => [
+                    'value' => $s->code,
+                    'label' => $s->description . ' (' . $s->code . ')'
+                ]);
+
+            // Get formula types
+            $formulaTypes = \App\Models\RatingCurve::getFormulaTypes();
 
             return view('admin.rating_curves.edit', [
                 'ratingCurve' => $ratingCurve,
-                'sensors' => collect($sensors)->map(fn($s) => [
-                    'value' => $s['code'],
-                    'label' => $s['name'] . ' (' . $s['code'] . ')'
+                'sensors' => $sensors,
+                'formulaTypes' => collect($formulaTypes)->map(fn($type) => [
+                    'value' => $type['value'],
+                    'label' => $type['label'],
+                    'description' => $type['description'],
+                    'parameters' => $type['parameters']
                 ])
             ]);
 
@@ -204,7 +226,7 @@ class RatingCurveController extends Controller
     {
         try {
             $token = $request->user()->createToken('admin-access')->plainTextToken;
-            
+
             $response = Http::withToken($token)
                 ->put($this->apiBaseUrl . '/' . $id, $request->all());
 
@@ -229,7 +251,7 @@ class RatingCurveController extends Controller
     {
         try {
             $token = $request->user()->createToken('admin-access')->plainTextToken;
-            
+
             $response = Http::withToken($token)
                 ->delete($this->apiBaseUrl . '/' . $id);
 
@@ -253,7 +275,7 @@ class RatingCurveController extends Controller
     {
         try {
             $token = $request->user()->createToken('admin-access')->plainTextToken;
-            
+
             // Get rating curve
             $response = Http::withToken($token)
                 ->get($this->apiBaseUrl . '/' . $id);
@@ -273,5 +295,34 @@ class RatingCurveController extends Controller
             return back()->with('error', 'Failed to load calculator');
         }
     }
+
+    /**
+     * Get rating curves by sensor code (for AJAX)
+     */
+    public function getBySensor($sensorCode)
+    {
+        try {
+            $ratingCurves = \App\Models\RatingCurve::where('mas_sensor_code', $sensorCode)
+                ->orderBy('effective_date', 'desc')
+                ->get()
+                ->map(function ($rc) {
+                    return [
+                        'code' => $rc->code,
+                        'effective_date' => $rc->effective_date->format('d/m/Y'),
+                        'formula_string' => $rc->formula_string,
+                        'a' => $rc->a,
+                        'b' => $rc->b,
+                        'c' => $rc->c
+                    ];
+                });
+
+            return response()->json($ratingCurves);
+
+        } catch (\Exception $e) {
+            Log::error('Error getting rating curves by sensor: ' . $e->getMessage());
+            return response()->json([], 500);
+        }
+    }
 }
+
 

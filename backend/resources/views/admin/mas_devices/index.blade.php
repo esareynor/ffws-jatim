@@ -20,8 +20,8 @@
             [
                 'type' => 'select',
                 'name' => 'river_basin_id',
-                'label' => 'DAS',
-                'empty_option' => 'Semua DAS',
+                'label' => 'Wilayah Sungai',
+                'empty_option' => 'Semua Wilayah Sungai',
                 'options' => $riverBasins->map(function($basin) {
                     return ['value' => $basin['value'], 'label' => $basin['label']];
                 })->toArray()
@@ -51,7 +51,7 @@
         ];
     @endphp
 
-    <x-filter-bar 
+    <x-filter-bar
         title="Filter & Pencarian Device"
         :filters="$filterConfig"
         :action="route('admin.devices.index')"
@@ -79,61 +79,61 @@
             @csrf
             <input type="hidden" name="context" value="create" />
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <x-admin.form-input 
-                    type="text" 
-                    name="name" 
-                    label="Nama Device" 
-                    placeholder="Contoh: AWS Malang 01" 
-                    required="true" 
+                <x-admin.form-input
+                    type="text"
+                    name="name"
+                    label="Nama Device"
+                    placeholder="Contoh: AWS Malang 01"
+                    required="true"
                     :error="$errors->first('name')"
                 />
-                <x-admin.form-input 
-                    type="text" 
-                    name="code" 
-                    label="Kode Device" 
-                    placeholder="Contoh: DEV-MLG-001" 
-                    required="true" 
+                <x-admin.form-input
+                    type="text"
+                    name="code"
+                    label="Kode Device"
+                    placeholder="Contoh: DEV-MLG-001"
+                    required="true"
                     :error="$errors->first('code')"
                 />
-                <x-admin.form-input 
+                <x-admin.form-input
                     type="select"
-                    name="mas_river_basin_id" 
-                    label="DAS" 
-                    required="true" 
-                    :error="$errors->first('mas_river_basin_id')"
+                    name="mas_river_basin_code"
+                    label="Wilayah Sungai"
+                    required="true"
+                    :error="$errors->first('mas_river_basin_code')"
                     :options="$riverBasins"
                 />
-                <x-admin.form-input 
-                    type="number" 
-                    name="latitude" 
-                    label="Latitude" 
-                    placeholder="-7.9666" 
+                <x-admin.form-input
+                    type="number"
+                    name="latitude"
+                    label="Latitude"
+                    placeholder="-7.9666"
                     step="0.000001"
-                    required="true" 
+                    required="true"
                     :error="$errors->first('latitude')"
                 />
-                <x-admin.form-input 
-                    type="number" 
-                    name="longitude" 
-                    label="Longitude" 
-                    placeholder="112.6326" 
+                <x-admin.form-input
+                    type="number"
+                    name="longitude"
+                    label="Longitude"
+                    placeholder="112.6326"
                     step="0.000001"
-                    required="true" 
+                    required="true"
                     :error="$errors->first('longitude')"
                 />
-                <x-admin.form-input 
-                    type="number" 
-                    name="elevation_m" 
-                    label="Elevasi (m)" 
-                    placeholder="500" 
+                <x-admin.form-input
+                    type="number"
+                    name="elevation_m"
+                    label="Elevasi (m)"
+                    placeholder="500"
                     step="0.01"
                     :error="$errors->first('elevation_m')"
                 />
-                <x-admin.form-input 
+                <x-admin.form-input
                     type="select"
-                    name="status" 
-                    label="Status" 
-                    required="true" 
+                    name="status"
+                    label="Status"
+                    required="true"
                     :error="$errors->first('status')"
                     :options="[
                         ['value' => 'active', 'label' => 'Aktif'],
@@ -159,63 +159,63 @@
             <input type="hidden" name="context" value="edit" />
             <input type="hidden" name="id" :value="editData.id" />
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <x-admin.form-input 
-                    type="text" 
-                    name="name" 
-                    label="Nama Device" 
-                    x-model="editData.name" 
-                    required="true" 
+                <x-admin.form-input
+                    type="text"
+                    name="name"
+                    label="Nama Device"
+                    x-model="editData.name"
+                    required="true"
                     :error="$errors->first('name')"
                 />
-                <x-admin.form-input 
-                    type="text" 
-                    name="code" 
-                    label="Kode Device" 
-                    x-model="editData.code" 
-                    required="true" 
+                <x-admin.form-input
+                    type="text"
+                    name="code"
+                    label="Kode Device"
+                    x-model="editData.code"
+                    required="true"
                     :error="$errors->first('code')"
                 />
-                <x-admin.form-input 
+                <x-admin.form-input
                     type="select"
-                    name="mas_river_basin_id" 
-                    label="DAS" 
-                    x-model="editData.mas_river_basin_id" 
-                    required="true" 
-                    :error="$errors->first('mas_river_basin_id')"
+                    name="mas_river_basin_code"
+                    label="Wilayah Sungai"
+                    x-model="editData.mas_river_basin_code"
+                    required="true"
+                    :error="$errors->first('mas_river_basin_code')"
                     :options="$riverBasins"
                 />
-                <x-admin.form-input 
-                    type="number" 
-                    name="latitude" 
-                    label="Latitude" 
-                    x-model="editData.latitude" 
+                <x-admin.form-input
+                    type="number"
+                    name="latitude"
+                    label="Latitude"
+                    x-model="editData.latitude"
                     step="0.000001"
-                    required="true" 
+                    required="true"
                     :error="$errors->first('latitude')"
                 />
-                <x-admin.form-input 
-                    type="number" 
-                    name="longitude" 
-                    label="Longitude" 
-                    x-model="editData.longitude" 
+                <x-admin.form-input
+                    type="number"
+                    name="longitude"
+                    label="Longitude"
+                    x-model="editData.longitude"
                     step="0.000001"
-                    required="true" 
+                    required="true"
                     :error="$errors->first('longitude')"
                 />
-                <x-admin.form-input 
-                    type="number" 
-                    name="elevation_m" 
-                    label="Elevasi (m)" 
-                    x-model="editData.elevation_m" 
+                <x-admin.form-input
+                    type="number"
+                    name="elevation_m"
+                    label="Elevasi (m)"
+                    x-model="editData.elevation_m"
                     step="0.01"
                     :error="$errors->first('elevation_m')"
                 />
-                <x-admin.form-input 
+                <x-admin.form-input
                     type="select"
-                    name="status" 
-                    label="Status" 
-                    x-model="editData.status" 
-                    required="true" 
+                    name="status"
+                    label="Status"
+                    x-model="editData.status"
+                    required="true"
                     :error="$errors->first('status')"
                     :options="[
                         ['value' => 'active', 'label' => 'Aktif'],
@@ -238,15 +238,15 @@
 <script>
 function devicesPage() {
     return {
-        editData: { 
-            id: null, 
-            name: '', 
-            code: '', 
-            mas_river_basin_id: '', 
-            latitude: '', 
-            longitude: '', 
-            elevation_m: '', 
-            status: '' 
+        editData: {
+            id: null,
+            name: '',
+            code: '',
+            mas_river_basin_code: '',
+            latitude: '',
+            longitude: '',
+            elevation_m: '',
+            status: ''
         },
         editAction: '',
         init() {
@@ -260,17 +260,17 @@ function devicesPage() {
             this.$dispatch('open-modal', 'device-create');
         },
         openEdit(item) {
-            this.editData = { 
-                id: item.id, 
-                name: item.name, 
-                code: item.code, 
-                mas_river_basin_id: item.mas_river_basin_id, 
-                latitude: item.latitude, 
-                longitude: item.longitude, 
-                elevation_m: item.elevation_m, 
-                status: item.status 
+            this.editData = {
+                id: item.id,
+                name: item.name,
+                code: item.code,
+                mas_river_basin_code: item.mas_river_basin_code,
+                latitude: item.latitude,
+                longitude: item.longitude,
+                elevation_m: item.elevation_m,
+                status: item.status
             };
-            this.editAction = `${window.location.origin}/admin/devices/${item.id}`;
+            this.editAction = `${window.location.origin}/admin/devices/${item.code}`;
             this.$dispatch('open-modal', 'device-edit');
         }
     }

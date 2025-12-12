@@ -335,6 +335,56 @@ const FilterPanel = ({
             )}
           </section>
 
+<<<<<<< HEAD
+=======
+          {/* SECTION X: PETA DEBIT 100 (AUTO-LOAD) */}
+          <section className="mt-4 space-y-4">
+            <div
+              onClick={() => setShowPetaGenangan(!showPetaGenangan)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                </svg>
+                <span className="font-semibold text-gray-700">Peta Debit 100 Welang</span>
+              </div>
+              {showPetaGenangan ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {showPetaGenangan && (
+              <div className="pl-4 pt-2 pb-4 space-y-2">
+                <div
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-3 h-3 rounded-full bg-cyan-500"></span>
+                    <span className="text-xs text-gray-700">Debit 100 Welang (Auto)</span>
+                  </div>
+                  <button
+                    onClick={() => handleLayerToggle('test-map-debit-100')}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      activeLayers['test-map-debit-100'] ? "bg-blue-600" : "bg-gray-300"
+                    }`}
+                    type="button"
+                    aria-pressed={!!activeLayers['test-map-debit-100']}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                        activeLayers['test-map-debit-100'] ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+
+>>>>>>> 39c60f841fa3c86ec38e34b2fd05b744dec26bb5
           {/* SECTION 3: PETA GENANGAN WELANG #1 */}
           <section className="mt-4 space-y-4">
             <div

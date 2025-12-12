@@ -1,9 +1,9 @@
 @extends('layouts.admin')
 
-@section('title', 'Daerah Aliran Sungai')
-@section('page-title', 'Daerah Aliran Sungai')
-@section('page-description', 'Kelola data Daerah Aliran Sungai')
-@section('breadcrumb', 'DAS')
+@section('title', 'Wilayah Sungai')
+@section('page-title', 'Wilayah Sungai')
+@section('page-description', 'Kelola data Wilayah Sungai')
+@section('breadcrumb', 'Wilayah Sungai')
 
 @section('content')
 <div class="space-y-6" x-data="riverBasinsPage()" x-init="init()">
@@ -14,8 +14,8 @@
             [
                 'type' => 'text',
                 'name' => 'search',
-                'label' => 'Cari DAS',
-                'placeholder' => 'Cari berdasarkan nama atau kode DAS...'
+                'label' => 'Cari Wilayah Sungai',
+                'placeholder' => 'Cari berdasarkan nama atau kode Wilayah Sungai...'
             ],
             [
                 'type' => 'select',
@@ -32,8 +32,8 @@
         ];
     @endphp
 
-    <x-filter-bar 
-        title="Filter & Pencarian DAS"
+    <x-filter-bar
+        title="Filter & Pencarian Wilayah Sungai"
         :filters="$filterConfig"
         :action="route('admin.region.river-basins.index')"
         gridCols="md:grid-cols-2"
@@ -41,7 +41,7 @@
     />
 
     <x-table
-        title="Daftar DAS"
+        title="Daftar Wilayah Sungai"
         :headers="$tableHeaders"
         :rows="$riverBasins"
         searchable
@@ -50,31 +50,31 @@
         <x-slot:actions>
             <x-admin.button type="button" variant="primary" @click="openCreate()">
                 <i class="fa-solid fa-plus -ml-1 mr-2"></i>
-                Tambah DAS
+                Tambah Wilayah Sungai
             </x-admin.button>
         </x-slot:actions>
     </x-table>
 
     <!-- Modal Create -->
-    <x-admin.modal :show="false" name="river-basin-create" title="Tambah DAS" size="md" :close-on-backdrop="true">
+    <x-admin.modal :show="false" name="river-basin-create" title="Tambah Wilayah Sungai" size="md" :close-on-backdrop="true">
         <form id="rbCreateForm" x-ref="createForm" action="{{ route('admin.region.river-basins.store') }}" method="POST" class="space-y-6">
             @csrf
             <input type="hidden" name="context" value="create" />
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <x-admin.form-input 
-                    type="text" 
-                    name="name" 
-                    label="Nama DAS" 
-                    placeholder="Contoh: Brantas" 
-                    required="true" 
+                <x-admin.form-input
+                    type="text"
+                    name="name"
+                    label="Nama Wilayah Sungai"
+                    placeholder="Contoh: Brantas"
+                    required="true"
                     :error="$errors->first('name')"
                 />
-                <x-admin.form-input 
-                    type="text" 
-                    name="code" 
-                    label="Kode DAS" 
-                    placeholder="Contoh: DAS-BRANTAS" 
-                    required="true" 
+                <x-admin.form-input
+                    type="text"
+                    name="code"
+                    label="Kode Wilayah Sungai"
+                    placeholder="Contoh: WS-BRANTAS"
+                    required="true"
                     :error="$errors->first('code')"
                 />
             </div>
@@ -89,27 +89,27 @@
     </x-admin.modal>
 
     <!-- Modal Edit -->
-    <x-admin.modal :show="false" name="river-basin-edit" title="Edit DAS" size="md" :close-on-backdrop="true">
+    <x-admin.modal :show="false" name="river-basin-edit" title="Edit Wilayah Sungai" size="md" :close-on-backdrop="true">
         <form id="rbEditForm" x-ref="editForm" :action="editAction" method="POST" class="space-y-6">
             @csrf
             @method('PUT')
             <input type="hidden" name="context" value="edit" />
             <input type="hidden" name="id" :value="editData.id" />
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <x-admin.form-input 
-                    type="text" 
-                    name="name" 
-                    label="Nama DAS" 
-                    x-model="editData.name" 
-                    required="true" 
+                <x-admin.form-input
+                    type="text"
+                    name="name"
+                    label="Nama Wilayah Sungai"
+                    x-model="editData.name"
+                    required="true"
                     :error="$errors->first('name')"
                 />
-                <x-admin.form-input 
-                    type="text" 
-                    name="code" 
-                    label="Kode DAS" 
-                    x-model="editData.code" 
-                    required="true" 
+                <x-admin.form-input
+                    type="text"
+                    name="code"
+                    label="Kode Wilayah Sungai"
+                    x-model="editData.code"
+                    required="true"
                     :error="$errors->first('code')"
                 />
             </div>

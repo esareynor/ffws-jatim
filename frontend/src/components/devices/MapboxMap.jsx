@@ -4,13 +4,12 @@ import React, { useEffect, useRef, useState, lazy, Suspense } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { fetchDevices } from "../../services/devices";
-import { fetchDeviceGeoJSON } from "/src/services/MapGeo"; // ✅ Import fungsi
+import { fetchDeviceGeoJSON } from "/src/services/MapGeo";
 import GoogleMapsSearchbar from "../common/GoogleMapsSearchbar";
 import {
   REGION_ID_TO_DEVICE_ID,
   DEVICE_ID_TO_COLOR,
   getBBox,
-  pointInGeoJSON,
   getStatusColor,
   getMarkerStyle,
   getButtonStyleOverride,
@@ -37,37 +36,24 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
   const [autoSwitchActive, setAutoSwitchActive] = useState(false);
   const [currentStationIndex, setCurrentStationIndex] = useState(0);
   const [selectedStationCoords, setSelectedStationCoords] = useState(null);
-
-  // ✅ State untuk active layers — termasuk wilayah legenda dan UPT
   const [activeLayers, setActiveLayers] = useState({
     rivers: false,
     'flood-risk': false,
     rainfall: false,
     administrative: false,
-    // Tambahkan ID khusus untuk tombol "Pos Hujan WS Bengawan Solo PJT 1"
     'pos-hujan-ws-bengawan-solo': false,
-    // Tambahkan ID khusus untuk tombol "Pos Duga Air WS Bengawan Solo PJT 1"
     'pos-duga-air-ws-bengawan-solo': false,
-    // Tambahkan ID khusus untuk tombol "Pos Duga Air WS Brantas PJT 1"
-    'pos-duga-air-ws-brantas-pjt1': false, // 👈 ID ini yang digunakan oleh FilterPanel
-    // Pos Hujan khusus: Hujan Jam-Jam an PU SDA
+    'pos-duga-air-ws-brantas-pjt1': false,
     'Hujan Jam-Jam an PU SDA': false,
-    // UPT Toggle akan dinamis
   });
-
-  // ✅ State untuk menyimpan reference source & layer per wilayah
   const [regionLayers, setRegionLayers] = useState({});
-
   const [administrativeGeojson, setAdministrativeGeojson] = useState(null);
   const administrativeSourceId = 'administrative-boundaries';
   const administrativeLayerId = 'administrative-fill';
-
   const [riversGeojson, setRiversGeojson] = useState(null);
   const riversSourceId = 'rivers-jatim-source';
   const riversLayerId = 'rivers-jatim-layer';
   const [hoveredFeature, setHoveredFeature] = useState(null);
-
-  // Helper utilities are imported from mapUtils.js
 
   useEffect(() => {
     const loadDevices = async () => {
@@ -81,27 +67,10 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     loadDevices();
   }, []);
 
-  // getStatusColor imported from mapUtils.js
-
-  // ✅ Fungsi baru: Tentukan jenis stasiun dan gaya marker-nya
-  // getMarkerStyle imported from mapUtils.js
-
-  // ✅ Per-button style overrides: kembalikan warna/icon khusus ketika tombol tertentu aktif
-  // getButtonStyleOverride imported from mapUtils.js
-
-  // NOTE: getUptIdFromStationName imported from mapUtils.js
-
   const getStationCoordinates = (stationName) => {
     if (!devices?.length) return null;
     const device = devices.find(d => d.name === stationName);
-    if (!device) {
-      console.warn(`⚠️ Stasiun "${stationName}" tidak ditemukan di devices.`);
-      return null;
-    }
-    if (!device.latitude || !device.longitude) {
-      console.warn(`⚠️ Stasiun "${stationName}" tidak memiliki koordinat yang valid.`);
-      return null;
-    }
+    if (!device?.latitude || !device?.longitude) return null;
     return [parseFloat(device.longitude), parseFloat(device.latitude)];
   };
 
@@ -135,35 +104,24 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     if (!map.current || !mapLoaded) return;
 
     const deviceId = REGION_ID_TO_DEVICE_ID[regionId];
-    if (deviceId === undefined) {
-      console.warn(`❌ Tidak ada deviceId untuk region: ${regionId}`);
-      return;
-    }
+    if (deviceId === undefined) return;
 
     const sourceId = `region-${regionId}`;
     const layerId = `region-${regionId}-fill`;
 
     if (isActive) {
       try {
-        console.log(`🔄 Memuat GeoJSON dari API untuk ID ${deviceId}...`);
         const geojson = await fetchDeviceGeoJSON(deviceId);
-        console.log(`✅ GeoJSON untuk ID ${deviceId} diterima`, geojson);
-
-        // Validasi geojson: harus berisi fitur
         if (!geojson || !Array.isArray(geojson.features) || geojson.features.length === 0) {
-          console.error(`❌ GeoJSON kosong atau tidak valid untuk device ID ${deviceId}`);
           setActiveLayers(prev => ({ ...prev, [regionId]: false }));
           return;
         }
 
-        // Hapus dulu jika sudah ada
         if (map.current.getLayer(layerId)) map.current.removeLayer(layerId);
         if (map.current.getSource(sourceId)) map.current.removeSource(sourceId);
 
-        // Tambahkan source baru
         map.current.addSource(sourceId, { type: 'geojson', data: geojson });
 
-        // Tambahkan layer baru
         map.current.addLayer({
           id: layerId,
           type: 'fill',
@@ -175,14 +133,13 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
           }
         });
 
-        // Click handler: fit bounds to clicked feature
         const clickHandler = (e) => {
           try {
             const features = e.features || [];
             if (features.length === 0) return;
             const geom = features[0].geometry;
             const bbox = getBBox(geom);
-            if (isFinite(bbox[0][0]) && isFinite(bbox[1][0]) && bbox[0][0] !== Infinity) {
+            if (isFinite(bbox[0][0]) && isFinite(bbox[1][0])) {
               map.current.fitBounds(bbox, { padding: 60, maxZoom: 12, duration: 800 });
             }
           } catch (err) {
@@ -193,7 +150,6 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         const mouseEnterHandler = () => { if (map.current) map.current.getCanvas().style.cursor = 'pointer'; };
         const mouseLeaveHandler = () => { if (map.current) map.current.getCanvas().style.cursor = ''; };
 
-        // Register handlers
         map.current.on('click', layerId, clickHandler);
         map.current.on('mouseenter', layerId, mouseEnterHandler);
         map.current.on('mouseleave', layerId, mouseLeaveHandler);
@@ -205,29 +161,19 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
 
       } catch (e) {
         console.error(`❌ Gagal muat GeoJSON dari API untuk device ID ${deviceId}:`, e);
-        // ❗ Set state aktif menjadi false agar tombol toggle kembali ke posisi off
         setActiveLayers(prev => ({ ...prev, [regionId]: false }));
-        // 🚫 Jangan biarkan layer tetap aktif jika gagal
       }
-
     } else {
-      // Hapus layer & source
-      // Remove event handlers if any
       const existing = regionLayers[regionId];
       if (existing) {
         try {
           if (existing.clickHandler) map.current.off('click', layerId, existing.clickHandler);
           if (existing.mouseEnterHandler) map.current.off('mouseenter', layerId, existing.mouseEnterHandler);
           if (existing.mouseLeaveHandler) map.current.off('mouseleave', layerId, existing.mouseLeaveHandler);
-        } catch (err) {
-          console.warn('Error removing handlers for', layerId, err);
-        }
+        } catch (err) { console.warn('Error removing handlers for', layerId, err); }
       }
-
       if (map.current.getLayer(layerId)) map.current.removeLayer(layerId);
       if (map.current.getSource(sourceId)) map.current.removeSource(sourceId);
-
-      // Hapus reference
       setRegionLayers(prev => {
         const newLayers = { ...prev };
         delete newLayers[regionId];
@@ -237,26 +183,14 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
   };
 
   const handleLayerToggle = (layerId) => {
-    console.log("🔄 MapboxMap: Toggle layer received:", layerId);
-
-    // Jika layerId adalah wilayah (misal: ws-baru-bajul-mati)
     if (layerId.startsWith('ws-')) {
       setActiveLayers(prev => {
         const newState = { ...prev, [layerId]: !prev[layerId] };
-        console.log("🆕 New activeLayers state:", newState);
-
-        // Aktifkan/mematikan layer wilayah dari API
         handleRegionLayerToggle(layerId, newState[layerId]);
-
         return newState;
       });
     } else {
-      // Untuk layer biasa (rivers, flood-risk, dll) atau UPT
-      setActiveLayers(prev => {
-        const newState = { ...prev, [layerId]: !prev[layerId] };
-        console.log("🆕 New activeLayers state:", newState);
-        return newState;
-      });
+      setActiveLayers(prev => ({ ...prev, [layerId]: !prev[layerId] }));
     }
   };
 
@@ -270,295 +204,179 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         zoom: 8
       });
 
-      if (typeof window !== 'undefined') {
-        window.mapboxMap = map.current;
-      }
+      if (typeof window !== 'undefined') window.mapboxMap = map.current;
 
       map.current.addControl(new mapboxgl.ScaleControl(), "bottom-left");
       map.current.on("zoom", () => map.current && setZoomLevel(map.current.getZoom()));
       map.current.on('load', () => setMapLoaded(true));
-    } catch (error) {
-      console.error('Error initializing map:', error);
-    }
+    } catch (error) { console.error('Error initializing map:', error); }
     return () => { if (map.current) { map.current.remove(); map.current = null; } };
   }, []);
 
-// ✅ Perbaikan: Gunakan useEffect untuk memperbarui marker hanya saat tickerData, devices, atau activeLayers berubah
-useEffect(() => {
-  if (!map.current || !tickerData || !devices.length) return;
+  useEffect(() => {
+    if (!map.current || !tickerData || !devices.length) return;
 
-  console.log("📊 tickerData length:", tickerData.length);
-  console.log("📡 devices length:", devices.length);
-  console.log("🔄 Active Layers:", activeLayers);
+    markersRef.current.forEach(marker => marker?.remove?.());
+    markersRef.current = [];
 
-  // Hapus semua marker lama
-  markersRef.current.forEach(marker => marker?.remove?.());
-  markersRef.current = [];
+    const awlrBrantasList = [
+      "AWLR Gubeng", "AWLR Gunungsari", "AWLR Jagir", "AWLR Lohor", "AWLR Lodoyo",
+      "AWLR Menturus", "AWLR Milirip", "AWLR Mojokerto", "AWLR Mrican", "AWLR New Lengkong",
+      "AWLR Neyama 1", "AWLR Pintu Bendo", "AWLR Pintu Wonokromo", "AWLR Pompa Tulungagung",
+      "AWLR Segawe", "AWLR Selorejo", "AWLR Sengguruh", "AWLR Sutami", "AWLR Tiudan",
+      "AWLR Wlingi", "AWLR Wonokromo", "AWLR Wonorejo",
+    ];
 
-  // ✅ Daftar AWLR untuk WS Brantas PJT 1
-  const awlrBrantasList = [
-    "AWLR Gubeng",
-    "AWLR Gunungsari",
-    "AWLR Jagir",
-    "AWLR Lohor",
-    "AWLR Lodoyo",
-    "AWLR Menturus",
-    "AWLR Milirip",
-    "AWLR Mojokerto",
-    "AWLR Mrican",
-    "AWLR New Lengkong",
-    "AWLR Neyama 1",
-    "AWLR Pintu Bendo",
-    "AWLR Pintu Wonokromo",
-    "AWLR Pompa Tulungagung",
-    "AWLR Segawe",
-    "AWLR Selorejo",
-    "AWLR Sengguruh",
-    "AWLR Sutami",
-    "AWLR Tiudan",
-    "AWLR Wlingi",
-    "AWLR Wonokromo",
-    "AWLR Wonorejo",
-  ];
+    const awlrBengawanSoloList = [
+      "AWLR Bendungan Jati", "AWLR BG Babat", "AWLR BG Bojonegoro",
+    ];
 
-  // ✅ Daftar AWLR untuk WS Bengawan Solo PJT 1
-  const awlrBengawanSoloList = [
-    "AWLR Bendungan Jati",
-    "AWLR BG Babat",
-    "AWLR BG Bojonegoro",
-  ];
+    const arrBrantasList = [
+      "ARR Wagir", "ARR Tangkil", "ARR Poncokusumo", "ARR Dampit", "ARR Sengguruh",
+      "ARR Sutami", "ARR Tunggorono", "ARR Doko", "ARR Birowo", "ARR Wates Wlingi",
+      "Semen ARR", "ARR Sumberagung", "Bendungan ARR Wlingi", "ARR Tugu", "ARR Kampak",
+      "ARR Bendo", "ARR Pagerwojo", "ARR Kediri", "ARR Tampung", "ARR Gunung Sari",
+      "ARR Metro", "ARR Gemarang", "ARR Bendungan", "ARR Tawangsari", "ARR Sadar",
+      "ARR Bogel", "ARR Karangpilang", "ARR Kedurus", "ARR Wonorejo-1", "ARR Wonorejo-2",
+      "ARR Rejotangan", "ARR Kali Biru", "ARR Neyama", "ARR Selorejo",
+    ];
 
-  // ✅ Daftar ARR (Pos Hujan) untuk WS Brantas PJT 1
-  const arrBrantasList = [
-    "ARR Wagir",
-    "ARR Tangkil",
-    "ARR Poncokusumo",
-    "ARR Dampit",
-    "ARR Sengguruh",
-    "ARR Sutami",
-    "ARR Tunggorono",
-    "ARR Doko",
-    "ARR Birowo",
-    "ARR Wates Wlingi",
-    "Semen ARR",
-    "ARR Sumberagung",
-    "Bendungan ARR Wlingi",
-    "ARR Tugu",
-    "ARR Kampak",
-    "ARR Bendo",
-    "ARR Pagerwojo",
-    "ARR Kediri",
-    "ARR Tampung",
-    "ARR Gunung Sari",
-    "ARR Metro",
-    "ARR Gemarang",
-    "ARR Bendungan",
-    "ARR Tawangsari",
-    "ARR Sadar",
-    "ARR Bogel",
-    "ARR Karangpilang",
-    "ARR Kedurus",
-    "ARR Wonorejo-1",
-    "ARR Wonorejo-2",
-    "ARR Rejotangan",
-    "ARR Kali Biru",
-    "ARR Neyama",
-    "ARR Selorejo",
-  ];
+    const brantasKeywords = extractKeywords(awlrBrantasList);
+    const bengawanKeywords = extractKeywords(awlrBengawanSoloList);
+    const arrBrantasKeywords = extractKeywords(arrBrantasList);
 
-  // extractKeywords imported from mapUtils.js
+    tickerData.forEach(station => {
+      const coordinates = getStationCoordinates(station.name);
+      if (!coordinates) return;
 
-  const brantasKeywords = extractKeywords(awlrBrantasList);
-  const bengawanKeywords = extractKeywords(awlrBengawanSoloList);
-  const arrBrantasKeywords = extractKeywords(arrBrantasList);
+      const stationUptId = getUptIdFromStationName(station.name);
 
-  console.log("🔍 Brantas Keywords:", brantasKeywords);
-  console.log("🔍 Bengawan Keywords:", bengawanKeywords);
-  console.log("🔍 ARR Brantas Keywords:", arrBrantasKeywords);
+      const isBengawanSoloPJT1Active = activeLayers['pos-hujan-ws-bengawan-solo'];
+      const isBSStation = station.name.startsWith('BS');
 
-  tickerData.forEach(station => {
-    console.log(`📍 Checking station: "${station.name}"`);
-    const coordinates = getStationCoordinates(station.name);
-    if (!coordinates) {
-      console.log(`❌ Marker tidak dibuat untuk "${station.name}" - koordinat tidak valid.`);
-      return;
-    }
+      const isHujanJamJamActive = !!activeLayers['Hujan Jam-Jam an PU SDA'];
+      const nameTrim = station.name ? station.name.trim() : '';
+      const isDoubleQuotedName = /^".*"$/.test(nameTrim);
+      const isHujanJamJamStation = isDoubleQuotedName;
 
-    // ✅ Cek apakah UPT stasiun ini aktif
-    const stationUptId = getUptIdFromStationName(station.name);
+      const isPosDugaJamJamActive = (!!activeLayers['Pos Duga Air Jam-Jam an PU SDA']) ||
+        Object.keys(activeLayers).some(k => k.toLowerCase().includes('pos-duga') && activeLayers[k]);
+      const isSingleQuotedName = /^'.*'$/.test(nameTrim);
 
-    // ✅ LOGIKA BARU: Jika tombol "Pos Hujan WS Bengawan Solo PJT 1" aktif, tampilkan semua stasiun yang namanya dimulai dengan "BS"
-    const isBengawanSoloPJT1Active = activeLayers['pos-hujan-ws-bengawan-solo'];
-    const isBSStation = station.name.startsWith('BS');
+      const isHujanBrantasActive = activeLayers['pos-hujan-ws-brantas-pjt1'];
+      const isARRBrantasStation = arrBrantasKeywords.some(keyword =>
+        station.name.toLowerCase().includes(keyword.toLowerCase())
+      );
 
-    // ✅ LOGIKA BARU: Jika tombol "Hujan Jam-Jam an PU SDA" aktif, tampilkan semua device ARR / Pos Hujan
-    const isHujanJamJamActive = !!activeLayers['Hujan Jam-Jam an PU SDA'];
-    // Trim name once and prepare quoted checks
-    const nameTrim = station.name ? station.name.trim() : '';
-    // Show only devices whose name starts and ends with double quotes ("...")
-    const isDoubleQuotedName = /^".*"$/.test(nameTrim);
-    const isHujanJamJamStation = isDoubleQuotedName;
+      const isDugaAirBengawanSoloActive = activeLayers['pos-duga-air-ws-bengawan-solo'];
+      const isAWLRBengawanSoloStation = bengawanKeywords.some(keyword =>
+        station.name.toLowerCase().includes(keyword.toLowerCase())
+      );
 
-    // ✅ NEW: Pos Duga Air Jam-Jam an PU SDA — show devices with single quotes at start and end (e.g., '\'Name\'')
-    // This supports both an explicit activeLayers key named exactly 'Pos Duga Air Jam-Jam an PU SDA'
-    // or any active layer key that includes 'pos-duga' (case-insensitive)
-    const isPosDugaJamJamActive = (!!activeLayers['Pos Duga Air Jam-Jam an PU SDA']) ||
-      Object.keys(activeLayers).some(k => k.toLowerCase().includes('pos-duga') && activeLayers[k]);
-    const isSingleQuotedName = /^'.*'$/.test(nameTrim);
+      const isDugaAirBrantasActive = activeLayers['pos-duga-air-ws-brantas-pjt1'];
+      const isAWLRBrantasStation = brantasKeywords.some(keyword =>
+        station.name.toLowerCase().includes(keyword.toLowerCase())
+      );
 
-    // ✅ LOGIKA BARU: Jika tombol "Pos Hujan WS Brantas PJT 1" aktif, tampilkan ARR di daftar brantas
-    const isHujanBrantasActive = activeLayers['pos-hujan-ws-brantas-pjt1'];
-    const isARRBrantasStation = arrBrantasKeywords.some(keyword =>
-      station.name.toLowerCase().includes(keyword.toLowerCase())
-    );
+      const isAnyUptActive = Object.keys(activeLayers).some(key => key.startsWith('upt-') && activeLayers[key]);
 
-    // ✅ LOGIKA BARU: Jika tombol "Pos Duga Air WS Bengawan Solo PJT 1" aktif, tampilkan AWLR di daftar bengawan solo
-    const isDugaAirBengawanSoloActive = activeLayers['pos-duga-air-ws-bengawan-solo'];
-    const isAWLRBengawanSoloStation = bengawanKeywords.some(keyword =>
-      station.name.toLowerCase().includes(keyword.toLowerCase())
-    );
+      const activeRegionIds = Object.keys(activeLayers).filter(k => k.startsWith('ws-') && activeLayers[k]);
+      if (activeRegionIds.length > 0) return;
 
-    // ✅ LOGIKA BARU: Jika tombol "Pos Duga Air WS Brantas PJT 1" aktif, tampilkan AWLR di daftar brantas
-    const isDugaAirBrantasActive = activeLayers['pos-duga-air-ws-brantas-pjt1'];
-    const isAWLRBrantasStation = brantasKeywords.some(keyword =>
-      station.name.toLowerCase().includes(keyword.toLowerCase())
-    );
+      let shouldShowMarker = false;
 
-    // ✅ LOGIKA BARU: Cek apakah ada tombol UPT aktif
-    const isAnyUptActive = Object.keys(activeLayers).some(key => 
-      key.startsWith('upt-') && activeLayers[key]
-    );
-
-    // ✅ LOGIKA PENAMPILAN MARKER — HANYA SATU KONDISI YANG BOLEH AKTIF
-    let shouldShowMarker = false;
-
-    // If any WS region toggles are active, do NOT show markers at all (markers are hidden when region layers active)
-    const activeRegionIds = Object.keys(activeLayers).filter(k => k.startsWith('ws-') && activeLayers[k]);
-    if (activeRegionIds.length > 0) {
-      console.log(`ℹ️ Region layers active (${activeRegionIds.join(',')}) — skipping marker rendering`);
-      return; // skip marker creation entirely while region layers are active
-    }
-
-    // 1. Jika ada tombol UPT aktif → tampilkan hanya UPT yang sesuai
-    if (isAnyUptActive && stationUptId && activeLayers[stationUptId]) {
-      shouldShowMarker = true;
-    }
-    // Jika tombol Hujan Jam-Jam an PU SDA aktif → tampilkan semua station ARR / POS
-    else if (isHujanJamJamActive && isHujanJamJamStation) {
-      shouldShowMarker = true;
-    }
-    // Jika tombol Pos Duga Air Jam-Jam an PU SDA aktif → tampilkan hanya device yang namanya diawali dan diakhiri dengan tanda petik tunggal (')
-    else if (isPosDugaJamJamActive && isSingleQuotedName) {
-      shouldShowMarker = true;
-    }
-    // 2. Jika tombol Pos Hujan WS Brantas PJT 1 aktif → tampilkan hanya ARR Brantas
-    else if (isHujanBrantasActive && isARRBrantasStation) {
-      shouldShowMarker = true;
-    }
-    // 3. Jika tombol Pos Duga Air WS Brantas PJT 1 aktif → tampilkan hanya AWLR Brantas
-    else if (isDugaAirBrantasActive && isAWLRBrantasStation) {
-      shouldShowMarker = true;
-    }
-    // 4. Jika tombol Pos Duga Air WS Bengawan Solo PJT 1 aktif → tampilkan hanya AWLR Bengawan Solo
-    else if (isDugaAirBengawanSoloActive && isAWLRBengawanSoloStation) {
-      shouldShowMarker = true;
-    }
-    // 5. Jika tombol Pos Hujan WS Bengawan Solo PJT 1 aktif → tampilkan hanya stasiun BS
-    else if (isBengawanSoloPJT1Active && isBSStation) {
-      shouldShowMarker = true;
-    }
-
-    console.log(`✅ Is Hujan Brantas Active? ${isHujanBrantasActive}`);
-    console.log(`✅ Is ARR Brantas Station? ${isARRBrantasStation}`);
-    console.log(`✅ Should Show Marker? ${shouldShowMarker}`);
-
-    if (!shouldShowMarker) {
-      console.log(`⏸️ Marker diabaikan untuk "${station.name}" - tidak memenuhi kondisi tampil.`);
-      return; // Skip jika tidak memenuhi syarat
-    }
-
-    try {
-      const markerEl = document.createElement("div");
-      markerEl.className = "custom-marker";
-      // ✅ Ambil gaya marker berdasarkan jenis stasiun
-      const markerStyle = getMarkerStyle(station.name);
-      const bgColor = getStatusColor(station.status); // Warna status (untuk background)
-      // Apply per-button override if present
-      const override = getButtonStyleOverride({
-        isHujanJamJamActive,
-        isPosDugaJamJamActive,
-        isHujanBrantasActive,
-        isDugaAirBrantasActive: isDugaAirBrantasActive,
-        isDugaAirBengawanSoloActive: isDugaAirBengawanSoloActive,
-        isBengawanSoloPJT1Active: isBengawanSoloPJT1Active,
-      });
-      const borderColor = override?.color || markerStyle.color; // Warna jenis (untuk border)
-
-      // Apply override visual styles when present
-      const overrideBg = override?.color || bgColor;
-      let borderRadiusVal = '50%';
-      let extraTransform = '';
-      if (override?.shape === 'rounded-square') borderRadiusVal = '8px';
-      if (override?.shape === 'square') borderRadiusVal = '6px';
-      if (override?.shape === 'diamond') { borderRadiusVal = '6px'; extraTransform = ' rotate(45deg)'; }
-      if (override?.shape === 'triangle') { borderRadiusVal = '4px'; }
-      if (override?.shape === 'pin') { borderRadiusVal = '50% 50% 50% 50%'; }
-      if (override?.shape === 'circle-with-square') borderRadiusVal = '50%';
-
-      markerEl.style.cssText = `
-        position: absolute; /* ✅ Penting! */
-        width: 24px; 
-        height: 24px; 
-        border-radius: ${borderRadiusVal}; 
-        background-color: ${overrideBg}; 
-        border: 2px solid ${borderColor}; 
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3); 
-        cursor: pointer; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center;
-        z-index: 1;
-        transform: translate(-50%, -50%)${extraTransform};
-      `;
-      
-      // ✅ Gunakan icon dari override jika ada, otherwise use markerStyle
-      markerEl.innerHTML = override?.icon || markerStyle.icon;
-
-      if (station.status === "alert") {
-        const pulseEl = document.createElement("div");
-        pulseEl.style.cssText = `
-          position: absolute; 
-          width: 100%; 
-          height: 100%; 
-          border-radius: 50%; 
-          background-color: ${bgColor}; 
-          opacity: 0.7; 
-          animation: alert-pulse 2s infinite; 
-          z-index: -1;
-          transform: translate(0, 0); /* ✅ Agar tidak terpengaruh oleh transform markerEl */
-        `;
-        markerEl.appendChild(pulseEl);
+      if (isAnyUptActive && stationUptId && activeLayers[stationUptId]) {
+        shouldShowMarker = true;
+      } else if (isHujanJamJamActive && isHujanJamJamStation) {
+        shouldShowMarker = true;
+      } else if (isPosDugaJamJamActive && isSingleQuotedName) {
+        shouldShowMarker = true;
+      } else if (isHujanBrantasActive && isARRBrantasStation) {
+        shouldShowMarker = true;
+      } else if (isDugaAirBrantasActive && isAWLRBrantasStation) {
+        shouldShowMarker = true;
+      } else if (isDugaAirBengawanSoloActive && isAWLRBengawanSoloStation) {
+        shouldShowMarker = true;
+      } else if (isBengawanSoloPJT1Active && isBSStation) {
+        shouldShowMarker = true;
       }
 
-      // ✅ Marker dengan anchor dan offset tetap agar tidak bergerak saat zoom
-      const marker = new mapboxgl.Marker({
-        element: markerEl,
-        anchor: 'center', // 🎯 Pusatkan marker
-        offset: [0, 0],   // ✅ Jangan geser
-      }).setLngLat(coordinates).addTo(map.current);
+      if (!shouldShowMarker) return;
 
-      markersRef.current.push(marker);
+      try {
+        const markerEl = document.createElement("div");
+        markerEl.className = "custom-marker";
+        const markerStyle = getMarkerStyle(station.name);
+        const bgColor = getStatusColor(station.status);
+        const override = getButtonStyleOverride({
+          isHujanJamJamActive,
+          isPosDugaJamJamActive,
+          isHujanBrantasActive,
+          isDugaAirBrantasActive,
+          isDugaAirBengawanSoloActive,
+          isBengawanSoloPJT1Active,
+        });
+        const borderColor = override?.color || markerStyle.color;
+        const overrideBg = override?.color || bgColor;
+        let borderRadiusVal = '50%';
+        let extraTransform = '';
+        if (override?.shape === 'rounded-square') borderRadiusVal = '8px';
+        if (override?.shape === 'square') borderRadiusVal = '6px';
+        if (override?.shape === 'diamond') { borderRadiusVal = '6px'; extraTransform = ' rotate(45deg)'; }
+        if (override?.shape === 'triangle') { borderRadiusVal = '4px'; }
+        if (override?.shape === 'pin') { borderRadiusVal = '50% 50% 50% 50%'; }
+        if (override?.shape === 'circle-with-square') borderRadiusVal = '50%';
 
-      markerEl.addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (autoSwitchActive) setAutoSwitchActive(false);
-        handleMarkerClick(station, coordinates);
-      });
-    } catch (error) {
-      console.error("Error creating marker:", error);
-    }
-  });
-}, [tickerData, devices, activeLayers]); // ✅ Tambahkan activeLayers ke dependency
+        markerEl.style.cssText = `
+          position: absolute;
+          width: 24px; 
+          height: 24px; 
+          border-radius: ${borderRadiusVal}; 
+          background-color: ${overrideBg}; 
+          border: 2px solid ${borderColor}; 
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3); 
+          cursor: pointer; 
+          display: flex; 
+          align-items: center; 
+          justify-content: center;
+          z-index: 1;
+          transform: translate(-50%, -50%)${extraTransform};
+        `;
+        
+        markerEl.innerHTML = override?.icon || markerStyle.icon;
+
+        if (station.status === "alert") {
+          const pulseEl = document.createElement("div");
+          pulseEl.style.cssText = `
+            position: absolute; 
+            width: 100%; 
+            height: 100%; 
+            border-radius: 50%; 
+            background-color: ${bgColor}; 
+            opacity: 0.7; 
+            animation: alert-pulse 2s infinite; 
+            z-index: -1;
+            transform: translate(0, 0);
+          `;
+          markerEl.appendChild(pulseEl);
+        }
+
+        const marker = new mapboxgl.Marker({
+          element: markerEl,
+          anchor: 'center',
+          offset: [0, 0],
+        }).setLngLat(coordinates).addTo(map.current);
+
+        markersRef.current.push(marker);
+
+        markerEl.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (autoSwitchActive) setAutoSwitchActive(false);
+          handleMarkerClick(station, coordinates);
+        });
+      } catch (error) { console.error("Error creating marker:", error); }
+    });
+  }, [tickerData, devices, activeLayers]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -596,13 +414,9 @@ useEffect(() => {
     } else {
       fetch('/src/data/TestMAP.json')
         .then(res => res.ok ? res.json() : Promise.reject('Sungai JSON not found (404)'))
-        .then(data => { console.log('✅ Sungai Jawa Timur JSON dimuat'); setRiversGeojson(data); })
+        .then(data => setRiversGeojson(data))
         .catch(e => { console.error('❌ Gagal muat GeoJSON Sungai Jawa Timur:', e); setActiveLayers(prev => ({ ...prev, rivers: false })); });
     }
-    return () => {
-      if (map.current.getLayer(riversLayerId)) map.current.removeLayer(riversLayerId);
-      if (map.current.getSource(riversSourceId)) map.current.removeSource(riversSourceId);
-    };
   }, [mapLoaded, activeLayers.rivers, riversGeojson]);
 
   useEffect(() => {
@@ -660,12 +474,6 @@ useEffect(() => {
         })
         .catch(e => { console.error('❌ Gagal JSON Batas Administrasi:', e); setActiveLayers(prev => ({ ...prev, administrative: false })); });
     }
-    return () => {
-      ['administrative-fill', 'administrative-highlight', 'administrative-fill-highlight'].forEach(id => {
-        if (map.current.getLayer(id)) map.current.removeLayer(id);
-      });
-      if (map.current.getSource(administrativeSourceId)) map.current.removeSource(administrativeSourceId);
-    };
   }, [mapLoaded, activeLayers.administrative, administrativeGeojson]);
 
   useEffect(() => {
@@ -702,7 +510,7 @@ useEffect(() => {
       const features = map.current.queryRenderedFeatures(e.point, { layers: [administrativeLayerId] });
       if (features.length > 0) {
         const bbox = getBBox(features[0].geometry);
-        if (isFinite(bbox[0][0]) && isFinite(bbox[1][0]) && bbox[0][0] !== Infinity) {
+        if (isFinite(bbox[0][0]) && isFinite(bbox[1][0])) {
           map.current.fitBounds(bbox, { padding: 60, maxZoom: 12, duration: 800 });
         }
       }
@@ -715,14 +523,12 @@ useEffect(() => {
     console.log("Pencarian berhasil:", query, coords);
   };
 
-  // ✅ Trigger: Jika "legenda-peta" aktif, sembunyikan Filter Panel
   const showFilter = showFilterSidebar && !activeLayers['legenda-peta'];
 
   return (
     <div className="w-full h-screen overflow-hidden relative z-0">
       <div ref={mapContainer} className="w-full h-full relative z-0" />
       
-      {/* Searchbar */}
       {mapLoaded && map.current ? (
         <GoogleMapsSearchbar
           mapboxMap={map.current}
@@ -737,7 +543,6 @@ useEffect(() => {
         </div>
       )}
 
-      {/* ✅ Filter Panel */}
       {showFilter && (
         <Suspense fallback={null}>
           <FilterPanel
@@ -775,9 +580,6 @@ useEffect(() => {
         />
       </Suspense>
 
-      {/* StationDetail is rendered by the top-level Layout to avoid duplicate sidebars */}
-
-      {/* Tombol Filter */}
       <div className="absolute top-4 right-4 z-[80]">
         <button
           onClick={() => setShowFilterSidebar(true)}

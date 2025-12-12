@@ -19,7 +19,7 @@ const PredictionChart = ({ stationData, className = "" }) => {
         const predictedWaterLevel = (stationData?.value || 0.4) + 0.2;
         const leveeData = [
             { x: 0, y: 3.5 },
-            { x: 1, y: 3.5 },
+            { x: 1, y: 3.5 },       
             { x: 2, y: 3.5 },
             { x: 3, y: 3.5 },
             { x: 4, y: 3.5 },

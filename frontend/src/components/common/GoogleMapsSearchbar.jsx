@@ -1,5 +1,10 @@
 // src/components/common/GoogleMapsSearchbar.jsx
+<<<<<<< HEAD
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+=======
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import cityCoordinates from "./CityCoordinates";
+>>>>>>> 04957d1903dd26bccf0cfb2e09a31dcd0e49dcf0
 
 const normalizeString = (str) => {
   return str.trim().toLowerCase();
@@ -28,6 +33,7 @@ const GoogleMapsSearchbar = ({
       .filter(station => normalizeString(station.name).includes(normalizedInput))
       .map(station => station.name);
 
+<<<<<<< HEAD
     return [...new Set([...citySuggestions, ...stationSuggestions])].slice(0, 5);
   }, [searchValue, stationsData]);
 
@@ -142,6 +148,8 @@ const GoogleMapsSearchbar = ({
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> 04957d1903dd26bccf0cfb2e09a31dcd0e49dcf0
     const executeFlyTo = useCallback(
         (coords) => {
             // Coba akses map via props dulu, lalu fallback ke window
@@ -253,28 +261,7 @@ const GoogleMapsSearchbar = ({
                                     </button>
                                 </div>
                             )}
-                            <div className="flex-shrink-0 ml-2">
-                                <button
-                                    type="button"
-                                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                                    title="Petunjuk arah"
-                                    disabled
-                                >
-                                    <svg
-                                        className="w-4 h-4 text-blue-600 opacity-50"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-                                        />
-                                    </svg>
-                                </button>
-                            </div>
+                        
                         </div>
                     </div>
                     {isFocused && suggestions.length > 0 && (
@@ -310,6 +297,7 @@ const GoogleMapsSearchbar = ({
                         </div>
                     )}
                 </form>
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> 39c60f841fa3c86ec38e34b2fd05b744dec26bb5
@@ -354,6 +342,8 @@ const GoogleMapsSearchbar = ({
 >>>>>>> b86689dedf9038f83a8013cde8cf1c80a07f3149
 =======
 >>>>>>> 39c60f841fa3c86ec38e34b2fd05b744dec26bb5
+=======
+>>>>>>> 04957d1903dd26bccf0cfb2e09a31dcd0e49dcf0
             </div>
           </div>
           {isFocused && suggestions.length > 0 && (
@@ -378,6 +368,7 @@ const GoogleMapsSearchbar = ({
     </div>
   );
 };
+<<<<<<< HEAD
 
 // Daftar kota tetap di luar komponen agar tidak direkompute tiap render
 const cityCoordinates = {
@@ -413,3 +404,6 @@ const cityCoordinates = {
 };
 
 export default GoogleMapsSearchbar;
+=======
+export default GoogleMapsSearchbar;
+>>>>>>> 04957d1903dd26bccf0cfb2e09a31dcd0e49dcf0

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { getStatusText } from "@/utils/statusUtils";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faLocationDot } from '@fortawesome/free-solid-svg-icons';
 
 // Lazy load komponen chart yang berat untuk optimasi bundle
 const MonitoringChart = lazy(() => import("@/components/common/MonitoringDualLinet"));
@@ -25,6 +27,21 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
     const [isTabChanging, setIsTabChanging] = useState(false);
     const [previousTab, setPreviousTab] = useState(null);
     const [isDotAnimating, setIsDotAnimating] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragOffset, setDragOffset] = useState(0);
+
+    // Detect mobile screen size
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     // Mengatur animasi visibility saat panel dibuka/ditutup
     useEffect(() => {
@@ -143,6 +160,66 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
         }
     }, [isAutoSwitchOn]);
 
+    // Handle swipe down to close on mobile with improved flexibility
+    const handleTouchStart = (e) => {
+        if (!isMobile) return;
+        
+        e.preventDefault();
+        setIsDragging(true);
+        setDragOffset(0);
+        
+        const touch = e.touches ? e.touches[0] : e;
+        const startY = touch.clientY;
+        const startTime = Date.now();
+        
+        const handleTouchMove = (e) => {
+            e.preventDefault();
+            const currentTouch = e.touches ? e.touches[0] : e;
+            const currentY = currentTouch.clientY;
+            const deltaY = currentY - startY;
+            
+            if (deltaY > 0) {
+                setDragOffset(deltaY);
+            }
+        };
+        
+        const handleTouchEnd = (e) => {
+            const currentTouch = e.changedTouches ? e.changedTouches[0] : e;
+            const currentY = currentTouch.clientY;
+            const deltaY = currentY - startY;
+            const deltaTime = Date.now() - startTime;
+            const velocity = deltaY / deltaTime;
+            
+            const shouldClose = 
+                deltaY > 120 || 
+                (velocity > 0.5 && deltaY > 60) || 
+                (velocity > 1 && deltaY > 30);
+            
+            if (shouldClose) {
+                handleClose();
+            }
+            
+            setIsDragging(false);
+            setDragOffset(0);
+            cleanup();
+        };
+        
+        const cleanup = () => {
+            document.removeEventListener('touchmove', handleTouchMove);
+            document.removeEventListener('touchend', handleTouchEnd);
+            document.removeEventListener('mousemove', handleTouchMove);
+            document.removeEventListener('mouseup', handleTouchEnd);
+        };
+        
+        if (e.type === 'touchstart') {
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+            document.addEventListener('touchend', handleTouchEnd);
+        } else {
+            document.addEventListener('mousemove', handleTouchMove);
+            document.addEventListener('mouseup', handleTouchEnd);
+        }
+    };
+
     // Handler untuk close dengan animasi - menggunakan useCallback untuk optimasi
     const handleClose = useCallback(() => {
         setIsVisible(false);
@@ -150,6 +227,39 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
             onClose();
         }, 300); // Sama dengan durasi animasi
     }, [onClose]);
+
+    // Handler untuk trigger close dari backdrop - untuk memberikan animasi
+    const handleTriggerClose = useCallback(() => {
+        handleClose();
+    }, [handleClose]);
+
+    // Expose method untuk parent component
+    useEffect(() => {
+        // Set up event listener untuk trigger close dari backdrop
+        const triggerClose = (event) => {
+            if (event.detail?.type === 'detail-panel') {
+                handleTriggerClose();
+            }
+        };
+        window.addEventListener('triggerCloseDetailPanel', triggerClose);
+        return () => window.removeEventListener('triggerCloseDetailPanel', triggerClose);
+    }, [handleTriggerClose]);
+
+    // Prevent body scroll when mobile panel is open
+    useEffect(() => {
+        if (isMobile && isOpen) {
+            document.body.style.overflow = 'hidden';
+            document.body.style.touchAction = 'none';
+        } else {
+            document.body.style.overflow = 'unset';
+            document.body.style.touchAction = 'auto';
+        }
+        
+        return () => {
+            document.body.style.overflow = 'unset';
+            document.body.style.touchAction = 'auto';
+        };
+    }, [isMobile, isOpen]);
 
     // Handler untuk tab click dengan animasi clean - menggunakan useCallback untuk optimasi
     const handleTabClick = useCallback(
@@ -181,65 +291,129 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
     // Fallback jika stationData tidak ada
     if (!stationData) {
         return (
-            <div
-                className={`fixed top-20 left-96 right-150 bottom-0 z-[50] bg-white shadow-2xl transform transition-all duration-300 ease-in-out ${
-                    isVisible ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
-                }`}
-            >
-                <div className="h-full flex items-center justify-center">
-                    <div className="text-center">
-                        <div className="text-gray-500 text-lg">Tidak ada data stasiun</div>
-                        <div className="text-gray-400 text-sm mt-2">Pilih stasiun untuk melihat detail</div>
+            <>
+                {/* Panel */}
+                <div
+                    className={`fixed bg-white shadow-2xl z-[50] transform flex flex-col ${
+                        isMobile 
+                        // h-[60vh] ukuran tinggi modal
+                            ? `bottom-0 left-0 right-0 h-[70vh] rounded-t-2xl ${ 
+                                isVisible ? "opacity-100" : "opacity-0"
+                              }`
+                            : `rounded-tr-lg top-20 left-96 right-0 bottom-0 transition-all duration-300 ease-in-out ${
+                                isVisible ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
+                              }`
+                    }`}
+                    style={{ 
+                        willChange: "transform, opacity",
+                        transform: isMobile 
+                            ? isDragging 
+                                ? `translateY(${dragOffset}px)` 
+                                : isVisible 
+                                    ? "translateY(0)" 
+                                    : "translateY(100%)"
+                            : undefined,
+                        transition: isMobile && !isDragging 
+                            ? "transform 300ms ease-in-out, opacity 300ms ease-in-out" 
+                            : undefined
+                    }}
+                >
+                    <div className="h-full flex items-center justify-center">
+                        <div className="text-center">
+                            <div className="text-gray-500 text-lg">Tidak ada data stasiun</div>
+                            <div className="text-gray-400 text-sm mt-2">Pilih stasiun untuk melihat detail</div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </>
         );
     }
 
     return (
-        <div
-            className={`rounded-tr-lg fixed top-20 left-96 right-80 bottom-0 z-[50] bg-white shadow-2xl transform transition-all duration-300 ease-in-out ${
-                isVisible ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
-            }`}
-            style={{ willChange: "transform, opacity" }}
-        >
-            <div className="h-full flex flex-col">
+        <>
+            {/* Panel */}
+            <div
+                className={`fixed bg-white shadow-2xl z-[50] transform flex flex-col ${
+                    isMobile 
+                        ? `bottom-0 left-0 right-0 h-[70vh] rounded-t-2xl ${
+                            isVisible ? "opacity-100" : "opacity-0"
+                          }`
+                        : `rounded-tr-lg top-20 left-96 right-0 bottom-0 transition-all duration-300 ease-in-out ${
+                            isVisible ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
+                          }`
+                }`}
+                style={{ 
+                    willChange: "transform, opacity",
+                    transform: isMobile 
+                        ? isDragging 
+                            ? `translateY(${dragOffset}px)` 
+                            : isVisible 
+                                ? "translateY(0)" 
+                                : "translateY(100%)"
+                        : undefined,
+                    transition: isMobile && !isDragging 
+                        ? "transform 300ms ease-in-out, opacity 300ms ease-in-out" 
+                        : undefined
+                }}
+            >
+                <div className="h-full flex flex-col">
                 {/* Header Panel - Gradient Styling */}
-                <div className="bg-gradient-to-r from-white-50 via-white-100 to-white-200 p-4 flex-shrink-0 shadow-lg">
+                <div 
+                    className={`bg-gradient-to-r from-white-50 via-white-100 to-white-200 p-4 flex-shrink-0 shadow-lg transition-colors ${
+                        isMobile ? 'rounded-t-2xl cursor-grab active:cursor-grabbing' : ''
+                    } ${
+                        isMobile && isDragging ? 'bg-gray-100' : ''
+                    }`}
+                    onTouchStart={isMobile ? handleTouchStart : undefined}
+                    onMouseDown={isMobile ? handleTouchStart : undefined}
+                >
+                    {/* Mobile drag handle */}
+                    {isMobile && (
+                        <div className={`absolute top-2 left-1/2 transform -translate-x-1/2 w-10 h-1.5 rounded-full transition-all duration-200 ${
+                            isDragging 
+                                ? 'bg-gray-600 w-12' 
+                                : 'bg-gray-400 hover:bg-gray-500'
+                        }`}></div>
+                    )}
+                    
                     {/* Baris judul + tombol close dengan alignment yang rapi */}
                     <div className="flex items-center justify-between">
                         {/* Bagian kiri - tombol back + judul */}
                         <div className="flex items-center gap-3">
-                            <button
-                                onClick={handleClose}
-                                className="p-3 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 rounded-xl transition-all duration-300 group shadow-lg hover:shadow-xl border border-blue-100 hover:border-blue-200"
-                                aria-label="Kembali"
-                            >
-                                <svg
-                                    className="w-6 h-6 text-blue-600 group-hover:text-blue-800 transition-colors duration-300"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
+                            {/* Desktop close button */}
+                            {!isMobile && (
+                                <button
+                                    onClick={handleClose}
+                                    className="p-3 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 rounded-xl transition-all duration-300 group shadow-lg hover:shadow-xl border border-blue-100 hover:border-blue-200"
+                                    aria-label="Kembali"
                                 >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2.5}
-                                        d="M11 17l-5-5m0 0l5-5m-5 5h14"
-                                    />
-                                </svg>
-                            </button>
+                                    <svg
+                                        className="w-6 h-6 text-blue-600 group-hover:text-blue-800 transition-colors duration-300"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2.5}
+                                            d="M11 17l-5-5m0 0l5-5m-5 5h14"
+                                        />
+                                    </svg>
+                                </button>
+                            )}
                             <div className="min-w-0">
                                 <h3
-                                    className="text-2xl font-bold text-gray-900 tracking-tight"
+                                    className="text-xl font-bold text-gray-900 tracking-tight"
                                     style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}
                                 >
                                     Detail Informasi
                                 </h3>
                                 <p
-                                    className="text-base text-gray-700 mt-1 font-semibold"
+                                    className="text-base text-gray-700 mt-1 font-semibold flex items-center gap-2"
                                     style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}
                                 >
+                                    <FontAwesomeIcon icon={faLocationDot} className="text-blue-600 text-sm" />
                                     {stationData.name}
                                 </p>
                             </div>
@@ -255,7 +429,7 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                                     </div>
                                 )}
                                 <div
-                                    className={`text-sm font-bold px-4 py-2 rounded-xl border-2 shadow-lg ${
+                                    className={`text-sm font-bold px-6 py-1 rounded-xl border-2 shadow-lg ${
                                         stationData.status === "safe"
                                             ? "bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300"
                                             : stationData.status === "warning"
@@ -315,7 +489,9 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                 </div>
 
                 {/* Konten Panel - Layout yang lebih rapi */}
-                <div className="flex-1 overflow-y-auto p-6">
+                <div className={`flex-1 overflow-y-auto p-6 ${
+                    isMobile ? 'pb-6' : ''
+                }`}>
                     <div
                         className={`space-y-6 transition-all duration-500 ease-out ${
                             isTabChanging ? "opacity-50 scale-95" : "opacity-100 scale-100"
@@ -552,8 +728,9 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                         )}
                     </div>
                 </div>
+                </div>
             </div>
-        </div>
+        </>
     );
 };
 

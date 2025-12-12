@@ -12,7 +12,8 @@ class MasModel extends Model
 
     protected $fillable = [
         'name',
-        'model_type',
+        'code',
+        'type',
         'version',
         'description',
         'file_path',

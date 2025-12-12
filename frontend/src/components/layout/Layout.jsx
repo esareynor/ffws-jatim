@@ -5,8 +5,7 @@ const FloatingLegend = lazy(() => import("@components/common/FloatingLegend"));
 const FloodRunningBar = lazy(() => import("@/components/common/FloodRunningBar"));
 const StationDetail = lazy(() => import("@/components/StationDetail"));
 const DetailPanel = lazy(() => import("@components/sensors/DetailPanel"));
-const AutoSwitchToggle = lazy(() => import("@components/devices/AutoSwitchToggle"));
-const FilterPanel = lazy(() => import("@/components/FilterPanel"));
+const FilterPanel = lazy(() => import("@components/common/FilterPanel"));
 const Layout = ({ children }) => {
     const [tickerData, setTickerData] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
@@ -17,6 +16,7 @@ const Layout = ({ children }) => {
     const [isAutoSwitchOn, setIsAutoSwitchOn] = useState(false);
     const mapRef = useRef(null);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [isBackdropVisible, setIsBackdropVisible] = useState(false);
 
     // Memoize event handlers untuk mencegah re-render yang tidak perlu
     const handleSearch = useCallback((query) => {
@@ -25,6 +25,7 @@ const Layout = ({ children }) => {
 
     const handleStationSelect = useCallback((station) => {
         setSelectedStation(station);
+        // Always open the sidebar on station select; do not hide it when the detail panel opens
         setIsSidebarOpen(true);
     }, []);
 
@@ -42,8 +43,8 @@ const Layout = ({ children }) => {
             // If auto switch is turned off, close sidebar
             if (!isOn) {
                 console.log('Auto switch OFF - closing sidebar');
-                setIsSidebarOpen(false);
-                setSelectedStation(null);
+                // Use centralized close handler so detail panel also closes
+                handleCloseStationDetail();
             } else {
                 console.log('Auto switch ON - closing detail panel');
                 // Jika auto switch diaktifkan, tutup detail panel
@@ -57,6 +58,8 @@ const Layout = ({ children }) => {
     const handleCloseStationDetail = useCallback(() => {
         setSelectedStation(null);
         setIsSidebarOpen(false);
+        // Also close the right-hand detail panel when the sidebar is closed from the sidebar
+        setIsDetailPanelOpen(false);
     }, []);
 
     const handleToggleDetailPanel = useCallback(() => {
@@ -64,10 +67,10 @@ const Layout = ({ children }) => {
             // Jika panel terbuka, tutup dengan animasi
             handleCloseDetailPanel();
         } else {
-            // Jika panel tertutup, buka langsung
+            // Jika panel tertutup, buka langsung (do not close sidebar)
             setIsDetailPanelOpen(true);
         }
-    }, [isDetailPanelOpen]);
+    }, []);
 
     const handleCloseDetailPanel = useCallback(() => {
         setIsDetailPanelOpen(false);
@@ -84,7 +87,7 @@ const Layout = ({ children }) => {
         setSelectedStation(station);
         // Auto open sidebar when auto switching
         setIsSidebarOpen(true);
-    }, []);
+    }, [isDetailPanelOpen]);
 
     const handleStationChange = useCallback(
         (device, index) => {
@@ -123,6 +126,22 @@ const Layout = ({ children }) => {
         [isAutoSwitchOn]
     );
 
+    // Kontrol animasi backdrop fade in/out
+    useEffect(() => {
+        const hasModal = selectedStation || isDetailPanelOpen || isFilterOpen;
+        
+        if (hasModal) {
+            // Fade in backdrop
+            setIsBackdropVisible(true);
+        } else {
+            // Fade out backdrop
+            const timeout = setTimeout(() => {
+                setIsBackdropVisible(false);
+            }, 300); // Sama dengan durasi animasi modal
+            return () => clearTimeout(timeout);
+        }
+    }, [selectedStation, isDetailPanelOpen, isFilterOpen]);
+
     return (
         <div className="h-screen bg-gray-50 relative overflow-hidden">
             {/* Full Screen Map */}
@@ -142,8 +161,8 @@ const Layout = ({ children }) => {
                         isAutoSwitchOn={isAutoSwitchOn}
                         onCloseSidebar={() => {
                             if (!isAutoSwitchOn) {
-                                setIsSidebarOpen(false);
-                                setSelectedStation(null);
+                                // use the centralized close handler so it also closes the detail panel
+                                handleCloseStationDetail();
                             }
                         }}
                     />
@@ -151,8 +170,8 @@ const Layout = ({ children }) => {
             </div>
 
             {/* Google Maps Style Searchbar - fixed position */}
-            <div className="absolute top-4 left-4 right-4 z-20">
-                <div className="max-w-2xl mx-auto">
+            <div className="absolute top-2 sm:top-4 left-2 sm:left-4 z-[70] mobile-searchbar">
+                <div className="w-auto sm:w-80 h-12">
                     <Suspense fallback={<div className="h-12 bg-white/80 rounded-lg animate-pulse"></div>}>
                         <GoogleMapsSearchbar onSearch={handleSearch} placeholder="Cari stasiun monitoring banjir..." />
                     </Suspense>
@@ -168,12 +187,14 @@ const Layout = ({ children }) => {
                 />
             </Suspense>
 
-            {/* Bottom-right container for Floating Legend only */}
-            <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-2 z-20">
+            {/* Bottom-right container for Floating Legend - hidden on mobile */}
+            <div className="hidden sm:block absolute bottom-2 right-2 sm:bottom-4 sm:right-2 z-20">
                 <Suspense fallback={<div className="h-20 bg-white/80 rounded animate-pulse"></div>}>
                     <FloatingLegend />
                 </Suspense>
             </div>
+
+            {/* Backdrop dihapus sesuai permintaan */}
 
             {/* Station Detail Modal */}
             <Suspense
@@ -183,16 +204,18 @@ const Layout = ({ children }) => {
                     </div>
                 }
             >
-                <StationDetail
-                    selectedStation={selectedStation}
-                    onClose={handleCloseStationDetail}
-                    tickerData={tickerData}
-                    isAutoSwitchOn={isAutoSwitchOn}
-                    showArrow={true}
-                    onArrowToggle={handleToggleDetailPanel}
-                    isDetailPanelOpen={isDetailPanelOpen}
-                    onCloseDetailPanel={handleCloseDetailPanel}
-                />
+                                {selectedStation && (
+                                    <StationDetail
+                                            selectedStation={selectedStation}
+                                            onClose={handleCloseStationDetail}
+                                            tickerData={tickerData}
+                                            isAutoSwitchOn={isAutoSwitchOn}
+                                            showArrow={true}
+                                            onArrowToggle={handleToggleDetailPanel}
+                                            isDetailPanelOpen={isDetailPanelOpen}
+                                            onCloseDetailPanel={handleCloseDetailPanel}
+                                    />
+                                )}
             </Suspense>
 
             {/* Detail Panel */}
@@ -213,9 +236,49 @@ const Layout = ({ children }) => {
                 <FilterPanel
                     isOpen={isFilterOpen}
                     onOpen={() => setIsFilterOpen(true)}
-                    onClose={() => setIsFilterOpen(false)} // Tambahkan handler untuk menutup panel
+                    onClose={() => setIsFilterOpen(false)}
+                    tickerData={tickerData}
+                    handleStationChange={handleStationChange}
+                    currentStationIndex={currentStationIndex}
+                    handleAutoSwitchToggle={handleAutoSwitchToggle}
                 />
             </Suspense>
+
+            {/* Mobile-specific styles */}
+            <style jsx>{`
+                @media (max-width: 640px) {
+                    /* Mobile layout adjustments */
+                    .mobile-flood-bar {
+                        top: 4rem !important;
+                        left: 0.5rem !important;
+                        right: 0.5rem !important;
+                    }
+                    
+                    .mobile-searchbar {
+                        top: 0.5rem !important;
+                        left: 0.5rem !important;
+                        right: 3.5rem !important;
+                    }
+                    
+                    /* Hide legend on mobile */
+                    .mobile-hide-legend {
+                        display: none !important;
+                    }
+                    
+                }
+                
+                @media (min-width: 641px) {
+                    /* Desktop layout - semua komponen sejajar dengan jarak konsisten */
+                    .mobile-searchbar {
+                        left: 1rem !important;
+                    }
+                    
+                    .desktop-flood-bar {
+                        left: calc(1rem + 20rem + 1rem) !important;
+                        right: calc(1rem + 3rem + 1rem) !important;
+                    }
+                }
+            `}</style>
         </div>
     );
 };

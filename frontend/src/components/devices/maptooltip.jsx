@@ -70,9 +70,27 @@ const injectPopupStyles = () => {
       justify-content: center;
       cursor: pointer;
       transition: background-color 0.2s;
+      margin-bottom: 8px;
     }
     .tooltip-detail-btn:hover {
       background-color: #2563EB;
+    }
+    .tooltip-gmaps-btn {
+      width: 100%;
+      background-color: #4285F4;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .tooltip-gmaps-btn:hover {
+      background-color: #3367D6;
     }
   `;
   document.head.appendChild(style);
@@ -153,6 +171,14 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
         </svg>
         Lihat Detail
       </button>
+
+      <button class="tooltip-gmaps-btn">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        Lihat di Google Maps
+      </button>
     `;
 
     popupRef.current = new mapboxgl.Popup({
@@ -167,11 +193,21 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
     // 👇 Gunakan requestAnimationFrame untuk pastikan DOM ready
     requestAnimationFrame(() => {
       const detailBtn = popupContent.querySelector('.tooltip-detail-btn');
+      const gmapsBtn = popupContent.querySelector('.tooltip-gmaps-btn');
       const closeBtn = popupContent.querySelector('.tooltip-close-btn');
 
       const handleDetailClick = () => {
         onClose();
         onShowDetail(station);
+      };
+
+      // ✅ Fungsi untuk membuka Google Maps
+      const handleGMapsClick = () => {
+        if (coordinates && coordinates.length === 2) {
+          const [lng, lat] = coordinates;
+          const gmapsUrl = `https://www.google.com/maps?q=${lat},${lng}&ll=${lat},${lng}&z=15`;
+          window.open(gmapsUrl, '_blank', 'noopener,noreferrer');
+        }
       };
 
       const handleCloseClick = () => {
@@ -181,6 +217,9 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
       if (detailBtn) {
         detailBtn.addEventListener('click', handleDetailClick);
       }
+      if (gmapsBtn) {
+        gmapsBtn.addEventListener('click', handleGMapsClick);
+      }
       if (closeBtn) {
         closeBtn.addEventListener('click', handleCloseClick);
       }
@@ -189,6 +228,9 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
       return () => {
         if (detailBtn) {
           detailBtn.removeEventListener('click', handleDetailClick);
+        }
+        if (gmapsBtn) {
+          gmapsBtn.removeEventListener('click', handleGMapsClick);
         }
         if (closeBtn) {
           closeBtn.removeEventListener('click', handleCloseClick);

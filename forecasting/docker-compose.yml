@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  forecasting:
+    build: .
+    container_name: ffws-forecasting
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./storage:/app/storage
+      - ./logs:/app/logs
+      - ../backend/.env:/app/.env:ro
+    environment:
+      - FLASK_ENV=production
+    restart: unless-stopped
+    networks:
+      - ffws-network
+
+networks:
+  ffws-network:
+    external: true
+

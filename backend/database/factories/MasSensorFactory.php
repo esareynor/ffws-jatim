@@ -22,7 +22,7 @@ class MasSensorFactory extends Factory
 
         return [
             'device_id' => MasDevice::inRandomOrder()->first()->id,
-            'sensor_code' => $this->faker->unique()->bothify('SENSOR-####'),
+            'code' => $this->faker->unique()->bothify('SENSOR-####'),
             'parameter' => $parameter,
             'unit' => $unit,
             'description' => $this->faker->sentence,

@@ -23,7 +23,7 @@ class MasSensorController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('sensor_code', 'like', "%{$search}%")
+                $q->where('code', 'like', "%{$search}%")
                     ->orWhere('description', 'like', "%{$search}%")
                     ->orWhereHas('device', function ($deviceQuery) use ($search) {
                         $deviceQuery->where('name', 'like', "%{$search}%");
@@ -46,7 +46,7 @@ class MasSensorController extends Controller
 
         // Prepare table headers
         $tableHeaders = [
-            ['key' => 'sensor_code', 'label' => 'Kode Sensor', 'sortable' => true],
+            ['key' => 'code', 'label' => 'Kode Sensor', 'sortable' => true],
             ['key' => 'formatted_device_name', 'label' => 'Device'],
             ['key' => 'formatted_parameter', 'label' => 'Parameter'],
             ['key' => 'unit', 'label' => 'Unit'],
@@ -129,7 +129,7 @@ class MasSensorController extends Controller
     {
         $validated = $request->validate([
             'device_id' => 'required|exists:mas_devices,id',
-            'sensor_code' => 'required|string|max:255|unique:mas_sensors,sensor_code',
+            'code' => 'required|string|max:100|unique:mas_sensors,code',
             'parameter' => 'required|in:water_level,rainfall',
             'unit' => 'required|string|max:50',
             'description' => 'nullable|string|max:500',
@@ -179,7 +179,7 @@ class MasSensorController extends Controller
     {
         $validated = $request->validate([
             'device_id' => 'required|exists:mas_devices,id',
-            'sensor_code' => 'required|string|max:255|unique:mas_sensors,sensor_code,' . $sensor->id,
+            'code' => 'required|string|max:100|unique:mas_sensors,code,' . $sensor->id,
             'parameter' => 'required|in:water_level,rainfall',
             'unit' => 'required|string|max:50',
             'description' => 'nullable|string|max:500',

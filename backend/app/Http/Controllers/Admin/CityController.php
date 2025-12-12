@@ -35,6 +35,43 @@ class CityController extends Controller
         $cities = $query->orderBy('name', 'asc')->paginate($perPage);
         $provinces = MasProvince::orderBy('provinces_name', 'asc')->get();
 
+        // Prepare table headers
+        $tableHeaders = [
+            ['key' => 'code', 'label' => 'Kode', 'sortable' => true],
+            ['key' => 'name', 'label' => 'Nama Kota/Kabupaten', 'sortable' => true],
+            ['key' => 'formatted_province', 'label' => 'Provinsi'],
+            ['key' => 'formatted_regencies_count', 'label' => 'Jumlah Kecamatan'],
+            ['key' => 'actions', 'label' => 'Aksi', 'format' => 'actions']
+        ];
+
+        // Transform data for table component
+        $cities->getCollection()->transform(function ($city) {
+            $city->formatted_province = $city->province->provinces_name ?? '-';
+            $city->formatted_regencies_count = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">'
+                . $city->regencies_count . ' kecamatan</span>';
+
+            $city->actions = [
+                [
+                    'type' => 'edit',
+                    'label' => 'Edit',
+                    'url' => '#',
+                    'icon' => 'edit',
+                    'color' => 'blue',
+                    'onclick' => "window.dispatchEvent(new CustomEvent('open-edit-city', { detail: " . json_encode($city) . " }))"
+                ],
+                [
+                    'type' => 'delete',
+                    'label' => 'Hapus',
+                    'url' => route('admin.region.cities.destroy', $city->id),
+                    'icon' => 'trash',
+                    'color' => 'red',
+                    'method' => 'DELETE',
+                    'confirm' => 'Apakah Anda yakin ingin menghapus kota/kabupaten ini?'
+                ]
+            ];
+            return $city;
+        });
+
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -42,7 +79,7 @@ class CityController extends Controller
             ]);
         }
 
-        return view('admin.region.cities.index', compact('cities', 'provinces'));
+        return view('admin.region.cities.index', compact('cities', 'provinces', 'tableHeaders'));
     }
 
     /**

@@ -1,212 +1,145 @@
 @extends('layouts.admin')
 
 @section('title', 'UPTD Management')
+@section('page-title', 'UPTD Management')
+@section('page-description', 'Kelola Unit Pelaksana Teknis Daerah')
+@section('breadcrumb', 'UPTD')
 
 @section('content')
-<div x-data="uptdData()">
-    <!-- Header Section -->
-    <div class="mb-6">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">UPTD Management</h1>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Kelola Unit Pelaksana Teknis Daerah</p>
-            </div>
-            <button @click="openCreateModal()" type="button"
-                class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
-                <i class="fas fa-plus mr-2"></i>
-                Tambah UPTD
-            </button>
-        </div>
-    </div>
+<div class="space-y-6" x-data="uptdData()" x-init="init()">
 
-    <!-- Filter Section -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-        <form method="GET" action="{{ route('admin.uptd.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search</label>
-                <input type="text" name="search" value="{{ request('search') }}"
-                    placeholder="Cari nama atau kode UPTD..."
-                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+    {{-- Filter Section --}}
+    @php
+        $filterConfig = [
+            [
+                'type' => 'text',
+                'name' => 'search',
+                'label' => 'Cari UPTD',
+                'placeholder' => 'Cari berdasarkan nama atau kode UPTD...'
+            ],
+            [
+                'type' => 'select',
+                'name' => 'upt_code',
+                'label' => 'UPT',
+                'empty_option' => 'Semua UPT',
+                'options' => $upts->map(function($upt) {
+                    return ['value' => $upt->code, 'label' => $upt->name];
+                })->toArray()
+            ],
+            [
+                'type' => 'select',
+                'name' => 'city_code',
+                'label' => 'Kabupaten',
+                'empty_option' => 'Semua Kabupaten',
+                'options' => $cities->map(function($city) {
+                    return ['value' => $city->code, 'label' => $city->name . ' (' . $city->province->provinces_name . ')'];
+                })->toArray()
+            ],
+            [
+                'type' => 'select',
+                'name' => 'per_page',
+                'label' => 'Per Halaman',
+                'options' => [
+                    ['value' => '10', 'label' => '10'],
+                    ['value' => '15', 'label' => '15'],
+                    ['value' => '25', 'label' => '25'],
+                    ['value' => '50', 'label' => '50'],
+                    ['value' => '100', 'label' => '100']
+                ]
+            ]
+        ];
+    @endphp
+
+    <x-filter-bar 
+        title="Filter & Pencarian UPTD"
+        :filters="$filterConfig"
+        :action="route('admin.uptd.index')"
+        gridCols="md:grid-cols-4"
+    />
+
+    {{-- UPTD Table --}}
+    <x-table
+        title="Daftar UPTD"
+        :headers="$tableHeaders"
+        :rows="$uptds"
+        searchable
+        searchPlaceholder="Cari UPTD..."
+        :pagination="$uptds->links()"
+    >
+        <x-slot:actions>
+            <x-admin.button type="button" variant="primary" @click="openCreateModal()">
+                <i class="fa-solid fa-plus -ml-1 mr-2"></i>
+                Tambah UPTD
+            </x-admin.button>
+        </x-slot:actions>
+    </x-table>
+
+    {{-- Modal Create/Edit --}}
+    <x-admin.modal :show="false" name="uptd-modal" size="lg" :close-on-backdrop="true">
+        <x-slot:title>
+            <span x-text="isEdit ? 'Edit UPTD' : 'Tambah UPTD'"></span>
+        </x-slot:title>
+
+        <form @submit.prevent="submitForm()" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <x-admin.form-input
+                    type="text"
+                    name="code"
+                    label="Kode"
+                    x-model="formData.code"
+                    placeholder="Contoh: UPTD-SBY"
+                    required="true"
+                />
+                <x-admin.form-input
+                    type="text"
+                    name="name"
+                    label="Nama UPTD"
+                    x-model="formData.name"
+                    placeholder="Contoh: UPTD Surabaya"
+                    required="true"
+                />
             </div>
+
+            <x-admin.form-input
+                type="select"
+                name="upt_code"
+                label="UPT"
+                x-model="formData.upt_code"
+                @change="loadCitiesByUpt()"
+                required="true"
+                :options="$upts->map(function($upt) {
+                    return ['value' => $upt->code, 'label' => $upt->name];
+                })->prepend(['value' => '', 'label' => 'Pilih UPT'])->toArray()"
+            />
+
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">UPT</label>
-                <select name="upt_code" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                    <option value="">Semua UPT</option>
-                    @foreach($upts as $upt)
-                        <option value="{{ $upt->code }}" {{ request('upt_code') == $upt->code ? 'selected' : '' }}>
-                            {{ $upt->name }}
-                        </option>
-                    @endforeach
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Kabupaten <span class="text-red-500">*</span>
+                    <span class="text-xs text-gray-500" x-show="!formData.upt_code">(Pilih UPT terlebih dahulu)</span>
+                </label>
+                <select x-model="formData.city_code" required 
+                    :disabled="!formData.upt_code || availableCities.length === 0"
+                    class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <option value="">Pilih Kabupaten</option>
+                    <template x-for="city in availableCities" :key="city.code">
+                        <option :value="city.code" x-text="city.name + ' (' + city.province.provinces_name + ')'"></option>
+                    </template>
                 </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Kabupaten</label>
-                <select name="city_code" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                    <option value="">Semua Kabupaten</option>
-                    @foreach($cities as $city)
-                        <option value="{{ $city->code }}" {{ request('city_code') == $city->code ? 'selected' : '' }}>
-                            {{ $city->name }} ({{ $city->province->provinces_name }})
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="flex items-end gap-2">
-                <button type="submit" class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors">
-                    <i class="fas fa-search mr-2"></i>Filter
-                </button>
-                <a href="{{ route('admin.uptd.index') }}" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition-colors">
-                    <i class="fas fa-redo"></i>
-                </a>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" x-show="formData.upt_code && availableCities.length === 0">
+                    UPT ini belum memiliki kabupaten yang terdaftar
+                </p>
             </div>
         </form>
-    </div>
 
-    <!-- Table Section -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-900">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kode</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nama UPTD</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">UPT</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kabupaten</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    @forelse($uptds as $uptd)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $uptd->code }}</span>
-                        </td>
-                        <td class="px-6 py-4">
-                            <span class="text-sm text-gray-900 dark:text-white">{{ $uptd->name }}</span>
-                        </td>
-                        <td class="px-6 py-4">
-                            <span class="text-sm text-gray-600 dark:text-gray-400">
-                                {{ $uptd->upt->name ?? '-' }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="text-sm">
-                                <div class="text-gray-900 dark:text-white font-medium">
-                                    {{ $uptd->city->name ?? '-' }}
-                                </div>
-                                @if($uptd->city && $uptd->city->province)
-                                <div class="text-gray-500 dark:text-gray-400 text-xs">
-                                    {{ $uptd->city->province->provinces_name }}
-                                </div>
-                                @endif
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                            <button @click="openEditModal({{ json_encode($uptd) }})"
-                                class="text-blue-600 hover:text-blue-900 dark:text-blue-400 mr-3">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button @click="confirmDelete({{ $uptd->id }})"
-                                class="text-red-600 hover:text-red-900 dark:text-red-400">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="5" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                            <i class="fas fa-inbox text-4xl mb-2"></i>
-                            <p>Tidak ada data UPTD</p>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination -->
-        @if($uptds->hasPages())
-        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-            {{ $uptds->links() }}
-        </div>
-        @endif
-    </div>
-
-    <!-- Create/Edit Modal -->
-    <div x-show="showModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" @click.self="closeModal()">
-        <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
-
-            <div class="relative bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full shadow-xl">
-                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white" x-text="isEdit ? 'Edit UPTD' : 'Tambah UPTD'"></h3>
-                </div>
-
-                <form @submit.prevent="submitForm()" class="px-6 py-4">
-                    <div class="space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Kode <span class="text-red-500">*</span>
-                                </label>
-                                <input type="text" x-model="formData.code" required
-                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                                    placeholder="Contoh: UPTD-SBY">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Nama UPTD <span class="text-red-500">*</span>
-                                </label>
-                                <input type="text" x-model="formData.name" required
-                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                                    placeholder="Contoh: UPTD Surabaya">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                UPT <span class="text-red-500">*</span>
-                            </label>
-                            <select x-model="formData.upt_code" required @change="loadCitiesByUpt()"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                                <option value="">Pilih UPT</option>
-                                @foreach($upts as $upt)
-                                    <option value="{{ $upt->code }}">{{ $upt->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Kabupaten <span class="text-red-500">*</span>
-                                <span class="text-xs text-gray-500" x-show="!formData.upt_code">(Pilih UPT terlebih dahulu)</span>
-                            </label>
-                            <select x-model="formData.city_code" required :disabled="!formData.upt_code || availableCities.length === 0"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed">
-                                <option value="">Pilih Kabupaten</option>
-                                <template x-for="city in availableCities" :key="city.code">
-                                    <option :value="city.code" x-text="city.name + ' (' + city.province.provinces_name + ')'"></option>
-                                </template>
-                            </select>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" x-show="formData.upt_code && availableCities.length === 0">
-                                UPT ini belum memiliki kabupaten yang terdaftar
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <button type="button" @click="closeModal()"
-                            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors">
-                            Batal
-                        </button>
-                        <button type="submit" :disabled="!formData.upt_code || !formData.city_code"
-                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                            <span x-text="isEdit ? 'Update' : 'Simpan'"></span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+        <x-slot:footer>
+            <x-admin.button variant="outline" @click="closeModal()">
+                Batal
+            </x-admin.button>
+            <x-admin.button variant="primary" @click="submitForm()" :disabled="!formData.upt_code || !formData.city_code">
+                <span x-text="isEdit ? 'Update' : 'Simpan'"></span>
+            </x-admin.button>
+        </x-slot:footer>
+    </x-admin.modal>
 </div>
 
 @push('scripts')
@@ -224,10 +157,18 @@ function uptdData() {
             city_code: ''
         },
 
+        init() {
+            // Listen for edit event from table
+            window.addEventListener('open-edit-uptd', (e) => {
+                const item = e.detail || {};
+                this.openEditModal(item);
+            });
+        },
+
         openCreateModal() {
             this.isEdit = false;
             this.resetForm();
-            this.showModal = true;
+            this.$dispatch('open-modal', 'uptd-modal');
         },
 
         async openEditModal(uptd) {
@@ -243,11 +184,11 @@ function uptdData() {
             // Load cities for the selected UPT
             await this.loadCitiesByUpt();
 
-            this.showModal = true;
+            this.$dispatch('open-modal', 'uptd-modal');
         },
 
         closeModal() {
-            this.showModal = false;
+            this.$dispatch('close-modal', 'uptd-modal');
             this.resetForm();
         },
 

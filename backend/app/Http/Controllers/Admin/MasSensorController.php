@@ -143,6 +143,24 @@ class MasSensorController extends Controller
             'last_seen' => 'nullable|date',
         ]);
 
+        // Custom validation for threshold ordering
+        $safe = $validated['threshold_safe'] ?? null;
+        $warning = $validated['threshold_warning'] ?? null;
+        $danger = $validated['threshold_danger'] ?? null;
+
+        // If all three thresholds are provided, validate their order
+        if ($safe !== null && $warning !== null && $danger !== null) {
+            if (!($safe < $warning && $warning < $danger)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors([
+                        'threshold_safe' => 'Threshold Safe harus lebih kecil dari Warning.',
+                        'threshold_warning' => 'Threshold Warning harus lebih besar dari Safe dan lebih kecil dari Danger.',
+                        'threshold_danger' => 'Threshold Danger harus lebih besar dari Warning.'
+                    ]);
+            }
+        }
+
         MasSensor::create($validated);
 
         return redirect()->route('admin.sensors.index')
@@ -194,6 +212,24 @@ class MasSensorController extends Controller
             'is_active' => 'nullable|boolean',
             'last_seen' => 'nullable|date',
         ]);
+
+        // Custom validation for threshold ordering
+        $safe = $validated['threshold_safe'] ?? null;
+        $warning = $validated['threshold_warning'] ?? null;
+        $danger = $validated['threshold_danger'] ?? null;
+
+        // If all three thresholds are provided, validate their order
+        if ($safe !== null && $warning !== null && $danger !== null) {
+            if (!($safe < $warning && $warning < $danger)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors([
+                        'threshold_safe' => 'Threshold Safe harus lebih kecil dari Warning.',
+                        'threshold_warning' => 'Threshold Warning harus lebih besar dari Safe dan lebih kecil dari Danger.',
+                        'threshold_danger' => 'Threshold Danger harus lebih besar dari Warning.'
+                    ]);
+            }
+        }
 
         $sensor->update($validated);
 

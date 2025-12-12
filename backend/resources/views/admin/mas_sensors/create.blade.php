@@ -15,12 +15,12 @@
                 <!-- Device Selection -->
                 <x-admin.form-input 
                     type="select"
-                    name="device_id" 
+                    name="mas_device_code" 
                     label="Device" 
                     required="true" 
-                    :error="$errors->first('device_id')"
+                    :error="$errors->first('mas_device_code')"
                     :options="collect($devices)->map(function($device) {
-                        return ['value' => $device->id, 'label' => $device->name . ' (' . $device->code . ')'];
+                        return ['value' => $device->code, 'label' => $device->name . ' (' . $device->code . ')'];
                     })->toArray()"
                     class="md:col-span-2"
                 />
@@ -28,11 +28,11 @@
                 <!-- Sensor Code -->
                 <x-admin.form-input 
                     type="text" 
-                    name="sensor_code" 
+                    name="code" 
                     label="Kode Sensor" 
                     placeholder="Contoh: SENSOR-WL-001" 
                     required="true" 
-                    :error="$errors->first('sensor_code')"
+                    :error="$errors->first('code')"
                 />
 
                 <!-- Parameter -->
@@ -72,12 +72,13 @@
                 <!-- Model Selection -->
                 <x-admin.form-input 
                     type="select"
-                    name="mas_model_id" 
-                    label="Model Sensor" 
-                    :error="$errors->first('mas_model_id')"
+                    name="mas_model_code" 
+                    label="Model Sensor"
+                    placeholder="Pilih Model (Opsional)"
+                    :error="$errors->first('mas_model_code')"
                     :options="collect($models)->map(function($model) {
-                        return ['value' => $model->id, 'label' => $model->model_name ?? $model->id];
-                    })->prepend(['value' => '', 'label' => 'Pilih Model (Opsional)'])->toArray()"
+                        return ['value' => $model->code, 'label' => $model->name . ' - ' . $model->code];
+                    })->toArray()"
                 />
 
                 <!-- Description -->
@@ -93,7 +94,13 @@
 
             <!-- Threshold Section -->
             <div class="border-t pt-6">
-                <h4 class="text-lg font-medium text-gray-900 mb-4">Threshold Settings</h4>
+                <h4 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Threshold Settings</h4>
+                <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                    <p class="text-sm text-blue-800 dark:text-blue-200">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        <strong>Catatan:</strong> Nilai threshold harus berurutan: Safe &lt; Warning &lt; Danger
+                    </p>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <!-- Safe Threshold -->
                     <x-admin.form-input 

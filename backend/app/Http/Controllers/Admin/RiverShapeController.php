@@ -36,10 +36,88 @@ class RiverShapeController extends Controller
             $query->where('sensor_code', $sensorCode);
         }
 
-        $riverShapes = $query->orderBy('created_at', 'desc')->paginate($perPage);
+        $riverShapes = $query->orderBy('created_at', 'desc')->paginate($perPage)->appends(request()->query());
         $sensors = MasSensor::where('status', 'active')->get(['id', 'code', 'parameter']);
 
-        return view('admin.river_shapes.index', compact('riverShapes', 'sensors'));
+        // Prepare filter configuration
+        $filterConfig = [
+            [
+                'type' => 'text',
+                'name' => 'search',
+                'label' => 'Cari',
+                'placeholder' => 'Cari berdasarkan kode atau sensor...'
+            ],
+            [
+                'type' => 'select',
+                'name' => 'sensor_code',
+                'label' => 'Sensor',
+                'empty_option' => 'Semua Sensor',
+                'options' => $sensors->map(function($sensor) {
+                    return [
+                        'value' => $sensor->code,
+                        'label' => $sensor->code . ' (' . $sensor->parameter . ')'
+                    ];
+                })->toArray()
+            ]
+        ];
+
+        // Prepare table headers
+        $tableHeaders = [
+            ['key' => 'code', 'label' => 'Code'],
+            ['key' => 'formatted_sensor', 'label' => 'Sensor Code'],
+            ['key' => 'formatted_coordinates', 'label' => 'Coordinates (X, Y)'],
+            ['key' => 'formatted_parameters', 'label' => 'Parameters (A, B, C)'],
+            ['key' => 'formatted_created_at', 'label' => 'Created', 'format' => 'date'],
+            ['key' => 'actions', 'label' => 'Actions', 'format' => 'actions']
+        ];
+
+        // Format rows data
+        $riverShapes->getCollection()->transform(function ($shape) {
+            // Format sensor code
+            $shape->formatted_sensor = $shape->sensor_code;
+            if ($shape->sensor) {
+                $shape->formatted_sensor .= ' <span class="text-xs text-gray-500 dark:text-gray-400">(' . $shape->sensor->parameter . ')</span>';
+            }
+            
+            // Format coordinates
+            $shape->formatted_coordinates = 'X: ' . ($shape->x ?? 'N/A') . ', Y: ' . ($shape->y ?? 'N/A');
+            
+            // Format parameters
+            $shape->formatted_parameters = 'A: ' . ($shape->a ?? 'N/A') . ', B: ' . ($shape->b ?? 'N/A') . ', C: ' . ($shape->c ?? 'N/A');
+            
+            // Format created at
+            $shape->formatted_received_at = $shape->created_at;
+            
+            // Format actions
+            $shape->actions = [
+                [
+                    'label' => 'View',
+                    'icon' => 'eye',
+                    'url' => '#',
+                    'onclick' => 'viewDetail(' . $shape->id . ')',
+                    'color' => 'gray'
+                ],
+                [
+                    'label' => 'Edit',
+                    'icon' => 'pen',
+                    'url' => '#',
+                    'onclick' => 'editShape(' . $shape->id . ')',
+                    'color' => 'gray'
+                ],
+                [
+                    'label' => 'Delete',
+                    'icon' => 'trash',
+                    'url' => route('admin.river-shapes.destroy', $shape->id),
+                    'method' => 'DELETE',
+                    'confirm' => 'Data yang dihapus tidak dapat dikembalikan. Lanjutkan?',
+                    'color' => 'red'
+                ]
+            ];
+            
+            return $shape;
+        });
+
+        return view('admin.river_shapes.index', compact('riverShapes', 'sensors', 'filterConfig', 'tableHeaders'));
     }
 
     /**

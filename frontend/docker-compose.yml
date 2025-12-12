@@ -1,0 +1,13 @@
+services:
+  web:
+    image: nginx:alpine
+    container_name: ffws_frontend
+    restart: always
+    volumes:
+      - ./dist:/usr/share/nginx/html:ro
+    networks:
+      - public_net
+
+networks:
+  public_net:
+    external: true

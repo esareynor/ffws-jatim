@@ -245,7 +245,7 @@ const Layout = ({ children }) => {
             </Suspense>
 
             {/* Mobile-specific styles */}
-            <style jsx>{`
+            <style>{`
                 @media (max-width: 640px) {
                     /* Mobile layout adjustments */
                     .mobile-flood-bar {

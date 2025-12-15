@@ -54,12 +54,11 @@ class RatingCurve extends Model
 
     /**
      * Calculate discharge from water level using the rating curve formula.
-     * 
+     *
      * Formula types:
-     * - power: Q = C × (H - A)^B  (most common for rating curves)
-     * - polynomial: Q = A + B×H + C×H²
-     * - exponential: Q = A × e^(B×H)
-     * - custom: Q = A × H (simple linear)
+     * - tipe-01: Q = C × (H - A)^B  (Power formula with subtraction)
+     * - tipe-02: Q = C × B × H^(3/2)  (Modified power formula)
+     * - tipe-03: Q = C × (H + A)^B  (Power formula with addition)
      *
      * @param float $waterLevel (H) - Water level in meters
      * @return float Discharge (Q) in m³/s
@@ -67,19 +66,24 @@ class RatingCurve extends Model
     public function calculateDischarge(float $waterLevel): float
     {
         return match($this->formula_type) {
-            // Q = C × (H - A)^B
+            // Tipe-01: Q = C × (H - A)^B
             // Where: C = coefficient c, A = offset a, B = exponent b
+            'tipe-01' => $this->c * pow(max(0, $waterLevel - $this->a), $this->b ?? 1),
+
+            // Tipe-02: Q = C × B × H^(3/2)
+            // Where: C = coefficient c, B = coefficient b
+            'tipe-02' => $this->c * ($this->b ?? 1) * pow($waterLevel, 1.5),
+
+            // Tipe-03: Q = C × (H + A)^B
+            // Where: C = coefficient c, A = offset a, B = exponent b
+            'tipe-03' => $this->c * pow(($waterLevel + $this->a), $this->b ?? 1),
+
+            // Legacy support (backward compatibility)
             'power' => $this->c * pow(max(0, $waterLevel - $this->a), $this->b ?? 1),
-            
-            // Q = A + B×H + C×H²
             'polynomial' => $this->a + ($this->b ?? 0) * $waterLevel + ($this->c ?? 0) * pow($waterLevel, 2),
-            
-            // Q = A × e^(B×H)
             'exponential' => $this->a * exp(($this->b ?? 1) * $waterLevel),
-            
-            // Q = A × H (simple linear)
             'custom' => $this->a * $waterLevel,
-            
+
             default => 0.0
         };
     }
@@ -90,6 +94,10 @@ class RatingCurve extends Model
     public function getFormulaStringAttribute(): string
     {
         return match($this->formula_type) {
+            'tipe-01' => "Q = {$this->c} × (H - {$this->a})^{$this->b}",
+            'tipe-02' => "Q = {$this->c} × {$this->b} × H^(3/2)",
+            'tipe-03' => "Q = {$this->c} × (H + {$this->a})^{$this->b}",
+            // Legacy support
             'power' => "Q = {$this->c} × (H - {$this->a})^{$this->b}",
             'polynomial' => "Q = {$this->a} + {$this->b}H + {$this->c}H²",
             'exponential' => "Q = {$this->a} × e^({$this->b}H)",
@@ -97,33 +105,58 @@ class RatingCurve extends Model
             default => 'Unknown formula'
         };
     }
-    
+
     /**
      * Get formula parameters description.
      */
     public function getFormulaParametersAttribute(): array
     {
         return match($this->formula_type) {
+            'tipe-01' => [
+                'C' => $this->c,
+                'A' => $this->a,
+                'B' => $this->b,
+                'description' => 'Q = C × (H - A)^B',
+                'label' => 'Tipe-01 (C x (H-A)^B)'
+            ],
+            'tipe-02' => [
+                'C' => $this->c,
+                'B' => $this->b,
+                'description' => 'Q = C × B × H^(3/2)',
+                'label' => 'Tipe-02 (C x B x H^3/2)'
+            ],
+            'tipe-03' => [
+                'C' => $this->c,
+                'A' => $this->a,
+                'B' => $this->b,
+                'description' => 'Q = C × (H + A)^B',
+                'label' => 'Tipe-03 (C x (H+A)^B)'
+            ],
+            // Legacy support
             'power' => [
                 'C' => $this->c,
                 'A' => $this->a,
                 'B' => $this->b,
-                'description' => 'Q = C × (H - A)^B'
+                'description' => 'Q = C × (H - A)^B',
+                'label' => 'Power Formula'
             ],
             'polynomial' => [
                 'A' => $this->a,
                 'B' => $this->b,
                 'C' => $this->c,
-                'description' => 'Q = A + B×H + C×H²'
+                'description' => 'Q = A + B×H + C×H²',
+                'label' => 'Polynomial Formula'
             ],
             'exponential' => [
                 'A' => $this->a,
                 'B' => $this->b,
-                'description' => 'Q = A × e^(B×H)'
+                'description' => 'Q = A × e^(B×H)',
+                'label' => 'Exponential Formula'
             ],
             'custom' => [
                 'A' => $this->a,
-                'description' => 'Q = A × H'
+                'description' => 'Q = A × H',
+                'label' => 'Custom Linear Formula'
             ],
             default => []
         };
@@ -147,18 +180,45 @@ class RatingCurve extends Model
     }
 
     /**
+     * Get available formula types.
+     */
+    public static function getFormulaTypes(): array
+    {
+        return [
+            'tipe-01' => [
+                'value' => 'tipe-01',
+                'label' => 'Tipe-01 (C x (H-A)^B)',
+                'description' => 'Q = C × (H - A)^B',
+                'parameters' => ['C', 'A', 'B']
+            ],
+            'tipe-02' => [
+                'value' => 'tipe-02',
+                'label' => 'Tipe-02 (C x B x H^3/2)',
+                'description' => 'Q = C × B × H^(3/2)',
+                'parameters' => ['C', 'B']
+            ],
+            'tipe-03' => [
+                'value' => 'tipe-03',
+                'label' => 'Tipe-03 (C x (H+A)^B)',
+                'description' => 'Q = C × (H + A)^B',
+                'parameters' => ['C', 'A', 'B']
+            ]
+        ];
+    }
+
+    /**
      * Get the most recent active rating curve for a sensor.
      */
     public static function getActiveForSensor(string $sensorCode, $asOfDate = null): ?self
     {
         $date = $asOfDate ?? now();
-        
+
         return self::where('mas_sensor_code', $sensorCode)
             ->whereDate('effective_date', '<=', $date)
             ->orderBy('effective_date', 'desc')
             ->first();
     }
-    
+
     /**
      * Get rating curve effective for a specific date.
      */
@@ -169,7 +229,7 @@ class RatingCurve extends Model
             ->orderBy('effective_date', 'desc')
             ->first();
     }
-    
+
     /**
      * Get all rating curves for a sensor with their effective periods.
      */
@@ -178,11 +238,11 @@ class RatingCurve extends Model
         $curves = self::where('mas_sensor_code', $sensorCode)
             ->orderBy('effective_date', 'desc')
             ->get();
-        
+
         $history = [];
         foreach ($curves as $index => $curve) {
             $nextCurve = $curves[$index + 1] ?? null;
-            
+
             $history[] = [
                 'id' => $curve->id,
                 'code' => $curve->code,
@@ -195,7 +255,7 @@ class RatingCurve extends Model
                 'usage_count' => $curve->calculatedDischarges()->count()
             ];
         }
-        
+
         return $history;
     }
 }

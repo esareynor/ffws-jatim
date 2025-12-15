@@ -26,6 +26,7 @@ class DeviceParameterController extends Controller
         }
 
         $parameters = $query->orderBy('name')->paginate(20);
+        $parameterOptions = self::getDeviceParameterOptions();
 
         // Prepare table headers
         $tableHeaders = [
@@ -67,7 +68,21 @@ class DeviceParameterController extends Controller
             ]);
         }
 
-        return view('admin.device_parameters.index', compact('parameters', 'tableHeaders'));
+        return view('admin.device_parameters.index', compact('parameters', 'parameterOptions'));
+    }
+
+    /**
+     * Get device parameter options
+     */
+    public static function getDeviceParameterOptions()
+    {
+        return [
+            'Manual - Peilschaal' => 'Manual - Peilschaal',
+            'Manual - Ombrometer' => 'Manual - Ombrometer',
+            'Automatic - AWLR' => 'Automatic - AWLR',
+            'Automatic - ARR' => 'Automatic - ARR',
+            'Automatic - Radar' => 'Automatic - Radar',
+        ];
     }
 
     /**
@@ -76,7 +91,7 @@ class DeviceParameterController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|in:Manual - Peilschaal,Manual - Ombrometer,Automatic - AWLR,Automatic - ARR,Automatic - Radar',
             'code' => 'required|string|max:100|unique:mas_device_parameters,code'
         ]);
 
@@ -120,7 +135,7 @@ class DeviceParameterController extends Controller
         $parameter = MasDeviceParameter::findOrFail($id);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|in:Manual - Peilschaal,Manual - Ombrometer,Automatic - AWLR,Automatic - ARR,Automatic - Radar',
             'code' => 'required|string|max:100|unique:mas_device_parameters,code,' . $id
         ]);
 

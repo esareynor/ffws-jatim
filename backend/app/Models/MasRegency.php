@@ -14,6 +14,23 @@ class MasRegency extends Model
     protected $fillable = [
         'regencies_name',
         'regencies_code',
+        'cities_code',
     ];
+
+    /**
+     * Get the city that owns the regency
+     */
+    public function city()
+    {
+        return $this->belongsTo(MasCity::class, 'cities_code', 'code');
+    }
+
+    /**
+     * Get villages that belong to this regency
+     */
+    public function villages()
+    {
+        return $this->hasMany(MasVillage::class, 'regencies_code', 'regencies_code');
+    }
 }
 

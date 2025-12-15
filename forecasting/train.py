@@ -65,7 +65,7 @@ def train_single_model(model_code, epochs=None, batch_size=None):
         if 'DateTime' in df_data.columns:
             df_data = df_data.drop(columns=['DateTime'])
         
-        # Train model
+        # Train model with full configuration
         result = train_model(
             model_code=model_code,
             model_type=model_config['type'],
@@ -73,7 +73,8 @@ def train_single_model(model_code, epochs=None, batch_size=None):
             n_steps_in=model_config['n_steps_in'],
             n_steps_out=model_config['n_steps_out'],
             epochs=epochs,
-            batch_size=batch_size
+            batch_size=batch_size,
+            model_config=model_config  # Pass full config for dynamic architecture
         )
         
         return result

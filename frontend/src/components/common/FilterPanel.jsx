@@ -1,5 +1,13 @@
+// src/components/common/FilterPanel.jsx
 import React, { useEffect, useState } from "react";
-import { Sliders, ToggleRight, Layers, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Sliders,
+  ToggleRight,
+  Layers,
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 
 const FilterPanel = ({
   isOpen,
@@ -16,7 +24,7 @@ const FilterPanel = ({
   onLayerToggle = () => {},
   activeLayers = {},
   administrativeRegions = [],
-  autoSwitchMode = 'station',
+  autoSwitchMode = "station",
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [showLayers, setShowLayers] = useState(false);
@@ -30,26 +38,29 @@ const FilterPanel = ({
   const [showPosTinggiMukaAir, setShowPosTinggiMukaAir] = useState(false);
   const [showPosHujan, setShowPosHujan] = useState(false);
   const [showPosDugaAir, setShowPosDugaAir] = useState(false);
-  const [showHujanHarian, setShowHujanHarian] = useState(false);
-  const [showLainnya, setShowLainnya] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       const t = setTimeout(() => setIsVisible(true), 10);
       return () => clearTimeout(t);
-    } else setIsVisible(false);
+    } else {
+      setIsVisible(false);
+    }
   }, [isOpen]);
 
   const handleLayerToggle = (layerId) => {
     console.log("🖱️ Klik layer di FilterPanel:", layerId);
-    if (typeof onLayerToggle === 'function') onLayerToggle(layerId);
+    if (typeof onLayerToggle === "function") {
+      onLayerToggle(layerId);
+    }
   };
 
   if (!isOpen) return null;
 
   return (
     <>
-      <div className="absolute top-4 right-4 z-[80]">
+      {/* Tombol buka filter (opsional, biasanya sudah di luar) */}
+      {/* <div className="absolute top-4 right-4 z-[80]">
         <button
           onClick={(e) => {
             e.preventDefault();
@@ -60,11 +71,20 @@ const FilterPanel = ({
           title="Buka Filter"
           aria-label="Buka Filter"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="relative z-10 w-6 h-6 text-blue-600">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="relative z-10 w-6 h-6 text-blue-600"
+          >
             <path d="M22 3H2l8 9v7l4 2v-9l8-9z"></path>
           </svg>
         </button>
-      </div>
+      </div> */}
 
       <div
         className={`fixed rounded-tl-lg rounded-bl-lg top-20 right-0 h-[calc(80%-8%)] ${widthClass} bg-white shadow-2xl z-[1000] transform transition-all duration-300 ease-in-out flex flex-col ${
@@ -72,7 +92,7 @@ const FilterPanel = ({
         }`}
         style={{
           pointerEvents: isVisible ? "auto" : "none",
-          willChange: "transform, opacity"
+          willChange: "transform, opacity",
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -80,7 +100,7 @@ const FilterPanel = ({
           <div className="flex items-center gap-2">
             <Sliders className="w-5 h-5 text-blue-600" />
             <div>
-              <h2 className="text-lg font-semibold text-gray-800">Filter &amp; Controls</h2>
+              <h2 className="text-lg font-semibold text-gray-800">Filter & Controls</h2>
               {subtitle && <p className="text-gray-500 text-sm">{subtitle}</p>}
             </div>
           </div>
@@ -95,8 +115,18 @@ const FilterPanel = ({
             title="Tutup"
             aria-label="Tutup panel filter"
           >
-            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-5 h-5 text-gray-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -118,7 +148,6 @@ const FilterPanel = ({
                 <ChevronDown className="w-4 h-4 text-gray-600" />
               )}
             </div>
-
             {showLayers && (
               <div className="pl-4 pt-2 pb-4 space-y-3">
                 {[
@@ -163,7 +192,14 @@ const FilterPanel = ({
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
             >
               <div className="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  className="w-4 h-4 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                >
                   <rect x="3" y="4" width="18" height="3" rx="1" stroke="currentColor" />
                   <rect x="3" y="10.5" width="14" height="3" rx="1" stroke="currentColor" />
                   <rect x="3" y="17" width="10" height="3" rx="1" stroke="currentColor" />
@@ -176,9 +212,9 @@ const FilterPanel = ({
                 <ChevronDown className="w-4 h-4 text-gray-600" />
               )}
             </div>
-
             {showLegend && (
               <div className="pl-4 pt-2 pb-4 space-y-3">
+                {/* Data Master */}
                 <div>
                   <div className="font-medium text-xs text-gray-600 mb-1">Data Master</div>
                   <div className="space-y-1 pl-2">
@@ -237,9 +273,26 @@ const FilterPanel = ({
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
             >
               <div className="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" strokeWidth="1.6">
-                  <path d="M20 16.58A4 4 0 0 0 16 12h-1.26A6 6 0 1 0 6 17" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M8 19v2M12 19v2M16 19v2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  className="w-4 h-4 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                >
+                  <path
+                    d="M20 16.58A4 4 0 0 0 16 12h-1.26A6 6 0 1 0 6 17"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M8 19v2M12 19v2M16 19v2"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
                 <span className="font-semibold text-gray-700">Pos Hujan</span>
               </div>
@@ -249,19 +302,30 @@ const FilterPanel = ({
                 <ChevronDown className="w-4 h-4 text-gray-600" />
               )}
             </div>
-
             {showPosHujan && (
               <div className="pl-4 pt-2 pb-4 space-y-2">
                 {[
-                  { id: "Hujan Jam-Jam an PU SDA", name: "Hujan Jam-Jam an PU SDA", color: "#FF6347" },
+                  {
+                    id: "Hujan Jam-Jam an PU SDA",
+                    name: "Hujan Jam-Jam an PU SDA",
+                    color: "#FF6347",
+                  },
                 ].map((item) => (
                   <div
                     key={item.id}
                     className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2C12 2 7 8 7 12.5C7 16.6421 9.85786 19.5 14 19.5C18.1421 19.5 21 16.6421 21 12.5C21 8 16.001 2 16.001 2H12Z" fill={item.color}/>
+                      <svg
+                        className="w-3 h-3"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M12 2C12 2 7 8 7 12.5C7 16.6421 9.85786 19.5 14 19.5C18.1421 19.5 21 16.6421 21 12.5C21 8 16.001 2 16.001 2H12Z"
+                          fill={item.color}
+                        />
                       </svg>
                       <span className="text-xs text-gray-700">{item.name}</span>
                     </div>
@@ -292,9 +356,26 @@ const FilterPanel = ({
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
             >
               <div className="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" strokeWidth="1.6">
-                  <path d="M8 2h8l-1 6a4 4 0 0 1-6 0L8 2z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M6 9v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  className="w-4 h-4 text-teal-600"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                >
+                  <path
+                    d="M8 2h8l-1 6a4 4 0 0 1-6 0L8 2z"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M6 9v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
                 <span className="font-semibold text-gray-700">Pos Duga Air</span>
               </div>
@@ -304,18 +385,24 @@ const FilterPanel = ({
                 <ChevronDown className="w-4 h-4 text-gray-600" />
               )}
             </div>
-
             {showPosDugaAir && (
               <div className="pl-4 pt-2 pb-4 space-y-2">
                 {[
-                  { id: "pos-duga-air-jam-jam-an", name: "Pos Duga Air Jam-jam an PU SDA", color: "#008080" },
+                  {
+                    id: "Pos Duga Air Jam-Jam an PU SDA",
+                    name: "Pos Duga Air Jam-Jam an PU SDA",
+                    color: "#008080",
+                  },
                 ].map((item) => (
                   <div
                     key={item.id}
                     className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="w-3 h-3" style={{ backgroundColor: item.color, borderRadius: 4 }}></span>
+                      <span
+                        className="w-3 h-3"
+                        style={{ backgroundColor: item.color, borderRadius: "4px" }}
+                      ></span>
                       <span className="text-xs text-gray-700">{item.name}</span>
                     </div>
                     <button
@@ -337,19 +424,9 @@ const FilterPanel = ({
               </div>
             )}
           </section>
-
-          <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5" />
-              <div className="text-xs text-amber-800">
-                <div className="font-medium">Layer Control</div>
-                <div className="mt-1">Klik toggle untuk mengaktifkan/menonaktifkan layer.</div>
-                <div className="mt-1">Klik panah di sebelah "Map Layers" atau "Legenda Peta" untuk melihat detailnya.</div>
-              </div>
-            </div>
-          </div>
         </div>
 
+        {/* Footer */}
         <div className="rounded-bl-lg border-t border-gray-200 p-4 bg-gray-50/50">
           <div className="flex items-center justify-between text-xs text-gray-500">
             <span>Map Layer Control</span>

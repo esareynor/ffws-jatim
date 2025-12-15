@@ -5,6 +5,10 @@ from flask import Blueprint, jsonify, request
 from services.prediction_service import get_prediction_service
 from database.queries import get_data_fetcher
 from database.connection import get_db
+from config.settings import (
+    HTTP_OK, HTTP_BAD_REQUEST, HTTP_NOT_FOUND, 
+    HTTP_SERVER_ERROR, HTTP_SERVICE_UNAVAILABLE
+)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -32,13 +36,13 @@ def health_check():
         return jsonify({
             'status': 'healthy' if db_status else 'unhealthy',
             'database': 'connected' if db_status else 'disconnected'
-        }), 200 if db_status else 503
+        }), HTTP_OK if db_status else HTTP_SERVICE_UNAVAILABLE
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         return jsonify({
             'status': 'unhealthy',
             'error': str(e)
-        }), 503
+        }), HTTP_SERVICE_UNAVAILABLE
 
 
 @api_bp.route("/api/models", methods=['GET'])
@@ -58,7 +62,7 @@ def get_models():
         return jsonify({
             'status': 'error',
             'error': str(e)
-        }), 500
+        }), HTTP_SERVER_ERROR
 
 
 @api_bp.route("/api/models/<model_code>", methods=['GET'])
@@ -72,7 +76,7 @@ def get_model(model_code):
             return jsonify({
                 'status': 'error',
                 'error': f'Model not found: {model_code}'
-            }), 404
+            }), HTTP_NOT_FOUND
         
         # Get sensors for this model
         sensors = data_fetcher.get_sensors_for_model(model_code)
@@ -87,7 +91,7 @@ def get_model(model_code):
         return jsonify({
             'status': 'error',
             'error': str(e)
-        }), 500
+        }), HTTP_SERVER_ERROR
 
 
 @api_bp.route("/api/sensors", methods=['GET'])
@@ -100,11 +104,31 @@ def get_sensors():
         if model_code:
             sensors = data_fetcher.get_sensors_for_model(model_code)
         else:
-            # TODO: Implement get all sensors
-            return jsonify({
-                'status': 'error',
-                'error': 'Please provide model_code parameter'
-            }), 400
+            # Get all active sensors from database
+            try:
+                with data_fetcher.db.session_scope() as session:
+                    from database.models import MasSensor
+                    sensors_query = session.query(MasSensor).filter(
+                        MasSensor.is_active == True,
+                        MasSensor.status == 'active'
+                    ).all()
+                    
+                    sensors = [{
+                        'id': s.id,
+                        'code': s.code,
+                        'name': s.name,
+                        'parameter': s.parameter,
+                        'unit': s.unit,
+                        'device_code': s.mas_device_code,
+                        'model_code': s.mas_model_code,
+                        'forecasting_status': s.forecasting_status
+                    } for s in sensors_query]
+            except Exception as e:
+                logger.error(f"Error fetching all sensors: {e}")
+                return jsonify({
+                    'status': 'error',
+                    'error': 'Failed to fetch sensors. Please provide model_code parameter.'
+                }), HTTP_BAD_REQUEST
         
         return jsonify({
             'status': 'success',
@@ -116,7 +140,7 @@ def get_sensors():
         return jsonify({
             'status': 'error',
             'error': str(e)
-        }), 500
+        }), HTTP_SERVER_ERROR
 
 
 @api_bp.route("/api/predict", methods=['POST'])
@@ -156,7 +180,7 @@ def predict():
             })
         
         if result.get('status') == 'error':
-            return jsonify(result), 500
+            return jsonify(result), HTTP_SERVER_ERROR
         
         return jsonify(result)
         
@@ -165,7 +189,7 @@ def predict():
         return jsonify({
             'status': 'error',
             'error': str(e)
-        }), 500
+        }), HTTP_SERVER_ERROR
 
 
 @api_bp.route("/api/predict/<model_code>", methods=['POST'])
@@ -176,7 +200,7 @@ def predict_model(model_code):
         result = prediction_service.predict_for_model(model_code)
         
         if result.get('status') == 'error':
-            return jsonify(result), 500
+            return jsonify(result), HTTP_SERVER_ERROR
         
         return jsonify(result)
         
@@ -185,7 +209,7 @@ def predict_model(model_code):
         return jsonify({
             'status': 'error',
             'error': str(e)
-        }), 500
+        }), HTTP_SERVER_ERROR
 
 
 @api_bp.route("/api/sensors/<sensor_code>/predict", methods=['POST'])
@@ -196,7 +220,7 @@ def predict_sensor(sensor_code):
         result = prediction_service.predict_for_sensor(sensor_code)
         
         if result.get('status') == 'error':
-            return jsonify(result), 500
+            return jsonify(result), HTTP_SERVER_ERROR
         
         return jsonify(result)
         
@@ -205,7 +229,7 @@ def predict_sensor(sensor_code):
         return jsonify({
             'status': 'error',
             'error': str(e)
-        }), 500
+        }), HTTP_SERVER_ERROR
 
 
 @api_bp.errorhandler(404)
@@ -214,7 +238,7 @@ def not_found(error):
     return jsonify({
         'status': 'error',
         'error': 'Endpoint not found'
-    }), 404
+    }), HTTP_NOT_FOUND
 
 
 @api_bp.errorhandler(500)
@@ -224,5 +248,5 @@ def internal_error(error):
     return jsonify({
         'status': 'error',
         'error': 'Internal server error'
-    }), 500
+    }), HTTP_SERVER_ERROR
 

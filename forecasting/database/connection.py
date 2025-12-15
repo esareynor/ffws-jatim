@@ -6,7 +6,9 @@ from sqlalchemy import create_engine, text, pool
 from sqlalchemy.orm import sessionmaker, scoped_session
 from contextlib import contextmanager
 import logging
-from config.settings import DB_URL, DB_CONFIG
+from config.settings import (
+    DB_URL, DB_CONFIG, DB_POOL_SIZE, DB_POOL_MAX_OVERFLOW, DB_POOL_RECYCLE
+)
 
 logger = logging.getLogger(__name__)
 
@@ -31,10 +33,10 @@ class DatabaseConnection:
             self._engine = create_engine(
                 DB_URL,
                 poolclass=pool.QueuePool,
-                pool_size=5,
-                max_overflow=10,
+                pool_size=DB_POOL_SIZE,
+                max_overflow=DB_POOL_MAX_OVERFLOW,
                 pool_pre_ping=True,  # Verify connections before using
-                pool_recycle=3600,   # Recycle connections after 1 hour
+                pool_recycle=DB_POOL_RECYCLE,  # Recycle connections after configured time
                 echo=False
             )
             
@@ -44,6 +46,7 @@ class DatabaseConnection:
             )
             
             logger.info(f"Database connection initialized: {DB_CONFIG['database']}@{DB_CONFIG['host']}")
+            logger.info(f"Pool config: size={DB_POOL_SIZE}, max_overflow={DB_POOL_MAX_OVERFLOW}, recycle={DB_POOL_RECYCLE}s")
         except Exception as e:
             logger.error(f"Failed to initialize database connection: {e}")
             raise

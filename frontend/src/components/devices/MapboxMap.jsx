@@ -1,21 +1,10 @@
-// src/components/devices/MapboxMap.jsx
-
 import React, { useEffect, useRef, useState, lazy, Suspense } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { fetchDevices } from "../../services/devices";
 import { fetchDeviceGeoJSON } from "/src/services/MapGeo";
 import GoogleMapsSearchbar from "../common/GoogleMapsSearchbar";
-import {
-  REGION_ID_TO_DEVICE_ID,
-  DEVICE_ID_TO_COLOR,
-  getBBox,
-  getStatusColor,
-  getMarkerStyle,
-  getButtonStyleOverride,
-  getUptIdFromStationName,
-  extractKeywords,
-} from "./mapUtils";
+import { REGION_ID_TO_DEVICE_ID, DEVICE_ID_TO_COLOR, getBBox, getStatusColor, getMarkerStyle, getButtonStyleOverride, getUptIdFromStationName, extractKeywords, } from "./mapUtils";
 
 const MapTooltip = lazy(() => import("./maptooltip"));
 const FilterPanel = lazy(() => import("/src/components/common/FilterPanel.jsx"));
@@ -37,14 +26,8 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
   const [currentStationIndex, setCurrentStationIndex] = useState(0);
   const [selectedStationCoords, setSelectedStationCoords] = useState(null);
   const [activeLayers, setActiveLayers] = useState({
-    rivers: false,
-    'flood-risk': false,
-    rainfall: false,
-    administrative: false,
-    'pos-hujan-ws-bengawan-solo': false,
-    'pos-duga-air-ws-bengawan-solo': false,
-    'pos-duga-air-ws-brantas-pjt1': false,
-    'Hujan Jam-Jam an PU SDA': false,
+    rivers: false, 'flood-risk': false, rainfall: false, administrative: false,
+    'Hujan Jam-Jam an PU SDA': false, 'Pos Duga Air Jam-Jam an PU SDA': false,
   });
   const [regionLayers, setRegionLayers] = useState({});
   const [administrativeGeojson, setAdministrativeGeojson] = useState(null);
@@ -60,9 +43,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
       try {
         const devicesData = await fetchDevices();
         setDevices(devicesData);
-      } catch (error) {
-        console.error("Failed to fetch devices:", error);
-      }
+      } catch (error) { console.error("Failed to fetch devices:", error); }
     };
     loadDevices();
   }, []);
@@ -102,13 +83,10 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
 
   const handleRegionLayerToggle = async (regionId, isActive) => {
     if (!map.current || !mapLoaded) return;
-
     const deviceId = REGION_ID_TO_DEVICE_ID[regionId];
     if (deviceId === undefined) return;
-
     const sourceId = `region-${regionId}`;
     const layerId = `region-${regionId}-fill`;
-
     if (isActive) {
       try {
         const geojson = await fetchDeviceGeoJSON(deviceId);
@@ -116,23 +94,13 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
           setActiveLayers(prev => ({ ...prev, [regionId]: false }));
           return;
         }
-
         if (map.current.getLayer(layerId)) map.current.removeLayer(layerId);
         if (map.current.getSource(sourceId)) map.current.removeSource(sourceId);
-
         map.current.addSource(sourceId, { type: 'geojson', data: geojson });
-
         map.current.addLayer({
-          id: layerId,
-          type: 'fill',
-          source: sourceId,
-          paint: {
-            'fill-color': DEVICE_ID_TO_COLOR[deviceId] || '#6B7280',
-            'fill-opacity': 0.5,
-            'fill-outline-color': '#4B5563'
-          }
+          id: layerId, type: 'fill', source: sourceId,
+          paint: { 'fill-color': DEVICE_ID_TO_COLOR[deviceId] || '#6B7280', 'fill-opacity': 0.5, 'fill-outline-color': '#4B5563' }
         });
-
         const clickHandler = (e) => {
           try {
             const features = e.features || [];
@@ -142,23 +110,17 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
             if (isFinite(bbox[0][0]) && isFinite(bbox[1][0])) {
               map.current.fitBounds(bbox, { padding: 60, maxZoom: 12, duration: 800 });
             }
-          } catch (err) {
-            console.error('Error on region click handler:', err);
-          }
+          } catch (err) { console.error('Error on region click handler:', err); }
         };
-
         const mouseEnterHandler = () => { if (map.current) map.current.getCanvas().style.cursor = 'pointer'; };
         const mouseLeaveHandler = () => { if (map.current) map.current.getCanvas().style.cursor = ''; };
-
         map.current.on('click', layerId, clickHandler);
         map.current.on('mouseenter', layerId, mouseEnterHandler);
         map.current.on('mouseleave', layerId, mouseLeaveHandler);
-
         setRegionLayers(prev => ({
           ...prev,
           [regionId]: { sourceId, layerId, deviceId, geojson, clickHandler, mouseEnterHandler, mouseLeaveHandler }
         }));
-
       } catch (e) {
         console.error(`❌ Gagal muat GeoJSON dari API untuk device ID ${deviceId}:`, e);
         setActiveLayers(prev => ({ ...prev, [regionId]: false }));
@@ -203,9 +165,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         center: [112.5, -7.5],
         zoom: 8
       });
-
       if (typeof window !== 'undefined') window.mapboxMap = map.current;
-
       map.current.addControl(new mapboxgl.ScaleControl(), "bottom-left");
       map.current.on("zoom", () => map.current && setZoomLevel(map.current.getZoom()));
       map.current.on('load', () => setMapLoaded(true));
@@ -215,7 +175,6 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
 
   useEffect(() => {
     if (!map.current || !tickerData || !devices.length) return;
-
     markersRef.current.forEach(marker => marker?.remove?.());
     markersRef.current = [];
 
@@ -243,7 +202,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
 
     const brantasKeywords = extractKeywords(awlrBrantasList);
     const bengawanKeywords = extractKeywords(awlrBengawanSoloList);
-    const arrBrantasKeywords = extractKeywords(arrBrantasList);
+    const arrBrantasListKeywords = extractKeywords(arrBrantasList);
 
     tickerData.forEach(station => {
       const coordinates = getStationCoordinates(station.name);
@@ -259,12 +218,15 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
       const isDoubleQuotedName = /^".*"$/.test(nameTrim);
       const isHujanJamJamStation = isDoubleQuotedName;
 
+      // --- PERUBAHAN UNTUK POS DUGA AIR ---
       const isPosDugaJamJamActive = (!!activeLayers['Pos Duga Air Jam-Jam an PU SDA']) ||
         Object.keys(activeLayers).some(k => k.toLowerCase().includes('pos-duga') && activeLayers[k]);
-      const isSingleQuotedName = /^'.*'$/.test(nameTrim);
+
+      const isPosDugaJamJamStation = station.name.toLowerCase().includes('awlr');
+      // --- AKHIR PERUBAHAN ---
 
       const isHujanBrantasActive = activeLayers['pos-hujan-ws-brantas-pjt1'];
-      const isARRBrantasStation = arrBrantasKeywords.some(keyword =>
+      const isARRBrantasStation = arrBrantasListKeywords.some(keyword =>
         station.name.toLowerCase().includes(keyword.toLowerCase())
       );
 
@@ -280,8 +242,8 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
 
       const isAnyUptActive = Object.keys(activeLayers).some(key => key.startsWith('upt-') && activeLayers[key]);
 
-      const activeRegionIds = Object.keys(activeLayers).filter(k => k.startsWith('ws-') && activeLayers[k]);
-      if (activeRegionIds.length > 0) return;
+      const activeRegionIds = Object.keys(activeLayers).some(k => k.startsWith('ws-') && activeLayers[k]);
+      if (activeRegionIds) return;
 
       let shouldShowMarker = false;
 
@@ -289,7 +251,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         shouldShowMarker = true;
       } else if (isHujanJamJamActive && isHujanJamJamStation) {
         shouldShowMarker = true;
-      } else if (isPosDugaJamJamActive && isSingleQuotedName) {
+      } else if (isPosDugaJamJamActive && isPosDugaJamJamStation) {
         shouldShowMarker = true;
       } else if (isHujanBrantasActive && isARRBrantasStation) {
         shouldShowMarker = true;
@@ -316,6 +278,17 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
           isDugaAirBengawanSoloActive,
           isBengawanSoloPJT1Active,
         });
+
+        // --- MODIFIKASI TAMBAHAN UNTUK UKURAN & IKON PIN ---
+        let iconToUse = override?.icon || markerStyle.icon;
+        let size = { width: 24, height: 24 }; // Ukuran default
+
+        if (isPosDugaJamJamActive && isPosDugaJamJamStation) {
+          // Ganti ikon dan ukuran jika layer 'Pos Duga Air...' aktif
+          iconToUse = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${bgColor}" stroke="white" stroke-width="1.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>`;
+          size = { width: 20, height: 24 }; // Lebih kecil
+        }
+
         const borderColor = override?.color || markerStyle.color;
         const overrideBg = override?.color || bgColor;
         let borderRadiusVal = '50%';
@@ -329,8 +302,8 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
 
         markerEl.style.cssText = `
           position: absolute;
-          width: 24px; 
-          height: 24px; 
+          width: ${size.width}px; 
+          height: ${size.height}px; 
           border-radius: ${borderRadiusVal}; 
           background-color: ${overrideBg}; 
           border: 2px solid ${borderColor}; 
@@ -342,8 +315,8 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
           z-index: 1;
           transform: translate(-50%, -50%)${extraTransform};
         `;
-        
-        markerEl.innerHTML = override?.icon || markerStyle.icon;
+
+        markerEl.innerHTML = iconToUse;
 
         if (station.status === "alert") {
           const pulseEl = document.createElement("div");
@@ -519,16 +492,13 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     return () => { if (map.current) map.current.off('click', administrativeLayerId, handleClick); };
   }, [mapLoaded, activeLayers.administrative]);
 
-  const handleSearch = (query, coords) => {
-    console.log("Pencarian berhasil:", query, coords);
-  };
+  const handleSearch = (query, coords) => { console.log("Pencarian berhasil:", query, coords); };
 
   const showFilter = showFilterSidebar && !activeLayers['legenda-peta'];
 
   return (
     <div className="w-full h-screen overflow-hidden relative z-0">
       <div ref={mapContainer} className="w-full h-full relative z-0" />
-      
       {mapLoaded && map.current ? (
         <GoogleMapsSearchbar
           mapboxMap={map.current}
@@ -542,7 +512,6 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
           <span className="text-sm text-gray-500">Memuat peta...</span>
         </div>
       )}
-
       {showFilter && (
         <Suspense fallback={null}>
           <FilterPanel
@@ -558,7 +527,6 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
           />
         </Suspense>
       )}
-
       <style>{`
         @keyframes alert-pulse { 
           0% { transform: scale(1); opacity: 0.7; } 
@@ -568,7 +536,6 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         .mapboxgl-popup-content { border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .coordinates-popup .mapboxgl-popup-content { padding: 0; }
       `}</style>
-
       <Suspense fallback={null}>
         <MapTooltip 
           map={map.current} 
@@ -579,7 +546,6 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
           onClose={handleCloseTooltip} 
         />
       </Suspense>
-
       <div className="absolute top-4 right-4 z-[80]">
         <button
           onClick={() => setShowFilterSidebar(true)}

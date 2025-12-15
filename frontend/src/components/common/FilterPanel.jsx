@@ -1,5 +1,3 @@
-// src/components/FilterPanel.jsx
-
 import React, { useEffect, useState } from "react";
 import { Sliders, ToggleRight, Layers, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 
@@ -21,10 +19,8 @@ const FilterPanel = ({
   autoSwitchMode = 'station',
 }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [showLayers, setShowLayers] = useState(false); // ✅ Collapsible Map Layers
-  const [showLegend, setShowLegend] = useState(false); // ✅ Collapsible Legenda Peta
-
-  // ✅ Tambahkan state untuk section baru
+  const [showLayers, setShowLayers] = useState(false);
+  const [showLegend, setShowLegend] = useState(false);
   const [showPetaGenangan, setShowPetaGenangan] = useState(false);
   const [showKabupatenKota, setShowKabupatenKota] = useState(false);
   const [showWilayahSungai, setShowWilayahSungai] = useState(false);
@@ -41,24 +37,18 @@ const FilterPanel = ({
     if (isOpen) {
       const t = setTimeout(() => setIsVisible(true), 10);
       return () => clearTimeout(t);
-    } else {
-      setIsVisible(false);
-    }
+    } else setIsVisible(false);
   }, [isOpen]);
 
-  // ✅ Hanya kirim layerId
   const handleLayerToggle = (layerId) => {
     console.log("🖱️ Klik layer di FilterPanel:", layerId);
-    if (typeof onLayerToggle === 'function') {
-      onLayerToggle(layerId);
-    }
+    if (typeof onLayerToggle === 'function') onLayerToggle(layerId);
   };
 
   if (!isOpen) return null;
 
   return (
     <>
-      {/* Tombol buka filter */}
       <div className="absolute top-4 right-4 z-[80]">
         <button
           onClick={(e) => {
@@ -76,7 +66,6 @@ const FilterPanel = ({
         </button>
       </div>
 
-      {/* Panel Filter */}
       <div
         className={`fixed rounded-tl-lg rounded-bl-lg top-20 right-0 h-[calc(80%-8%)] ${widthClass} bg-white shadow-2xl z-[1000] transform transition-all duration-300 ease-in-out flex flex-col ${
           isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
@@ -87,7 +76,6 @@ const FilterPanel = ({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="rounded-tl-lg flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50/50">
           <div className="flex items-center gap-2">
             <Sliders className="w-5 h-5 text-blue-600" />
@@ -113,11 +101,9 @@ const FilterPanel = ({
           </button>
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-4">
-          {/* SECTION 1: MAP LAYERS */}
+          {/* Map Layers */}
           <section className="mt-4 space-y-4">
-            {/* Header Map Layers + Panah */}
             <div
               onClick={() => setShowLayers(!showLayers)}
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
@@ -133,7 +119,6 @@ const FilterPanel = ({
               )}
             </div>
 
-            {/* Isi Layers — MUNCUL SAAT showLayers = true */}
             {showLayers && (
               <div className="pl-4 pt-2 pb-4 space-y-3">
                 {[
@@ -171,15 +156,13 @@ const FilterPanel = ({
             )}
           </section>
 
-          {/* SECTION 2: LEGENDA PETA */}
+          {/* Legenda Peta */}
           <section className="mt-4 space-y-4">
-            {/* Header Legenda Peta + Panah */}
             <div
               onClick={() => setShowLegend(!showLegend)}
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
             >
               <div className="flex items-center gap-2">
-                {/* Ikon legenda (distinct) */}
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <rect x="3" y="4" width="18" height="3" rx="1" stroke="currentColor" />
                   <rect x="3" y="10.5" width="14" height="3" rx="1" stroke="currentColor" />
@@ -194,10 +177,8 @@ const FilterPanel = ({
               )}
             </div>
 
-            {/* Isi Legenda Peta — MUNCUL SAAT showLegend = true */}
             {showLegend && (
               <div className="pl-4 pt-2 pb-4 space-y-3">
-                {/* Data Master */}
                 <div>
                   <div className="font-medium text-xs text-gray-600 mb-1">Data Master</div>
                   <div className="space-y-1 pl-2">
@@ -249,14 +230,13 @@ const FilterPanel = ({
             )}
           </section>
 
-          {/* SECTION 10: POS HUJAN */}
+          {/* Pos Hujan */}
           <section className="mt-4 space-y-4">
             <div
               onClick={() => setShowPosHujan(!showPosHujan)}
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
             >
               <div className="flex items-center gap-2">
-                {/* Icon: cloud + rain */}
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" strokeWidth="1.6">
                   <path d="M20 16.58A4 4 0 0 0 16 12h-1.26A6 6 0 1 0 6 17" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
                   <path d="M8 19v2M12 19v2M16 19v2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
@@ -273,8 +253,6 @@ const FilterPanel = ({
             {showPosHujan && (
               <div className="pl-4 pt-2 pb-4 space-y-2">
                 {[
-                  { id: "pos-hujan-ws-brantas-pjt1", name: "Pos Hujan WS Brantas PJT 1", color: "#FF6347" },
-                  { id: "pos-hujan-ws-bengawan-solo", name: "Pos Hujan WS Bengawan Solo PJT 1", color: "#FFA500" },
                   { id: "Hujan Jam-Jam an PU SDA", name: "Hujan Jam-Jam an PU SDA", color: "#FF6347" },
                 ].map((item) => (
                   <div
@@ -282,7 +260,6 @@ const FilterPanel = ({
                     className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      {/* droplet icon per-item */}
                       <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M12 2C12 2 7 8 7 12.5C7 16.6421 9.85786 19.5 14 19.5C18.1421 19.5 21 16.6421 21 12.5C21 8 16.001 2 16.001 2H12Z" fill={item.color}/>
                       </svg>
@@ -308,14 +285,13 @@ const FilterPanel = ({
             )}
           </section>
 
-          {/* SECTION 11: POS DUGA AIR */}
+          {/* Pos Duga Air */}
           <section className="mt-4 space-y-4">
             <div
               onClick={() => setShowPosDugaAir(!showPosDugaAir)}
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
             >
               <div className="flex items-center gap-2">
-                {/* Icon: water gauge / beaker-like */}
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" strokeWidth="1.6">
                   <path d="M8 2h8l-1 6a4 4 0 0 1-6 0L8 2z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
                   <path d="M6 9v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
@@ -332,8 +308,6 @@ const FilterPanel = ({
             {showPosDugaAir && (
               <div className="pl-4 pt-2 pb-4 space-y-2">
                 {[
-                  { id: "pos-duga-air-ws-brantas-pjt1", name: "Pos Duga Air WS Brantas PJT 1", color: "#FF6347" },
-                  { id: "pos-duga-air-ws-bengawan-solo", name: "Pos Duga Air WS Bengawan Solo PJT 1", color: "#FFA500" },
                   { id: "pos-duga-air-jam-jam-an", name: "Pos Duga Air Jam-jam an PU SDA", color: "#008080" },
                 ].map((item) => (
                   <div
@@ -341,7 +315,6 @@ const FilterPanel = ({
                     className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      {/* small square indicator */}
                       <span className="w-3 h-3" style={{ backgroundColor: item.color, borderRadius: 4 }}></span>
                       <span className="text-xs text-gray-700">{item.name}</span>
                     </div>
@@ -377,7 +350,6 @@ const FilterPanel = ({
           </div>
         </div>
 
-        {/* Footer */}
         <div className="rounded-bl-lg border-t border-gray-200 p-4 bg-gray-50/50">
           <div className="flex items-center justify-between text-xs text-gray-500">
             <span>Map Layer Control</span>

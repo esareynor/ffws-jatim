@@ -151,7 +151,7 @@ const GoogleMapsSearchbar = ({
 
     return (
         <div
-            className={`fixed top-4 z-[70] transition-all duration-300 ease-in-out ${
+            className={`fixed top-5 z-[70] transition-all duration-300 ease-in-out ${
                 isSidebarOpen ? "left-4 transform translate-x-0" : "left-4 transform translate-x-0"
             }`}
         >

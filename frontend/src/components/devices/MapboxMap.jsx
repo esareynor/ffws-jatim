@@ -662,36 +662,7 @@ const MapboxMap = ({ tickerData, onStationSelect }) => {
         />
       </Suspense>
 
-      <div className="absolute top-4 right-4 z-[80] flex gap-2">
-        <button
-          onClick={() => setShowZoomDebug(!showZoomDebug)}
-          className={`relative inline-flex items-center justify-center w-12 h-12 rounded-full transition-colors shadow-md ${
-            showZoomDebug ? "bg-green-500 text-white" : "bg-white hover:bg-green-50 text-green-600"
-          }`}
-          title="Toggle Zoom Debug Mode"
-          aria-label="Zoom Debug"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="relative z-10 w-6 h-6">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            <line x1="11" y1="8" x2="11" y2="14"></line>
-            <line x1="8" y1="11" x2="14" y2="11"></line>
-          </svg>
-        </button>
-
-        <button
-          onClick={() => setShowDebugger(true)}
-          className="relative inline-flex items-center justify-center w-12 h-12 rounded-full bg-white hover:bg-purple-50 transition-colors shadow-md"
-          title="Debug Koordinat Station"
-          aria-label="Debug Koordinat"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="relative z-10 w-6 h-6 text-purple-600">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="16" x2="12" y2="12"></line>
-            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-          </svg>
-        </button>
-
+      <div className="absolute top-5 right-4 z-[80] flex gap-2">
         <button
           onClick={() => setShowFilterSidebar(true)}
           className="relative inline-flex items-center justify-center w-12 h-12 rounded-full bg-white hover:bg-blue-50 transition-colors shadow-md"
@@ -776,12 +747,6 @@ const MapboxMap = ({ tickerData, onStationSelect }) => {
       )}
 
       <Suspense fallback={null}>
-        <CoordinateDebugger
-          tickerData={tickerData}
-          devices={devices}
-          isVisible={showDebugger}
-          onClose={() => setShowDebugger(false)}
-        />
       </Suspense>
     </div>
   );

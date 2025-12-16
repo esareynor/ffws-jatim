@@ -135,17 +135,18 @@
 
     <!-- Assignments Tab -->
     <div x-show="activeTab === 'assignments'" x-cloak>
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-            <!-- Toolbar -->
-            <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                <div class="flex items-center space-x-4">
-                    <input type="text" x-model="assignmentSearch" placeholder="Search sensor..."
-                        class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
-                </div>
+        <x-admin.card title="Sensor Assignments">
+            <x-slot:actions>
                 <x-admin.button type="button" variant="primary" @click="openAssignmentModal()">
                     <i class="fas fa-plus mr-2"></i>
                     Assign Template
                 </x-admin.button>
+            </x-slot:actions>
+            
+            <!-- Toolbar -->
+            <div class="mb-4 flex items-center space-x-4">
+                <input type="text" x-model="assignmentSearch" placeholder="Search sensor..."
+                    class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
             </div>
 
             <!-- Assignments Table -->
@@ -215,7 +216,7 @@
                     Create Assignment
                 </x-admin.button>
             </div>
-        </div>
+        </x-admin.card>
     </div>
 
     <!-- Template Modal -->

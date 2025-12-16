@@ -28,6 +28,41 @@ class ProvinceController extends Controller
 
         $provinces = $query->orderBy('provinces_name', 'asc')->paginate($perPage);
 
+        // Prepare table headers
+        $tableHeaders = [
+            ['key' => 'provinces_code', 'label' => 'Kode', 'sortable' => true],
+            ['key' => 'provinces_name', 'label' => 'Nama Provinsi', 'sortable' => true],
+            ['key' => 'formatted_cities_count', 'label' => 'Jumlah Kota'],
+            ['key' => 'actions', 'label' => 'Aksi', 'format' => 'actions']
+        ];
+
+        // Transform data for table component
+        $provinces->getCollection()->transform(function ($province) {
+            $province->formatted_cities_count = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">'
+                . $province->cities_count . ' kota</span>';
+
+            $province->actions = [
+                [
+                    'type' => 'edit',
+                    'label' => 'Edit',
+                    'url' => '#',
+                    'icon' => 'edit',
+                    'color' => 'blue',
+                    'onclick' => "window.dispatchEvent(new CustomEvent('open-edit-province', { detail: " . json_encode($province) . " }))"
+                ],
+                [
+                    'type' => 'delete',
+                    'label' => 'Hapus',
+                    'url' => route('admin.region.provinces.destroy', $province->id),
+                    'icon' => 'trash',
+                    'color' => 'red',
+                    'method' => 'DELETE',
+                    'confirm' => 'Apakah Anda yakin ingin menghapus provinsi ini?'
+                ]
+            ];
+            return $province;
+        });
+
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -35,7 +70,7 @@ class ProvinceController extends Controller
             ]);
         }
 
-        return view('admin.region.provinces.index', compact('provinces'));
+        return view('admin.region.provinces.index', compact('provinces', 'tableHeaders'));
     }
 
     /**

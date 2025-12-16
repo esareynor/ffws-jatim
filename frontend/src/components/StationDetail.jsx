@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLocationDot } from '@fortawesome/free-solid-svg-icons';
 import { getStatusColor, getStatusBgColor, getStatusText } from "@/utils/statusUtils";
+import { fetchDataActualsBySensor } from "../services/dataActuals";
+import { fetchDevice } from "../services/devices";
 
 const StationDetail = ({
     selectedStation,
@@ -19,6 +21,8 @@ const StationDetail = ({
     const [isMobile, setIsMobile] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [dragOffset, setDragOffset] = useState(0);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [dataSource, setDataSource] = useState(null); // 'data-actuals' | 'fallback' | 'ticker'
 
     // Detect mobile screen size
     useEffect(() => {
@@ -45,12 +49,135 @@ const StationDetail = ({
         }
     }, [selectedStation]);
 
+    // Reusable fetch function that enriches station data from per-sensor DataActuals.
+    const fetchStationSensors = async (foundStation, { showWarnings = false, signal } = {}) => {
+        if (!foundStation) return null;
+        setIsRefreshing(true);
+        setDataSource(null);
+
+        try {
+            let sensors = (foundStation.sensors || []).slice();
+
+            // Jika tidak ada sensors pada tickerData, coba fetch detail device (backend devices/:id)
+            if (!sensors || sensors.length === 0) {
+                try {
+                    const deviceDetail = await fetchDevice(foundStation.id);
+                    sensors = deviceDetail?.sensors || [];
+                } catch (deviceErr) {
+                    console.warn('fetchDevice failed for', foundStation.id, deviceErr?.message || deviceErr);
+                    sensors = [];
+                }
+            }
+
+            // Jika tetap tidak ada sensors, buat synthetic sensor berdasarkan device (fallback)
+            if (!sensors || sensors.length === 0) {
+                sensors = [
+                    {
+                        name: foundStation.name,
+                        parameter: 'water_level',
+                        type: 'water_level',
+                        code: undefined,
+                        value: foundStation.value,
+                        unit: foundStation.unit || 'm',
+                        lastUpdate: null,
+                    },
+                ];
+            }
+
+            const promises = sensors.map(async (sensor) => {
+                const sensorCode = sensor.code || sensor.sensor_code || sensor.id;
+
+                // If no sensor code (synthetic/fallback), just return sensor with device name
+                if (!sensorCode) return { ...sensor, name: foundStation.name };
+
+                try {
+                    const resp = await fetchDataActualsBySensor(sensorCode, { per_page: 1, sort_by: 'created_at', sort_order: 'desc' });
+                    if (signal?.aborted) throw new Error('aborted');
+                    const list = resp?.data || resp || [];
+                    const latest = Array.isArray(list) ? list[0] : list;
+                    if (latest) {
+                        return {
+                            ...sensor,
+                            name: foundStation.name,
+                            value: latest.value ?? latest.nilai ?? sensor.value,
+                            unit: latest.unit ?? sensor.unit,
+                            lastUpdate: latest.created_at ?? latest.updated_at ?? sensor.lastUpdate,
+                            status: latest.status ?? sensor.status,
+                        };
+                    }
+                } catch (err) {
+                    console.warn('Per-sensor fetch failed for', sensorCode, err?.message || err);
+                }
+
+                return { ...sensor, name: foundStation.name };
+            });
+
+            let sensorsUpdated = await Promise.all(promises);
+
+            // If station is an ARR station, map water sensors to rainfall
+            const stationNameUpper = (foundStation.name || '').trim().toUpperCase();
+            const isARRStation = stationNameUpper.startsWith('ARR') || stationNameUpper.includes(' ARR');
+
+            if (isARRStation) {
+                sensorsUpdated = sensorsUpdated.map((s) => {
+                    const nameLower = (s.name || '').toLowerCase();
+                    const typeLower = (s.type || '').toLowerCase();
+                    const isWaterSensor = s.parameter === 'water_level' || nameLower.includes('water') || typeLower.includes('water') || nameLower.includes('air');
+                    if (isWaterSensor) {
+                        // ARR: treat as rainfall (mm) and set elevation values to 0 as backend stores 0
+                        return { ...s, parameter: 'rainfall', type: 'rainfall', unit: 'mm', value: 0 };
+                    }
+                    // For other sensors, ensure unit is set to mm for ARR (optional; keep existing if present)
+                    return { ...s, unit: s.unit || 'mm' };
+                });
+            }
+
+            // Determine if at least one sensor had a fresh value (heuristic)
+            const hadFresh = sensorsUpdated.some((s, i) => {
+                const orig = (foundStation.sensors || [])[i] || {};
+                return s.value !== undefined && s.value !== orig.value;
+            });
+
+            const waterSensor = sensorsUpdated.find((s) => (
+                s.parameter === 'water_level' || s.parameter === 'rainfall' ||
+                (s.name && (s.name.toLowerCase().includes('water') || s.name.toLowerCase().includes('rain') || s.name.toLowerCase().includes('hujan'))) ||
+                (s.type && (s.type.toLowerCase().includes('water') || s.type.toLowerCase().includes('rain') || s.type.toLowerCase().includes('hujan')))
+            )) || sensorsUpdated[0];
+
+            // For ARR stations the elevation/value should be zero and unit mm
+            const valueNum = isARRStation ? 0 : (waterSensor ? parseFloat(waterSensor.value) : parseFloat(foundStation.value));
+
+            const newStation = {
+                ...foundStation,
+                sensors: sensorsUpdated,
+                value: Number.isFinite(valueNum) ? valueNum : (foundStation.value ?? null),
+                unit: isARRStation ? 'mm' : (waterSensor?.unit || foundStation.unit),
+            };
+
+            setStationData(newStation);
+            setDataSource(hadFresh ? 'data-actuals' : 'ticker');
+            return newStation;
+        } catch (e) {
+            console.error('fetchStationSensors failed:', e);
+            if (showWarnings) setDataSource('fallback');
+            const sensorsRenamed = (foundStation.sensors || []).map((s) => ({ ...s, name: foundStation.name }));
+            const fallbackStation = { ...foundStation, sensors: sensorsRenamed };
+            setStationData(fallbackStation);
+            return fallbackStation;
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
     useEffect(() => {
         if (selectedStation && tickerData) {
             const foundStation = tickerData.find((station) => station.id === selectedStation.id);
-            if (foundStation) {
-                setStationData(foundStation);
-            }
+            if (!foundStation) return;
+
+            const controller = new AbortController();
+            fetchStationSensors(foundStation, { signal: controller.signal }).catch((e) => console.warn(e));
+
+            return () => controller.abort();
         }
     }, [selectedStation, tickerData]);
 
@@ -267,8 +394,11 @@ const StationDetail = ({
                             </p>
                         </div>
                         <div className="text-right">
-                            <p className="text-3xl font-bold text-gray-600">{stationData.value.toFixed(1)} {stationData.unit}</p>
-                            {/* <p className="text-sm text-gray-500">{stationData.unit}</p> */}
+                            <p className="text-3xl font-bold text-gray-600">{typeof stationData.value === 'number' ? stationData.value.toFixed(1) : (stationData.value ?? '-')} {stationData.unit}</p>
+                            {/* Source indicator */}
+                            <p className="text-xs text-gray-500 mt-1">
+                                Sumber: {(dataSource === 'data-actuals' ? (<span className="text-green-600 font-medium">DataActuals</span>) : dataSource === 'fallback' ? (<span className="text-yellow-600 font-medium">Fallback</span>) : (<span className="text-gray-500">Ticker</span>))}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -293,9 +423,32 @@ const StationDetail = ({
                             </svg>
                             Informasi Sensor
                         </h3>
-                        <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
-                            {stationData.sensors ? stationData.sensors.length : 0} Sensor
-                        </span>
+                        <div className="flex items-center gap-2">
+                            <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
+                                {stationData.sensors ? stationData.sensors.length : 0} Sensor
+                            </span>
+
+                            <button
+                                onClick={async () => {
+                                    const foundStation = tickerData.find((s) => s.id === selectedStation.id);
+                                    if (!foundStation) return;
+                                    await fetchStationSensors(foundStation, { showWarnings: true });
+                                }}
+                                title="Refresh data sensor"
+                                className="inline-flex items-center justify-center w-9 h-9 rounded-md border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
+                            >
+                                {isRefreshing ? (
+                                    <svg className="animate-spin h-4 w-4 text-gray-600" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z"></path>
+                                    </svg>
+                                ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v6h6M20 20v-6h-6" />
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
                     </div>
                     
                     {stationData.sensors && stationData.sensors.length > 0 ? (

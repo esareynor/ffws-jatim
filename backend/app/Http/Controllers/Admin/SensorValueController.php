@@ -43,13 +43,112 @@ class SensorValueController extends Controller
             $query->where('mas_sensor_code', $sensorCode);
         }
 
-        $sensorValues = $query->orderBy('created_at', 'desc')->paginate($perPage);
+        $sensorValues = $query->orderBy('created_at', 'desc')->paginate($perPage)->appends(request()->query());
 
         $sensors = MasSensor::where('status', 'active')->get(['id', 'code', 'parameter']);
         $parameters = MasSensorParameter::all(['id', 'code', 'name']);
         $thresholds = MasSensorThresholdTemplate::where('is_active', true)->get(['id', 'code', 'name']);
 
-        return view('admin.sensor_values.index', compact('sensorValues', 'sensors', 'parameters', 'thresholds'));
+        // Prepare filter configuration
+        $filterConfig = [
+            [
+                'type' => 'text',
+                'name' => 'search',
+                'label' => 'Cari',
+                'placeholder' => 'Cari berdasarkan nama atau kode sensor...'
+            ],
+            [
+                'type' => 'select',
+                'name' => 'status',
+                'label' => 'Status',
+                'empty_option' => 'Semua Status',
+                'options' => [
+                    ['value' => 'active', 'label' => 'Active'],
+                    ['value' => 'inactive', 'label' => 'Inactive'],
+                    ['value' => 'fault', 'label' => 'Fault']
+                ]
+            ],
+            [
+                'type' => 'select',
+                'name' => 'sensor_code',
+                'label' => 'Sensor',
+                'empty_option' => 'Semua Sensor',
+                'options' => $sensors->map(function($sensor) {
+                    return [
+                        'value' => $sensor->code,
+                        'label' => $sensor->code . ' (' . $sensor->parameter . ')'
+                    ];
+                })->toArray()
+            ]
+        ];
+
+        // Prepare table headers
+        $tableHeaders = [
+            ['key' => 'formatted_sensor_name', 'label' => 'Sensor Name'],
+            ['key' => 'mas_sensor_code', 'label' => 'Sensor Code'],
+            ['key' => 'formatted_parameter', 'label' => 'Parameter'],
+            ['key' => 'sensor_unit', 'label' => 'Unit'],
+            ['key' => 'status', 'label' => 'Status', 'format' => 'status'],
+            ['key' => 'formatted_last_seen', 'label' => 'Last Seen'],
+            ['key' => 'actions', 'label' => 'Actions', 'format' => 'actions']
+        ];
+
+        // Format rows data
+        $sensorValues->getCollection()->transform(function ($value) {
+            // Format sensor name with icon
+            $iconHtml = '';
+            if ($value->sensor_icon_path) {
+                $iconHtml = '<img src="' . asset('storage/' . $value->sensor_icon_path) . '" class="h-8 w-8 rounded mr-3" alt="Icon">';
+            } else {
+                $iconHtml = '<div class="h-8 w-8 rounded bg-gray-200 dark:bg-gray-600 flex items-center justify-center mr-3"><i class="fa-solid fa-sensor text-gray-400"></i></div>';
+            }
+            
+            $statusBadge = $value->is_active 
+                ? '<span class="text-xs text-green-600 dark:text-green-400">Active</span>' 
+                : '<span class="text-xs text-gray-500 dark:text-gray-400">Inactive</span>';
+            
+            $value->formatted_sensor_name = '<div class="flex items-center">' . $iconHtml . '<div><div class="text-sm font-medium text-gray-900 dark:text-gray-100">' . ($value->sensor_name ?? 'N/A') . '</div>' . $statusBadge . '</div></div>';
+            
+            // Format parameter
+            $value->formatted_parameter = $value->sensorParameter ? $value->sensorParameter->name : '<span class="text-gray-400">-</span>';
+            
+            // Format last seen
+            $value->formatted_last_seen = $value->last_seen ? $value->last_seen->diffForHumans() : 'Never';
+            
+            // Format status for table component
+            // Keep original status values (active, inactive, fault) as they are supported by table component
+            $value->formatted_threshold_status = $value->status;
+            
+            // Format actions
+            $value->actions = [
+                [
+                    'label' => 'View',
+                    'icon' => 'eye',
+                    'url' => '#',
+                    'onclick' => 'viewDetail(' . $value->id . ')',
+                    'color' => 'gray'
+                ],
+                [
+                    'label' => 'Edit',
+                    'icon' => 'pen',
+                    'url' => '#',
+                    'onclick' => 'editValue(' . $value->id . ')',
+                    'color' => 'gray'
+                ],
+                [
+                    'label' => 'Delete',
+                    'icon' => 'trash',
+                    'url' => route('admin.sensor-values.destroy', $value->id),
+                    'method' => 'DELETE',
+                    'confirm' => 'Data yang dihapus tidak dapat dikembalikan. Lanjutkan?',
+                    'color' => 'red'
+                ]
+            ];
+            
+            return $value;
+        });
+
+        return view('admin.sensor_values.index', compact('sensorValues', 'sensors', 'parameters', 'thresholds', 'filterConfig', 'tableHeaders'));
     }
 
     /**

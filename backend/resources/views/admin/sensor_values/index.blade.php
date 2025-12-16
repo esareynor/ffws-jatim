@@ -7,140 +7,28 @@
 @section('content')
 <div class="space-y-6">
     <!-- Filter Section -->
-    <div class="bg-white rounded-lg shadow-sm p-6">
-        <form method="GET" action="{{ route('admin.sensor-values.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
-                <input type="text" name="search" value="{{ request('search') }}"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Search by name or sensor code...">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                <select name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    <option value="">All Status</option>
-                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
-                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
-                    <option value="fault" {{ request('status') == 'fault' ? 'selected' : '' }}>Fault</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Sensor</label>
-                <select name="sensor_code" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    <option value="">All Sensors</option>
-                    @foreach($sensors as $sensor)
-                        <option value="{{ $sensor->code }}" {{ request('sensor_code') == $sensor->code ? 'selected' : '' }}>
-                            {{ $sensor->code }} ({{ $sensor->parameter }})
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="flex items-end space-x-2">
-                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    <i class="fa-solid fa-search mr-2"></i>Filter
-                </button>
-                <a href="{{ route('admin.sensor-values.index') }}" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
-                    <i class="fa-solid fa-redo mr-2"></i>Reset
-                </a>
-            </div>
-        </form>
-    </div>
+    <x-filter-bar 
+        title="Filter & Pencarian Sensor Values"
+        :filters="$filterConfig"
+        :action="route('admin.sensor-values.index')"
+        gridCols="md:grid-cols-3"
+    />
 
     <!-- Table Section -->
-    <div class="bg-white rounded-lg shadow-sm">
-        <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-            <h3 class="text-lg font-semibold text-gray-900">Sensor Values List</h3>
-            <button type="button" onclick="openCreateModal()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                <i class="fa-solid fa-plus mr-2"></i>Add Sensor Value
-            </button>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sensor Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sensor Code</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parameter</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Seen</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($sensorValues as $value)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    @if($value->sensor_icon_path)
-                                        <img src="{{ asset('storage/' . $value->sensor_icon_path) }}" class="h-8 w-8 rounded mr-3" alt="Icon">
-                                    @else
-                                        <div class="h-8 w-8 rounded bg-gray-200 flex items-center justify-center mr-3">
-                                            <i class="fa-solid fa-sensor text-gray-400"></i>
-                                        </div>
-                                    @endif
-                                    <div>
-                                        <div class="text-sm font-medium text-gray-900">{{ $value->sensor_name ?? 'N/A' }}</div>
-                                        @if($value->is_active)
-                                            <span class="text-xs text-green-600">Active</span>
-                                        @else
-                                            <span class="text-xs text-gray-500">Inactive</span>
-                                        @endif
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                {{ $value->mas_sensor_code }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                @if($value->sensorParameter)
-                                    {{ $value->sensorParameter->name }}
-                                @else
-                                    <span class="text-gray-400">-</span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                {{ $value->sensor_unit ?? '-' }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                @if($value->status == 'active')
-                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>
-                                @elseif($value->status == 'inactive')
-                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>
-                                @else
-                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Fault</span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ $value->last_seen ? $value->last_seen->diffForHumans() : 'Never' }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                <button onclick="viewDetail({{ $value->id }})" class="text-blue-600 hover:text-blue-900 mx-1">
-                                    <i class="fa-solid fa-eye"></i>
-                                </button>
-                                <button onclick="editValue({{ $value->id }})" class="text-yellow-600 hover:text-yellow-900 mx-1">
-                                    <i class="fa-solid fa-edit"></i>
-                                </button>
-                                <button onclick="deleteValue({{ $value->id }})" class="text-red-600 hover:text-red-900 mx-1">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="px-6 py-12 text-center text-gray-500">
-                                <i class="fa-solid fa-inbox text-4xl mb-3 text-gray-300"></i>
-                                <p>No sensor values found.</p>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        <div class="px-6 py-4 border-t border-gray-200">
-            {{ $sensorValues->links() }}
-        </div>
-    </div>
+    <x-table
+        title="Daftar Sensor Values"
+        :headers="$tableHeaders"
+        :rows="$sensorValues"
+        searchable
+        searchPlaceholder="Cari sensor values..."
+    >
+        <x-slot:actions>
+            <x-admin.button type="button" variant="primary" onclick="openCreateModal()">
+                <i class="fa-solid fa-plus -ml-1 mr-2"></i>
+                Tambah Sensor Value
+            </x-admin.button>
+        </x-slot:actions>
+    </x-table>
 </div>
 
 <!-- Create/Edit Modal -->

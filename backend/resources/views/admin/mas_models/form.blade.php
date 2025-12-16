@@ -30,11 +30,11 @@
                 />
                 <x-admin.form-input 
                     type="select" 
-                    name="model_type" 
+                    name="type" 
                     label="Tipe Model" 
-                    value="{{ old('model_type', $isEdit ? $model->model_type : '') }}"
+                    value="{{ old('type', $isEdit ? $model->type : '') }}"
                     required="true" 
-                    :error="$errors->first('model_type')"
+                    :error="$errors->first('type')"
                     :options="[
                         ['value' => 'lstm', 'label' => 'LSTM'],
                         ['value' => 'gru', 'label' => 'GRU'],

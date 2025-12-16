@@ -42,6 +42,49 @@ class UptController extends Controller
 
         $upts = $query->orderBy('created_at', 'desc')->paginate(15);
 
+        // Prepare table headers
+        $tableHeaders = [
+            ['key' => 'code', 'label' => 'Kode', 'sortable' => true],
+            ['key' => 'name', 'label' => 'Nama UPT', 'sortable' => true],
+            ['key' => 'formatted_river_basin', 'label' => 'Wilayah Sungai'],
+            ['key' => 'formatted_cities', 'label' => 'Kota/Kabupaten'],
+            ['key' => 'actions', 'label' => 'Aksi', 'format' => 'actions']
+        ];
+
+        // Transform data for table component
+        $upts->getCollection()->transform(function ($upt) {
+            $upt->formatted_river_basin = $upt->riverBasin->name ?? '-';
+            $upt->formatted_cities = $upt->cities->map(function($city) {
+                return '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 mr-1 mb-1">' 
+                    . $city->name . '</span>';
+            })->join('');
+            
+            if (empty($upt->formatted_cities)) {
+                $upt->formatted_cities = '<span class="text-sm text-gray-400">-</span>';
+            }
+
+            $upt->actions = [
+                [
+                    'type' => 'edit',
+                    'label' => 'Edit',
+                    'url' => '#',
+                    'icon' => 'edit',
+                    'color' => 'blue',
+                    'onclick' => "window.dispatchEvent(new CustomEvent('open-edit-upt', { detail: " . json_encode($upt) . " }))"
+                ],
+                [
+                    'type' => 'delete',
+                    'label' => 'Hapus',
+                    'url' => route('admin.upt.destroy', $upt->id),
+                    'icon' => 'trash',
+                    'color' => 'red',
+                    'method' => 'DELETE',
+                    'confirm' => 'Apakah Anda yakin ingin menghapus UPT ini?'
+                ]
+            ];
+            return $upt;
+        });
+
         // For filters dropdown
         $riverBasins = MasRiverBasin::orderBy('name')->get();
         $cities = MasCity::with('province')->orderBy('name')->get();
@@ -53,7 +96,7 @@ class UptController extends Controller
             ]);
         }
 
-        return view('admin.upt.index', compact('upts', 'riverBasins', 'cities'));
+        return view('admin.upt.index', compact('upts', 'riverBasins', 'cities', 'tableHeaders'));
     }
 
     /**

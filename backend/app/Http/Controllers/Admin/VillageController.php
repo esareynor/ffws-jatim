@@ -35,6 +35,46 @@ class VillageController extends Controller
         $villages = $query->orderBy('name', 'asc')->paginate($perPage);
         $regencies = MasRegency::with('city')->orderBy('regencies_name', 'asc')->get();
 
+        // Prepare table headers
+        $tableHeaders = [
+            ['key' => 'code', 'label' => 'Kode', 'sortable' => true],
+            ['key' => 'name', 'label' => 'Nama Desa/Kelurahan', 'sortable' => true],
+            ['key' => 'formatted_regency', 'label' => 'Kecamatan'],
+            ['key' => 'formatted_city', 'label' => 'Kota/Kabupaten'],
+            ['key' => 'formatted_province', 'label' => 'Provinsi'],
+            ['key' => 'actions', 'label' => 'Aksi', 'format' => 'actions']
+        ];
+
+        // Transform data for table component
+        $villages->getCollection()->transform(function ($village) {
+            $village->formatted_regency = $village->regency->regencies_name ?? '-';
+            $village->formatted_city = '<span class="text-xs text-gray-500 dark:text-gray-500">' 
+                . ($village->regency->city->name ?? '-') . '</span>';
+            $village->formatted_province = '<span class="text-xs text-gray-400 dark:text-gray-600">' 
+                . ($village->regency->city->province->provinces_name ?? '-') . '</span>';
+
+            $village->actions = [
+                [
+                    'type' => 'edit',
+                    'label' => 'Edit',
+                    'url' => '#',
+                    'icon' => 'edit',
+                    'color' => 'blue',
+                    'onclick' => "window.dispatchEvent(new CustomEvent('open-edit-village', { detail: " . json_encode($village) . " }))"
+                ],
+                [
+                    'type' => 'delete',
+                    'label' => 'Hapus',
+                    'url' => route('admin.region.villages.destroy', $village->id),
+                    'icon' => 'trash',
+                    'color' => 'red',
+                    'method' => 'DELETE',
+                    'confirm' => 'Apakah Anda yakin ingin menghapus desa/kelurahan ini?'
+                ]
+            ];
+            return $village;
+        });
+
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -42,7 +82,7 @@ class VillageController extends Controller
             ]);
         }
 
-        return view('admin.region.villages.index', compact('villages', 'regencies'));
+        return view('admin.region.villages.index', compact('villages', 'regencies', 'tableHeaders'));
     }
 
     /**

@@ -25,15 +25,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Force HTTPS because we are behind Nginx Proxy Manager
-        if ($this->app->environment('production') || true) { // Force on 'true' just to be safe for now
+        if ($this->app->environment('production')) {
             URL::forceScheme('https');
+
+            Vite::prefetch(concurrency: 3);
+
+            // Register observers for automatic discharge calculation
+            DataActual::observe(DataActualObserver::class);
+            DataPrediction::observe(DataPredictionObserver::class);
         }
-
-        Vite::prefetch(concurrency: 3);
-
-        // Register observers for automatic discharge calculation
-        DataActual::observe(DataActualObserver::class);
-        DataPrediction::observe(DataPredictionObserver::class);
     }
 }

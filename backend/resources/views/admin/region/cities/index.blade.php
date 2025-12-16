@@ -1,174 +1,113 @@
 @extends('layouts.admin')
 
 @section('title', 'Kota/Kabupaten')
+@section('page-title', 'Kota/Kabupaten')
+@section('page-description', 'Kelola data kota dan kabupaten')
+@section('breadcrumb', 'Kota/Kabupaten')
 
 @section('content')
-<div x-data="cityData()">
-    <!-- Header Section -->
-    <div class="mb-6">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Kota/Kabupaten</h1>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Kelola data kota dan kabupaten</p>
-            </div>
-            <button @click="openCreateModal()" type="button"
-                class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
-                <i class="fas fa-plus mr-2"></i>
+<div class="space-y-6" x-data="cityData()" x-init="init()">
+
+    {{-- Filter Section --}}
+    @php
+        $filterConfig = [
+            [
+                'type' => 'text',
+                'name' => 'search',
+                'label' => 'Cari Kota/Kabupaten',
+                'placeholder' => 'Cari berdasarkan kode atau nama...'
+            ],
+            [
+                'type' => 'select',
+                'name' => 'province_code',
+                'label' => 'Provinsi',
+                'empty_option' => 'Semua Provinsi',
+                'options' => $provinces->map(function($province) {
+                    return ['value' => $province->provinces_code, 'label' => $province->provinces_name];
+                })->toArray()
+            ],
+            [
+                'type' => 'select',
+                'name' => 'per_page',
+                'label' => 'Per Halaman',
+                'options' => [
+                    ['value' => '10', 'label' => '10'],
+                    ['value' => '15', 'label' => '15'],
+                    ['value' => '25', 'label' => '25'],
+                    ['value' => '50', 'label' => '50']
+                ]
+            ]
+        ];
+    @endphp
+
+    <x-filter-bar 
+        title="Filter & Pencarian Kota/Kabupaten"
+        :filters="$filterConfig"
+        :action="route('admin.region.cities.index')"
+        gridCols="md:grid-cols-3"
+    />
+
+    {{-- Cities Table --}}
+    <x-table
+        title="Daftar Kota/Kabupaten"
+        :headers="$tableHeaders"
+        :rows="$cities"
+        searchable
+        searchPlaceholder="Cari kota/kabupaten..."
+        :pagination="$cities->links()"
+    >
+        <x-slot:actions>
+            <x-admin.button type="button" variant="primary" @click="openCreateModal()">
+                <i class="fa-solid fa-plus -ml-1 mr-2"></i>
                 Tambah Kota/Kabupaten
-            </button>
-        </div>
-    </div>
+            </x-admin.button>
+        </x-slot:actions>
+    </x-table>
 
-    <!-- Filter Section -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-        <form method="GET" action="{{ route('admin.region.cities.index') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search</label>
-                <input type="text" name="search" value="{{ request('search') }}"
-                    placeholder="Cari kota/kabupaten..."
-                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Provinsi</label>
-                <select name="province_code" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                    <option value="">Semua Provinsi</option>
-                    @foreach($provinces as $province)
-                        <option value="{{ $province->provinces_code }}" {{ request('province_code') == $province->provinces_code ? 'selected' : '' }}>
-                            {{ $province->provinces_name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="flex items-end gap-2">
-                <button type="submit" class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors">
-                    <i class="fas fa-search mr-2"></i>Filter
-                </button>
-                <a href="{{ route('admin.region.cities.index') }}" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition-colors">
-                    <i class="fas fa-redo"></i>
-                </a>
-            </div>
+    {{-- Modal Create/Edit --}}
+    <x-admin.modal :show="false" name="city-modal" size="md" :close-on-backdrop="true">
+        <x-slot:title>
+            <span x-text="isEdit ? 'Edit Kota/Kabupaten' : 'Tambah Kota/Kabupaten'"></span>
+        </x-slot:title>
+
+        <form @submit.prevent="submitForm()" class="space-y-6">
+            <x-admin.form-input
+                type="select"
+                name="provinces_code"
+                label="Provinsi"
+                x-model="formData.provinces_code"
+                required="true"
+                :options="$provinces->map(function($province) {
+                    return ['value' => $province->provinces_code, 'label' => $province->provinces_name];
+                })->prepend(['value' => '', 'label' => 'Pilih Provinsi'])->toArray()"
+            />
+            <x-admin.form-input
+                type="text"
+                name="code"
+                label="Kode"
+                x-model="formData.code"
+                placeholder="Contoh: KAB-SBY"
+                required="true"
+            />
+            <x-admin.form-input
+                type="text"
+                name="name"
+                label="Nama Kota/Kabupaten"
+                x-model="formData.name"
+                placeholder="Contoh: Surabaya"
+                required="true"
+            />
         </form>
-    </div>
 
-    <!-- Table Section -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-900">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kode</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nama Kota/Kabupaten</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Provinsi</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Jumlah Kecamatan</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    @forelse($cities as $city)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $city->code }}</span>
-                        </td>
-                        <td class="px-6 py-4">
-                            <span class="text-sm text-gray-900 dark:text-white">{{ $city->name }}</span>
-                        </td>
-                        <td class="px-6 py-4">
-                            <span class="text-sm text-gray-600 dark:text-gray-400">{{ $city->province->provinces_name ?? '-' }}</span>
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                {{ $city->regencies_count }} kecamatan
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                            <button @click="openEditModal({{ json_encode($city) }})"
-                                class="text-blue-600 hover:text-blue-900 dark:text-blue-400 mr-3">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button @click="confirmDelete({{ $city->id }})"
-                                class="text-red-600 hover:text-red-900 dark:text-red-400">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="5" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                            <i class="fas fa-inbox text-4xl mb-2"></i>
-                            <p>Tidak ada data kota/kabupaten</p>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination -->
-        @if($cities->hasPages())
-        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-            {{ $cities->links() }}
-        </div>
-        @endif
-    </div>
-
-    <!-- Create/Edit Modal -->
-    <div x-show="showModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" @click.self="closeModal()">
-        <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
-
-            <div class="relative bg-white dark:bg-gray-800 rounded-lg max-w-lg w-full shadow-xl">
-                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white" x-text="isEdit ? 'Edit Kota/Kabupaten' : 'Tambah Kota/Kabupaten'"></h3>
-                </div>
-
-                <form @submit.prevent="submitForm()" class="px-6 py-4">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Provinsi <span class="text-red-500">*</span>
-                            </label>
-                            <select x-model="formData.provinces_code" required
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                                <option value="">Pilih Provinsi</option>
-                                @foreach($provinces as $province)
-                                    <option value="{{ $province->provinces_code }}">{{ $province->provinces_name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Kode <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text" x-model="formData.code" required
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                                placeholder="Contoh: KAB-SBY">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Nama Kota/Kabupaten <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text" x-model="formData.name" required
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                                placeholder="Contoh: Surabaya">
-                        </div>
-                    </div>
-
-                    <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <button type="button" @click="closeModal()"
-                            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors">
-                            Batal
-                        </button>
-                        <button type="submit"
-                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-                            <span x-text="isEdit ? 'Update' : 'Simpan'"></span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+        <x-slot:footer>
+            <x-admin.button variant="outline" @click="closeModal()">
+                Batal
+            </x-admin.button>
+            <x-admin.button variant="primary" @click="submitForm()">
+                <span x-text="isEdit ? 'Update' : 'Simpan'"></span>
+            </x-admin.button>
+        </x-slot:footer>
+    </x-admin.modal>
 </div>
 
 @push('scripts')
@@ -184,10 +123,17 @@ function cityData() {
             provinces_code: ''
         },
 
+        init() {
+            window.addEventListener('open-edit-city', (e) => {
+                const item = e.detail || {};
+                this.openEditModal(item);
+            });
+        },
+
         openCreateModal() {
             this.isEdit = false;
             this.resetForm();
-            this.showModal = true;
+            this.$dispatch('open-modal', 'city-modal');
         },
 
         openEditModal(city) {
@@ -198,11 +144,11 @@ function cityData() {
                 name: city.name,
                 provinces_code: city.provinces_code
             };
-            this.showModal = true;
+            this.$dispatch('open-modal', 'city-modal');
         },
 
         closeModal() {
-            this.showModal = false;
+            this.$dispatch('close-modal', 'city-modal');
             this.resetForm();
         },
 
@@ -242,34 +188,6 @@ function cityData() {
             } catch (error) {
                 console.error('Error:', error);
                 alert('Terjadi kesalahan saat menyimpan data');
-            }
-        },
-
-        confirmDelete(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus kota/kabupaten ini?')) {
-                this.deleteCity(id);
-            }
-        },
-
-        async deleteCity(id) {
-            try {
-                const response = await fetch(`/admin/region/cities/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    }
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    window.location.reload();
-                } else {
-                    alert(data.message || 'Gagal menghapus data');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Terjadi kesalahan saat menghapus data');
             }
         }
     };

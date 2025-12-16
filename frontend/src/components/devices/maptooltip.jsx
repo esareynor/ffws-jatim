@@ -132,6 +132,16 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
       }
     };
 
+    const isARR = (station.name || '').toUpperCase().startsWith('ARR') || (station.name || '').toUpperCase().includes(' ARR');
+    const isAWLR = (station.name || '').toUpperCase().includes('AWLR');
+
+    const tooltipInfoHTML = (isARR || isAWLR) ? '' : `
+      <div class="tooltip-info">
+        <div class="text-xs text-gray-500 mb-1">ID: ${station.id}</div>
+        <div class="text-xs text-gray-500 truncate">${station.location}</div>
+      </div>
+    `;
+
     const popupContent = document.createElement('div');
     popupContent.className = 'map-tooltip-content';
     popupContent.innerHTML = `
@@ -149,9 +159,13 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
       
       <div class="tooltip-level">
         <div class="flex justify-between items-center">
-          <span class="text-sm text-gray-600">Level Air:</span>
+          <span class="text-sm text-gray-600">${( (station.unit === 'mm' || (station.name||'').toUpperCase().startsWith('ARR')) ? 'Curah Hujan' : 'Level Air') }:</span>
           <div class="text-right">
-            <span class="font-semibold text-lg block">${station.value}</span>
+            <span class="font-semibold text-lg block">${(() => {
+              const v = Number(station.value);
+              if (!Number.isFinite(v)) return station.value ?? '-';
+              return station.unit === 'mm' ? v.toFixed(0) : v.toFixed(1);
+            })()}</span>
             <span class="text-xs text-gray-500">${station.unit}</span>
           </div>
         </div>
@@ -160,10 +174,7 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
         </div>
       </div>
       
-      <div class="tooltip-info">
-        <div class="text-xs text-gray-500 mb-1">ID: ${station.id}</div>
-        <div class="text-xs text-gray-500 truncate">${station.location}</div>
-      </div>
+      ${tooltipInfoHTML}
       
       <button class="tooltip-detail-btn">
         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

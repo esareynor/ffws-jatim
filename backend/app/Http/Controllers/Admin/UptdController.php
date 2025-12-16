@@ -39,6 +39,53 @@ class UptdController extends Controller
 
         $uptds = $query->orderBy('created_at', 'desc')->paginate(15);
 
+        // Prepare table headers
+        $tableHeaders = [
+            ['key' => 'code', 'label' => 'Kode', 'sortable' => true],
+            ['key' => 'name', 'label' => 'Nama UPTD', 'sortable' => true],
+            ['key' => 'formatted_upt', 'label' => 'UPT'],
+            ['key' => 'formatted_city', 'label' => 'Kabupaten'],
+            ['key' => 'actions', 'label' => 'Aksi', 'format' => 'actions']
+        ];
+
+        // Transform data for table component
+        $uptds->getCollection()->transform(function ($uptd) {
+            $uptd->formatted_upt = $uptd->upt->name ?? '-';
+            
+            if ($uptd->city) {
+                $cityHtml = '<div class="text-sm">';
+                $cityHtml .= '<div class="text-gray-900 dark:text-white font-medium">' . $uptd->city->name . '</div>';
+                if ($uptd->city->province) {
+                    $cityHtml .= '<div class="text-gray-500 dark:text-gray-400 text-xs">' . $uptd->city->province->provinces_name . '</div>';
+                }
+                $cityHtml .= '</div>';
+                $uptd->formatted_city = $cityHtml;
+            } else {
+                $uptd->formatted_city = '<span class="text-sm text-gray-400">-</span>';
+            }
+
+            $uptd->actions = [
+                [
+                    'type' => 'edit',
+                    'label' => 'Edit',
+                    'url' => '#',
+                    'icon' => 'edit',
+                    'color' => 'blue',
+                    'onclick' => "window.dispatchEvent(new CustomEvent('open-edit-uptd', { detail: " . json_encode($uptd) . " }))"
+                ],
+                [
+                    'type' => 'delete',
+                    'label' => 'Hapus',
+                    'url' => route('admin.uptd.destroy', $uptd->id),
+                    'icon' => 'trash',
+                    'color' => 'red',
+                    'method' => 'DELETE',
+                    'confirm' => 'Apakah Anda yakin ingin menghapus UPTD ini?'
+                ]
+            ];
+            return $uptd;
+        });
+
         // For filters dropdown
         $upts = MasUpt::orderBy('name')->get();
         $cities = MasCity::with('province')->orderBy('name')->get();
@@ -50,7 +97,7 @@ class UptdController extends Controller
             ]);
         }
 
-        return view('admin.uptd.index', compact('uptds', 'upts', 'cities'));
+        return view('admin.uptd.index', compact('uptds', 'upts', 'cities', 'tableHeaders'));
     }
 
     /**

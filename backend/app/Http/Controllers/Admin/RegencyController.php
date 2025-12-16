@@ -35,6 +35,46 @@ class RegencyController extends Controller
         $regencies = $query->orderBy('regencies_name', 'asc')->paginate($perPage);
         $cities = MasCity::with('province')->orderBy('name', 'asc')->get();
 
+        // Prepare table headers
+        $tableHeaders = [
+            ['key' => 'regencies_code', 'label' => 'Kode', 'sortable' => true],
+            ['key' => 'regencies_name', 'label' => 'Nama Kecamatan', 'sortable' => true],
+            ['key' => 'formatted_city', 'label' => 'Kota/Kabupaten'],
+            ['key' => 'formatted_province', 'label' => 'Provinsi'],
+            ['key' => 'formatted_villages_count', 'label' => 'Jumlah Desa'],
+            ['key' => 'actions', 'label' => 'Aksi', 'format' => 'actions']
+        ];
+
+        // Transform data for table component
+        $regencies->getCollection()->transform(function ($regency) {
+            $regency->formatted_city = $regency->city->name ?? '-';
+            $regency->formatted_province = '<span class="text-xs text-gray-500 dark:text-gray-500">' 
+                . ($regency->city->province->provinces_name ?? '-') . '</span>';
+            $regency->formatted_villages_count = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">'
+                . $regency->villages_count . ' desa</span>';
+
+            $regency->actions = [
+                [
+                    'type' => 'edit',
+                    'label' => 'Edit',
+                    'url' => '#',
+                    'icon' => 'edit',
+                    'color' => 'blue',
+                    'onclick' => "window.dispatchEvent(new CustomEvent('open-edit-regency', { detail: " . json_encode($regency) . " }))"
+                ],
+                [
+                    'type' => 'delete',
+                    'label' => 'Hapus',
+                    'url' => route('admin.region.regencies.destroy', $regency->id),
+                    'icon' => 'trash',
+                    'color' => 'red',
+                    'method' => 'DELETE',
+                    'confirm' => 'Apakah Anda yakin ingin menghapus kecamatan ini?'
+                ]
+            ];
+            return $regency;
+        });
+
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -42,7 +82,7 @@ class RegencyController extends Controller
             ]);
         }
 
-        return view('admin.region.regencies.index', compact('regencies', 'cities'));
+        return view('admin.region.regencies.index', compact('regencies', 'cities', 'tableHeaders'));
     }
 
     /**

@@ -124,10 +124,18 @@ const MapboxMap = ({ tickerData, onStationSelect }) => {
   };
 
   const handleMarkerClick = (station, coordinates) => {
+    // Untuk tooltip, adaptasi data agar sesuai dengan sidebar khususnya untuk ARR
+    const stationNameUpper = (station?.name || "").trim().toUpperCase();
+    const isARRStation = stationNameUpper.startsWith("ARR") || stationNameUpper.includes(" ARR");
+
+    const tooltipStation = isARRStation
+      ? { ...station, value: 0, unit: 'mm' }
+      : station;
+
     setSelectedStation(station);
     setSelectedStationCoords(coordinates);
     if (map.current) map.current.flyTo({ center: coordinates, zoom: 14 });
-    setTooltip({ visible: true, station, coordinates });
+    setTooltip({ visible: true, station: tooltipStation, coordinates });
   };
 
   const handleShowDetail = (station) => {
@@ -325,7 +333,7 @@ const MapboxMap = ({ tickerData, onStationSelect }) => {
       const isBengawanSoloPJT1Active = activeLayers["pos-hujan-ws-bengawan-solo"];
 
       const nameTrim = station.name?.trim() || "";
-      const isHujanJamJamStation = /^".*"$/.test(nameTrim);
+      const isHujanJamJamStation = nameTrim.toUpperCase().startsWith("ARR");
       const isPosDugaJamJamStation = station.name.toLowerCase().includes("awlr");
       const isARRBrantasStation = arrBrantasListKeywords.some((kw) =>
         station.name.toLowerCase().includes(kw.toLowerCase())
@@ -381,12 +389,29 @@ const MapboxMap = ({ tickerData, onStationSelect }) => {
           isBengawanSoloPJT1Active,
         });
 
-        let iconToUse = override?.icon || markerStyle.icon || "";
+      let iconToUse = override?.icon || markerStyle.icon || "";
+        // Default size
         let size = { width: 24, height: 24 };
 
+        // 1. Kustomisasi untuk POS DUGA AIR (AWLR) - Ikon Tetesan Air
         if (isPosDugaJamJamActive && isPosDugaJamJamStation) {
           iconToUse = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${bgColor}" stroke="white" stroke-width="1.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>`;
           size = { width: 20, height: 24 };
+        }
+
+        // 2. Kustomisasi KHUSUS untuk ARR (Hujan Jam-Jam an) - Ikon Awan Hujan
+        else if (isHujanJamJamActive && isHujanJamJamStation) {
+          // Desain: Ikon Awan dengan warna status, background putih transparan
+          iconToUse = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+              <path d="M17.5 19C19.9853 19 22 16.9853 22 14.5C22 12.132 20.177 10.244 17.819 10.037C17.457 6.452 14.394 4 10.5 4C6.273 4 2.912 7.158 2.508 11.23C2.348 11.222 2.181 11.22 2 11.22C2 11.22 2 11.22 2 11.22C0.895 11.22 0 12.115 0 13.22C0 14.325 0.895 15.22 2 15.22H3V17H2C0.895 17 0 17.895 0 19C0 20.105 0.895 21 2 21H17.5Z" fill="${bgColor}" stroke="white" stroke-width="1.5"/>
+              <path d="M8 13V15" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              <path d="M12 13V16" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              <path d="M16 13V15" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          `;
+          // Ukuran diperkecil (Lebih kecil dari default 24px)
+          size = { width: 22, height: 22 }; 
         }
 
         const borderColor = override?.color || markerStyle.color || "white";
@@ -401,23 +426,46 @@ const MapboxMap = ({ tickerData, onStationSelect }) => {
           extraTransform = " rotate(45deg)";
         }
 
-        markerEl.style.cssText = `
-          width: ${size.width}px;
-          height: ${size.height}px;
-          border-radius: ${borderRadiusVal};
-          background-color: ${overrideBg};
-          border: 2px solid ${borderColor};
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1;
-          transform: translate(-50%, -50%)${extraTransform};
-        `;
+        // Disable icon-only for AWLR and ARR — show background unless explicitly overridden by style override
+        const isIconOnly = !!override?.noBackground;
+
+        if (isIconOnly) {
+          // Hanya tampilkan ikon SVG tanpa latar / border
+          markerEl.style.cssText = `
+            width: ${size.width}px;
+            height: ${size.height}px;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            transform: translate(-50%, -50%)${extraTransform};
+            padding: 0;
+          `;
+        } else {
+          markerEl.style.cssText = `
+            width: ${size.width}px;
+            height: ${size.height}px;
+            border-radius: ${borderRadiusVal};
+            background-color: ${overrideBg};
+            border: 2px solid ${borderColor};
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            transform: translate(-50%, -50%)${extraTransform};
+          `;
+        }
+
         markerEl.innerHTML = iconToUse;
 
-        if (station.status === "alert") {
+        // Hanya tampilkan pulse untuk marker yang bukan icon-only
+        if (station.status === "alert" && !isIconOnly) {
           const pulseEl = document.createElement("div");
           pulseEl.style.cssText = `
             position: absolute;
@@ -664,10 +712,10 @@ const MapboxMap = ({ tickerData, onStationSelect }) => {
 
       <div className="absolute top-5 right-4 z-[80] flex gap-2">
         <button
-          onClick={() => setShowFilterSidebar(true)}
+          onClick={() => setShowFilterSidebar((s) => !s)}
           className="relative inline-flex items-center justify-center w-12 h-12 rounded-full bg-white hover:bg-blue-50 transition-colors shadow-md"
-          title="Buka Filter"
-          aria-label="Buka Filter"
+          title={showFilterSidebar ? "Tutup Filter" : "Buka Filter"}
+          aria-label={showFilterSidebar ? "Tutup Filter" : "Buka Filter"}
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="relative z-10 w-6 h-6 text-blue-600">
             <path d="M22 3H2l8 9v7l4 2v-9l8-9z"></path>

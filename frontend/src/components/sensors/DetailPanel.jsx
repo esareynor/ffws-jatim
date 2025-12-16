@@ -261,6 +261,27 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
         };
     }, [isMobile, isOpen]);
 
+    // Determine station type to customize visible tabs
+    const stationNameUpper = (stationData?.name || "").trim().toUpperCase();
+    const isARRStation = stationNameUpper.startsWith("ARR") || stationNameUpper.includes(" ARR");
+    const isAWLRStation = stationNameUpper.includes("AWLR");
+
+    // Compute visible tabs based on station type
+    const visibleTabs = React.useMemo(() => {
+        if (isARRStation) return ["cuaca", "monitoring", "riwayat"];
+        if (isAWLRStation) return ["sensor", "monitoring", "riwayat"];
+        return DETAIL_TABS.map((t) => t.key);
+    }, [isARRStation, isAWLRStation]);
+
+    // Ensure activeTab is valid for visibleTabs when stationData changes
+    useEffect(() => {
+        if (!visibleTabs.includes(activeTab)) {
+            // choose default tab
+            const defaultTab = isARRStation ? "cuaca" : isAWLRStation ? "sensor" : "sensor";
+            setActiveTab(defaultTab);
+        }
+    }, [stationData, visibleTabs]);
+
     // Handler untuk tab click dengan animasi clean - menggunakan useCallback untuk optimasi
     const handleTabClick = useCallback(
         (tabKey) => {
@@ -300,7 +321,7 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                             ? `bottom-0 left-0 right-0 h-[70vh] rounded-t-2xl ${ 
                                 isVisible ? "opacity-100" : "opacity-0"
                               }`
-                            : `rounded-tr-lg top-20 left-96 right-0 bottom-0 transition-all duration-300 ease-in-out ${
+                            : `rounded-tr-lg top-20 left-20 right-0 bottom-0 transition-all duration-300 ease-in-out ${
                                 isVisible ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
                               }`
                     }`}
@@ -458,7 +479,7 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                     >
                         <nav className="relative">
                             <div className="flex items-center justify-center space-x-8 text-base">
-                                {DETAIL_TABS.map((tab) => (
+                                {DETAIL_TABS.filter((t) => visibleTabs.includes(t.key)).map((tab) => (
                                     <button
                                         key={tab.key}
                                         onClick={() => handleTabClick(tab.key)}

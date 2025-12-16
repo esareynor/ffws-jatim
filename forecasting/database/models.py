@@ -23,6 +23,15 @@ class MasModel(Base):
     file_path = Column(String(512))
     n_steps_in = Column(Integer)  # Input timesteps
     n_steps_out = Column(Integer)  # Output timesteps
+    
+    # Architecture configuration (JSON field for flexibility)
+    # Can store: layer_sizes, dropout_rate, filters, kernel_size, dilations, etc.
+    architecture_config = Column(Text)  # JSON string with architecture parameters
+    
+    # Training configuration (JSON field)
+    # Can store: epochs, batch_size, test_size, optimizer, learning_rate, etc.
+    training_config = Column(Text)  # JSON string with training parameters
+    
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

@@ -15,5 +15,13 @@ class MasProvince extends Model
         'provinces_name',
         'provinces_code',
     ];
+
+    /**
+     * Get cities that belong to this province
+     */
+    public function cities()
+    {
+        return $this->hasMany(MasCity::class, 'provinces_code', 'provinces_code');
+    }
 }
 

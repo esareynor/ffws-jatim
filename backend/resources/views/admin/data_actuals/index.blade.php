@@ -119,7 +119,7 @@
                 'options' => $sensors->map(function($sensor) { 
                     return [
                         'value' => $sensor->id, 
-                        'label' => $sensor->sensor_code . ' - ' . $sensor->parameter
+                        'label' => $sensor->code . ' - ' . $sensor->parameter
                     ]; 
                 })->toArray()
             ],

@@ -33,7 +33,7 @@ class MasModel extends Model
      */
     public function sensors(): HasMany
     {
-        return $this->hasMany(MasSensor::class, 'mas_model_id');
+        return $this->hasMany(MasSensor::class, 'mas_model_code', 'code');
     }
 
     /**

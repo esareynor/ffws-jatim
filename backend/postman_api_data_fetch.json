@@ -1,0 +1,369 @@
+{
+  "info": {
+    "name": "FFWS - API Data Fetch System",
+    "description": "Collection untuk testing API Data Fetch System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "YOUR_AUTH_TOKEN_HERE",
+      "type": "string"
+    },
+    {
+      "key": "source_code",
+      "value": "demo-public",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "API Data Sources",
+      "item": [
+        {
+          "name": "List All Sources",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api-data-sources?per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["api-data-sources"],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "20"
+                },
+                {
+                  "key": "is_active",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "demo",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create New Source",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test API Source\",\n  \"code\": \"test-api\",\n  \"api_url\": \"https://jsonplaceholder.typicode.com/posts\",\n  \"api_method\": \"GET\",\n  \"auth_type\": \"none\",\n  \"response_format\": \"json\",\n  \"data_mapping\": {\n    \"fields\": {\n      \"external_id\": \"id\",\n      \"value\": \"userId\"\n    }\n  },\n  \"fetch_interval_minutes\": 30,\n  \"is_active\": true,\n  \"description\": \"Test API source\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api-data-sources",
+              "host": ["{{base_url}}"],
+              "path": ["api-data-sources"]
+            }
+          }
+        },
+        {
+          "name": "Get Source Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api-data-sources/{{source_code}}",
+              "host": ["{{base_url}}"],
+              "path": ["api-data-sources", "{{source_code}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Source",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": true,\n  \"fetch_interval_minutes\": 15,\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api-data-sources/{{source_code}}",
+              "host": ["{{base_url}}"],
+              "path": ["api-data-sources", "{{source_code}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Source",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api-data-sources/{{source_code}}",
+              "host": ["{{base_url}}"],
+              "path": ["api-data-sources", "{{source_code}}"]
+            }
+          }
+        },
+        {
+          "name": "Test Connection",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api-data-sources/{{source_code}}/test-connection",
+              "host": ["{{base_url}}"],
+              "path": ["api-data-sources", "{{source_code}}", "test-connection"]
+            }
+          }
+        },
+        {
+          "name": "Trigger Manual Fetch",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api-data-sources/{{source_code}}/trigger-fetch",
+              "host": ["{{base_url}}"],
+              "path": ["api-data-sources", "{{source_code}}", "trigger-fetch"]
+            }
+          }
+        },
+        {
+          "name": "Get Fetch Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api-data-sources/{{source_code}}/fetch-logs?per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["api-data-sources", "{{source_code}}", "fetch-logs"],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api-data-sources/{{source_code}}/statistics",
+              "host": ["{{base_url}}"],
+              "path": ["api-data-sources", "{{source_code}}", "statistics"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sensor API Mappings",
+      "item": [
+        {
+          "name": "List All Mappings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sensor-api-mappings?per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["sensor-api-mappings"],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "20"
+                },
+                {
+                  "key": "api_data_source_id",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "mas_device_code",
+                  "value": "AWS-001",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Mapping",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"api_data_source_id\": 1,\n  \"mas_sensor_code\": \"AWS-001-WL\",\n  \"mas_device_code\": \"AWS-001\",\n  \"external_sensor_id\": \"ext-001\",\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/sensor-api-mappings",
+              "host": ["{{base_url}}"],
+              "path": ["sensor-api-mappings"]
+            }
+          }
+        },
+        {
+          "name": "Bulk Create Mappings",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mappings\": [\n    {\n      \"api_data_source_id\": 1,\n      \"mas_sensor_code\": \"AWS-001-WL\",\n      \"mas_device_code\": \"AWS-001\",\n      \"external_sensor_id\": \"ext-001\"\n    },\n    {\n      \"api_data_source_id\": 1,\n      \"mas_sensor_code\": \"AWS-001-RF\",\n      \"mas_device_code\": \"AWS-001\",\n      \"external_sensor_id\": \"ext-002\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/sensor-api-mappings/bulk",
+              "host": ["{{base_url}}"],
+              "path": ["sensor-api-mappings", "bulk"]
+            }
+          }
+        },
+        {
+          "name": "Get Mapping Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sensor-api-mappings/1",
+              "host": ["{{base_url}}"],
+              "path": ["sensor-api-mappings", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Mapping",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/sensor-api-mappings/1",
+              "host": ["{{base_url}}"],
+              "path": ["sensor-api-mappings", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Mapping",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sensor-api-mappings/1",
+              "host": ["{{base_url}}"],
+              "path": ["sensor-api-mappings", "1"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

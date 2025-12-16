@@ -3,7 +3,7 @@
  * Menggunakan Laravel Sanctum dengan auto-refresh token dan auto-login
  */
 
-const API_BASE_URL = "https://ffws-backend.rachmanesa.com/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://ffws-backend.rachmanesa.com/api";
 
 
 

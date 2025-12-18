@@ -219,12 +219,6 @@ const FilterPanel = ({
                   <div className="font-medium text-xs text-gray-600 mb-1">Data Master</div>
                   <div className="space-y-1 pl-2">
                     {[
-                      { id: "dinas-pusda", name: "Dinas PUSDA Jatim", color: "#00008B" },
-                      { id: "upt-welang-pekalen", name: "UPT PSDA Welang Pekalen Pasuruan", color: "#00008B" },
-                      { id: "upt-madura", name: "UPT PSDA Madura Pamekasan", color: "#00008B" },
-                      { id: "upt-bengawan-solo", name: "UPT PSDA Bengawan Solo Bojonegoro", color: "#00008B" },
-                      { id: "upt-brantas", name: "UPT PSDA Brantas Kediri", color: "#00008B" },
-                      { id: "upt-sampean", name: "UPT PSDA Sampean Setail Bondowoso", color: "#00008B" },
                       { id: "ws-brantas", name: "WS Brantas", color: "#FF4500" },
                       { id: "ws-bengawan-solo", name: "WS Bengawan Solo", color: "#FF7F50" },
                       { id: "ws-bondoyudo-bedadung", name: "WS Bondoyudo Bedadung", color: "#00CED1" },
@@ -424,6 +418,30 @@ const FilterPanel = ({
               </div>
             )}
           </section>
+        {/* --- INFO PANEL: EDUKATIF --- */}
+          <div className="mt-6 mb-4 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+            <div className="flex items-start gap-3">
+              {/* Anda mungkin perlu import { Info } from 'lucide-react' jika ingin ikon huruf 'i' */}
+              <AlertTriangle className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" /> 
+              <div>
+                <h4 className="text-sm font-bold text-black mb-2">Panduan Penggunaan Peta</h4>
+                <p className="text-xs text-black mb-2 leading-relaxed">
+                  Gunakan panel ini untuk menyaring informasi yang ingin Anda pantau. 
+                  Berikut beberapa tips untuk pengalaman terbaik:
+                </p>
+                <div className="space-y-2">
+                  <div className="flex gap-2 items-center p-2 bg-white/60 rounded-lg border border-indigo-100">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                    <span className="text-[11px] text-black font-medium">Klik nama layer untuk melihat detail legenda.</span>
+                  </div>
+                  <div className="flex gap-2 items-center p-2 bg-white/60 rounded-lg border border-indigo-100">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                    <span className="text-[11px] text-black font-medium">Zoom-in peta untuk melihat lokasi pos lebih akurat.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Footer */}
@@ -437,5 +455,4 @@ const FilterPanel = ({
     </>
   );
 };
-
 export default FilterPanel;

@@ -1,23 +1,23 @@
 // src/components/devices/mapUtils.js
 // Utilities extracted from MapboxMap for readability and reuse
 export const REGION_ID_TO_DEVICE_ID = {
-  'ws-baru-bajul-mati': 9,
-  'ws-bengawan-solo': 8,
-  'ws-bondoyudo-bedadung': 5,
-  'ws-brantas': 10,
-  'ws-pekalen-sampean': 7,
-  'ws-welang-rejoso': 6,
-  'ws-madura-bawean': 11,
+  'ws-baru-bajul-mati': 1,
+  'ws-bengawan-solo': 2,
+  'ws-bondoyudo-bedadung': 3,
+  'ws-brantas': 4,
+  'ws-madura-bawean': 5,
+  'ws-pekalen-sampean': 6,
+  'ws-welang-rejoso': 7,
 };
 
 export const DEVICE_ID_TO_COLOR = {
-  9: '#8A2BE2',
-  8: '#FF7F50',
-  5: '#00CED1',
-  10: '#FF4500',
-  7: '#FF69B4',
-  6: '#FF00FF',
-  11: '#FFD700',
+  1: '#8A2BE2',   // WS Baru Bajul Mati
+  2: '#FF7F50',   // WS Bengawan Solo
+  3: '#00CED1',   // WS Bondoyudo Bedadung
+  4: '#FF4500',   // WS Brantas
+  5: '#FFD700',   // WS Madura Bawean
+  6: '#FF69B4',   // WS Pekalen Sampean
+  7: '#FF00FF',   // WS Welang Rejoso
 };
 
 export const getBBox = (geometry) => {

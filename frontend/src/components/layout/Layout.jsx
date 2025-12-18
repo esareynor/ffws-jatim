@@ -76,10 +76,12 @@ const Layout = ({ children }) => {
         setIsDetailPanelOpen(false);
     }, []);
 
-    const handleLayerToggle = useCallback((layerId, enabled) => {
-        console.log(`Layer ${layerId} toggled: ${enabled}`);
-        // Implementasi logic untuk toggle layer map
-        // Bisa dikomunikasikan dengan MapboxMap component
+    const handleLayerToggle = useCallback((layerId) => {
+        console.log(`Layer toggle requested: ${layerId}`);
+        // Trigger layer toggle di MapboxMap melalui ref
+        if (mapRef.current?.handleLayerToggle) {
+            mapRef.current.handleLayerToggle(layerId);
+        }
     }, []);
 
     const handleAutoSwitch = useCallback((station, index) => {
@@ -241,6 +243,7 @@ const Layout = ({ children }) => {
                     handleStationChange={handleStationChange}
                     currentStationIndex={currentStationIndex}
                     handleAutoSwitchToggle={handleAutoSwitchToggle}
+                    onLayerToggle={handleLayerToggle}
                 />
             </Suspense>
 

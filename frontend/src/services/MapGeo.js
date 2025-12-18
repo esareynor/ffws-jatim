@@ -2,74 +2,122 @@
 
 import { fetchWithAuth } from "./apiClient";
 
+// Mapping antara Device ID dan nama wilayah sungai
+const DEVICE_ID_TO_WS_NAME = {
+  1: 'WS BARU-BAJULMATI',
+  2: 'WS BENGAWAN SOLO',
+  3: 'WS BONDOYUDO-BEDADUNG',
+  4: 'WS BRANTAS',
+  5: 'WS MADURA BAWEAN',
+  6: 'WS PEKALEN-SAMPEAN',
+  7: 'WS WELANG-REJOSO',
+};
+
+// Cache untuk menyimpan master GeoJSON file
+let masterGeojsonCache = null;
+
+/**
+ * Load master GeoJSON file yang berisi semua wilayah sungai
+ */
+const loadMasterGeojson = async () => {
+  if (masterGeojsonCache) {
+    return masterGeojsonCache;
+  }
+
+  try {
+    const res = await fetch('/src/data/72_peta_4_peta_Wilayah_Sungai.json');
+    if (!res.ok) {
+      throw new Error(`Failed to load master GeoJSON: ${res.status}`);
+    }
+    masterGeojsonCache = await res.json();
+    console.log('✅ Master GeoJSON loaded and cached');
+    return masterGeojsonCache;
+  } catch (error) {
+    console.error('❌ Failed to load master GeoJSON:', error);
+    throw error;
+  }
+};
+
+/**
+ * Filter GeoJSON berdasarkan nama wilayah sungai
+ */
+const filterGeojsonByName = (masterGeojson, wsName) => {
+  if (!masterGeojson || !masterGeojson.features) {
+    return null;
+  }
+
+  const filteredFeatures = masterGeojson.features.filter((feature) => {
+    const featureName = feature.properties?.WS || '';
+    return featureName.toLowerCase().trim() === wsName.toLowerCase().trim();
+  });
+
+  if (filteredFeatures.length === 0) {
+    return null;
+  }
+
+  return {
+    type: 'FeatureCollection',
+    name: wsName,
+    features: filteredFeatures,
+  };
+};
+
 export const fetchDeviceGeoJSON = async (id) => {
   try {
     console.log(`🔍 Fetching GeoJSON for device ID: ${id}`);
 
-    // fetchWithAuth already prefixes API_BASE_URL, so do NOT include extra `/api` here
-    // It returns parsed JSON (or throws), so use it directly.
-    const geojson = await fetchWithAuth(`/geojson-files/${id}/content`);
-
-    // Validate minimal GeoJSON structure
-    if (!geojson || (typeof geojson !== 'object')) {
-      throw new Error(`Invalid response from API for device ID ${id}`);
-    }
-
-    if (!geojson.type || !geojson.features) {
-      // Some APIs might return a wrapper; try to find geojson inside
-      if (geojson.data && geojson.data.type && geojson.data.features) {
-        console.log(`ℹ️ Extracting geojson from wrapper for device ID ${id}`);
-        return geojson.data;
-      }
-      throw new Error(`Invalid GeoJSON structure for device ID ${id}. Missing 'type' or 'features'.`);
-    }
-
-    console.log(`✅ Successfully loaded GeoJSON for device ID ${id}`, geojson);
-    return geojson;
-
-  } catch (error) {
-    console.error(`❌ FAILED to load GeoJSON for device ID ${id}:`, error.message || error);
-    console.warn(`⚠️ Using local fallback for device ID ${id}`);
-
-    // Fallback local filenames use .json in the repo `src/data` folder
-    let localPath;
-    switch (id) {
-      case 9:
-        localPath = '/src/data/WSBaruBajulMati.json';
-        break;
-      case 8:
-        localPath = '/src/data/WSBengawanSolo.json';
-        break;
-      case 5:
-        localPath = '/src/data/WSBondoyudoBedadung.json';
-        break;
-      case 10:
-        localPath = '/src/data/WSBrantas.json';
-        break;
-      case 7:
-        localPath = '/src/data/WSPekalenSampean.json';
-        break;
-      case 6:
-        localPath = '/src/data/WSWelangRejoso.json';
-        break;
-      case 11:
-        localPath = '/src/data/WSMaduraBawean.json';
-        break;
-      default:
-        throw new Error(`No fallback file for device ID ${id}`);
-    }
-
+    // Coba fetch dari API dulu
     try {
-      const res = await fetch(localPath);
-      if (!res.ok) {
-        throw new Error(`Local file not found: ${localPath}`);
+      const geojson = await fetchWithAuth(`/geojson-files/${id}/content`);
+
+      // Validate minimal GeoJSON structure
+      if (!geojson || typeof geojson !== 'object') {
+        throw new Error(`Invalid response from API for device ID ${id}`);
       }
-      const geojson = await res.json();
-      console.log(`✅ Loaded local fallback GeoJSON for device ID ${id}`, geojson);
+
+      if (!geojson.type || !geojson.features) {
+        // Some APIs might return a wrapper; try to find geojson inside
+        if (geojson.data && geojson.data.type && geojson.data.features) {
+          console.log(`ℹ️ Extracting geojson from wrapper for device ID ${id}`);
+          return geojson.data;
+        }
+        throw new Error(`Invalid GeoJSON structure for device ID ${id}. Missing 'type' or 'features'.`);
+      }
+
+      console.log(`✅ Successfully loaded GeoJSON from API for device ID ${id}`);
       return geojson;
-    } catch (fallbackError) {
-      console.error(`❌ Fallback also failed for device ID ${id}:`, fallbackError);
-      throw new Error(`Failed to load GeoJSON for device ID ${id} — no API or local fallback available.`);
+    } catch (apiError) {
+      console.warn(`⚠️ API call failed for device ID ${id}:`, apiError.message);
+      console.log(`📂 Trying local fallback for device ID ${id}...`);
+
+      // Jika API gagal, gunakan fallback dari master GeoJSON
+      const wsName = DEVICE_ID_TO_WS_NAME[id];
+      if (!wsName) {
+        throw new Error(`Unknown device ID: ${id}`);
+      }
+
+      const masterGeojson = await loadMasterGeojson();
+      const filteredGeojson = filterGeojsonByName(masterGeojson, wsName);
+
+      if (!filteredGeojson || filteredGeojson.features.length === 0) {
+        throw new Error(
+          `No features found for wilayah sungai "${wsName}" (device ID ${id})`
+        );
+      }
+
+      console.log(
+        `✅ Successfully loaded GeoJSON from local fallback for device ID ${id}`,
+        filteredGeojson
+      );
+      return filteredGeojson;
     }
+  } catch (error) {
+    console.error(
+      `❌ FAILED to load GeoJSON for device ID ${id}:`,
+      error.message || error
+    );
+    throw new Error(
+      `Failed to load GeoJSON for device ID ${id} — no API or local fallback available.`
+    );
   }
 };

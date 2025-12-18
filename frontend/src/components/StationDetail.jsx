@@ -406,7 +406,6 @@ const StationDetail = ({
                             <p className="text-3xl font-bold text-gray-600">{typeof stationData.value === 'number' ? stationData.value.toFixed(1) : (stationData.value ?? '-')} {stationData.unit}</p>
                             {/* Source indicator */}
                             <p className="text-xs text-gray-500 mt-1">
-                                Sumber: {(dataSource === 'data-actuals' ? (<span className="text-green-600 font-medium">DataActuals</span>) : dataSource === 'fallback' ? (<span className="text-yellow-600 font-medium">Fallback</span>) : (<span className="text-gray-500">Ticker</span>))}
                             </p>
                         </div>
                     </div>
@@ -433,19 +432,25 @@ const StationDetail = ({
                                 {stationData.sensors ? stationData.sensors.length : 0} Sensor
                             </span>
 
-                                <button
-                                    onClick={async () => {
-                                        const foundStation = tickerData.find((s) => s.id === selectedStation.id);
-                                        if (!foundStation) return;
-                                        await fetchStationSensors(foundStation, { showWarnings: true });
-                                    }}
-                                    title="Refresh data sensor"
-                                    className="inline-flex items-center justify-center w-9 h-9 rounded-md border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
-                                >
-                                    <RefreshCw
-                                        className={`h-4 w-4 text-gray-600 ${isRefreshing ? "animate-spin" : ""}`}
-                                    />
-                                </button>
+                            <button
+                                onClick={async () => {
+                                    const foundStation = tickerData.find((s) => s.id === selectedStation.id);
+                                    if (!foundStation) return;
+                                    await fetchStationSensors(foundStation, { showWarnings: true });
+                                }}
+                                
+                            >
+                                {isRefreshing ? (
+                                    <svg className="animate-spin h-4 w-4 text-gray-600" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z"></path>
+                                    </svg>
+                                ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v6h6M20 20v-6h-6" />
+                                    </svg>
+                                )}
+                            </button>
                         </div>
                     </div>
                     

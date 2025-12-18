@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, lazy, Suspense } from "react";
+import React, { useEffect, useRef, useState, lazy, Suspense, useImperativeHandle, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { fetchDevices } from "../../services/devices";
@@ -25,7 +25,7 @@ mapboxgl.accessToken =
 
 const BASE_SIZE = 32;
 
-const MapboxMap = ({ tickerData, onStationSelect }) => {
+const MapboxMap = React.forwardRef(({ tickerData, onStationSelect, onAutoSwitch, isAutoSwitchOn, onCloseSidebar }, ref) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
@@ -70,6 +70,108 @@ const MapboxMap = ({ tickerData, onStationSelect }) => {
   const riversLayerId = "rivers-jatim-layer";
 
   const [hoveredFeature, setHoveredFeature] = useState(null);
+
+  // Wrap handleLayerToggle dengan useCallback agar dapat digunakan di useImperativeHandle
+  const memoizedHandleRegionLayerToggle = useCallback(
+    (regionId, isActive) => {
+      if (!map.current || !mapLoaded) return;
+      const deviceId = REGION_ID_TO_DEVICE_ID[regionId];
+      if (deviceId === undefined) {
+        console.warn(`❌ Tidak ada deviceId untuk region: ${regionId}`);
+        return;
+      }
+      const sourceId = `region-${regionId}`;
+      const layerId = `region-${regionId}-fill`;
+
+      if (isActive) {
+        try {
+          (async () => {
+            const geojson = await fetchDeviceGeoJSON(deviceId);
+            if (!geojson || !Array.isArray(geojson.features) || geojson.features.length === 0) {
+              setActiveLayers((prev) => ({ ...prev, [regionId]: false }));
+              return;
+            }
+            if (map.current.getLayer(layerId)) map.current.removeLayer(layerId);
+            if (map.current.getSource(sourceId)) map.current.removeSource(sourceId);
+
+            map.current.addSource(sourceId, { type: "geojson", data: geojson });
+            map.current.addLayer({
+              id: layerId,
+              type: "fill",
+              source: sourceId,
+              paint: {
+                "fill-color": DEVICE_ID_TO_COLOR[deviceId] || "#6B7280",
+                "fill-opacity": 0.5,
+                "fill-outline-color": "#4B5563",
+              },
+            });
+
+            const clickHandler = (e) => {
+              try {
+                const features = e?.features || [];
+                if (features.length === 0) return;
+                const bbox = getBBox(features[0].geometry);
+                if (isFinite(bbox[0][0]) && isFinite(bbox[1][0])) {
+                  map.current.fitBounds(bbox, { padding: 60, maxZoom: 12, duration: 800 });
+                }
+              } catch (err) {
+                console.error("Error on region click:", err);
+              }
+            };
+
+            const mouseEnterHandler = () => {
+              if (map.current) map.current.getCanvas().style.cursor = "pointer";
+            };
+            const mouseLeaveHandler = () => {
+              if (map.current) map.current.getCanvas().style.cursor = "";
+            };
+
+            map.current.on("click", layerId, clickHandler);
+            map.current.on("mouseenter", layerId, mouseEnterHandler);
+            map.current.on("mouseleave", layerId, mouseLeaveHandler);
+
+            setRegionLayers((prev) => ({
+              ...prev,
+              [regionId]: { sourceId, layerId, clickHandler, mouseEnterHandler, mouseLeaveHandler },
+            }));
+          })();
+        } catch (e) {
+          console.error(`❌ Gagal muat GeoJSON untuk device ID ${deviceId}:`, e);
+          setActiveLayers((prev) => ({ ...prev, [regionId]: false }));
+        }
+      } else {
+        const existing = regionLayers[regionId];
+        if (existing) {
+          if (existing.clickHandler) map.current.off("click", layerId, existing.clickHandler);
+          if (existing.mouseEnterHandler) map.current.off("mouseenter", layerId, existing.mouseEnterHandler);
+          if (existing.mouseLeaveHandler) map.current.off("mouseleave", layerId, existing.mouseLeaveHandler);
+        }
+        if (map.current.getLayer(layerId)) map.current.removeLayer(layerId);
+        if (map.current.getSource(sourceId)) map.current.removeSource(sourceId);
+
+        setRegionLayers((prev) => {
+          const n = { ...prev };
+          delete n[regionId];
+          return n;
+        });
+      }
+    },
+    [mapLoaded, regionLayers]
+  );
+
+  // Expose handleLayerToggle melalui ref untuk dipanggil dari parent
+  useImperativeHandle(ref, () => ({
+    handleLayerToggle: (layerId) => {
+      console.log("🎯 handleLayerToggle called from parent:", layerId);
+      setActiveLayers((prev) => {
+        const newState = { ...prev, [layerId]: !prev[layerId] };
+        if (layerId.startsWith("ws-")) {
+          memoizedHandleRegionLayerToggle(layerId, newState[layerId]);
+        }
+        return newState;
+      });
+    },
+  }), [memoizedHandleRegionLayerToggle]);
 
   // Load devices
   useEffect(() => {
@@ -157,94 +259,11 @@ const MapboxMap = ({ tickerData, onStationSelect }) => {
 
   const handleAutoSwitchToggle = (isActive) => setAutoSwitchActive(isActive);
 
-  // ✅ Toggle region layers (dari API)
-  const handleRegionLayerToggle = async (regionId, isActive) => {
-    if (!map.current || !mapLoaded) return;
-    const deviceId = REGION_ID_TO_DEVICE_ID[regionId];
-    if (deviceId === undefined) {
-      console.warn(`❌ Tidak ada deviceId untuk region: ${regionId}`);
-      return;
-    }
-    const sourceId = `region-${regionId}`;
-    const layerId = `region-${regionId}-fill`;
-
-    if (isActive) {
-      try {
-        const geojson = await fetchDeviceGeoJSON(deviceId);
-        if (!geojson || !Array.isArray(geojson.features) || geojson.features.length === 0) {
-          setActiveLayers((prev) => ({ ...prev, [regionId]: false }));
-          return;
-        }
-        if (map.current.getLayer(layerId)) map.current.removeLayer(layerId);
-        if (map.current.getSource(sourceId)) map.current.removeSource(sourceId);
-
-        map.current.addSource(sourceId, { type: "geojson", data: geojson });
-        map.current.addLayer({
-          id: layerId,
-          type: "fill",
-          source: sourceId,
-          paint: {
-            "fill-color": DEVICE_ID_TO_COLOR[deviceId] || "#6B7280",
-            "fill-opacity": 0.5,
-            "fill-outline-color": "#4B5563",
-          },
-        });
-
-        const clickHandler = (e) => {
-          try {
-            const features = e?.features || [];
-            if (features.length === 0) return;
-            const bbox = getBBox(features[0].geometry);
-            if (isFinite(bbox[0][0]) && isFinite(bbox[1][0])) {
-              map.current.fitBounds(bbox, { padding: 60, maxZoom: 12, duration: 800 });
-            }
-          } catch (err) {
-            console.error("Error on region click:", err);
-          }
-        };
-
-        const mouseEnterHandler = () => {
-          if (map.current) map.current.getCanvas().style.cursor = "pointer";
-        };
-        const mouseLeaveHandler = () => {
-          if (map.current) map.current.getCanvas().style.cursor = "";
-        };
-
-        map.current.on("click", layerId, clickHandler);
-        map.current.on("mouseenter", layerId, mouseEnterHandler);
-        map.current.on("mouseleave", layerId, mouseLeaveHandler);
-
-        setRegionLayers((prev) => ({
-          ...prev,
-          [regionId]: { sourceId, layerId, clickHandler, mouseEnterHandler, mouseLeaveHandler },
-        }));
-      } catch (e) {
-        console.error(`❌ Gagal muat GeoJSON untuk device ID ${deviceId}:`, e);
-        setActiveLayers((prev) => ({ ...prev, [regionId]: false }));
-      }
-    } else {
-      const existing = regionLayers[regionId];
-      if (existing) {
-        if (existing.clickHandler) map.current.off("click", layerId, existing.clickHandler);
-        if (existing.mouseEnterHandler) map.current.off("mouseenter", layerId, existing.mouseEnterHandler);
-        if (existing.mouseLeaveHandler) map.current.off("mouseleave", layerId, existing.mouseLeaveHandler);
-      }
-      if (map.current.getLayer(layerId)) map.current.removeLayer(layerId);
-      if (map.current.getSource(sourceId)) map.current.removeSource(sourceId);
-
-      setRegionLayers((prev) => {
-        const n = { ...prev };
-        delete n[regionId];
-        return n;
-      });
-    }
-  };
-
   const handleLayerToggle = (layerId) => {
     if (layerId.startsWith("ws-")) {
       setActiveLayers((prev) => {
         const newState = { ...prev, [layerId]: !prev[layerId] };
-        handleRegionLayerToggle(layerId, newState[layerId]);
+        memoizedHandleRegionLayerToggle(layerId, newState[layerId]);
         return newState;
       });
     } else {
@@ -798,6 +817,8 @@ const MapboxMap = ({ tickerData, onStationSelect }) => {
       </Suspense>
     </div>
   );
-};
+});
+
+MapboxMap.displayName = "MapboxMap";
 
 export default MapboxMap;

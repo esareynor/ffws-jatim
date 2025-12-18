@@ -397,7 +397,6 @@ const StationDetail = ({
                             <p className="text-3xl font-bold text-gray-600">{typeof stationData.value === 'number' ? stationData.value.toFixed(1) : (stationData.value ?? '-')} {stationData.unit}</p>
                             {/* Source indicator */}
                             <p className="text-xs text-gray-500 mt-1">
-                                Sumber: {(dataSource === 'data-actuals' ? (<span className="text-green-600 font-medium">DataActuals</span>) : dataSource === 'fallback' ? (<span className="text-yellow-600 font-medium">Fallback</span>) : (<span className="text-gray-500">Ticker</span>))}
                             </p>
                         </div>
                     </div>
@@ -434,8 +433,7 @@ const StationDetail = ({
                                     if (!foundStation) return;
                                     await fetchStationSensors(foundStation, { showWarnings: true });
                                 }}
-                                title="Refresh data sensor"
-                                className="inline-flex items-center justify-center w-9 h-9 rounded-md border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
+                                
                             >
                                 {isRefreshing ? (
                                     <svg className="animate-spin h-4 w-4 text-gray-600" viewBox="0 0 24 24">

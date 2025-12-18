@@ -1,8 +1,7 @@
 // src/components/StationDetail.jsx
 
 import React, { useState, useEffect } from "react";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLocationDot } from '@fortawesome/free-solid-svg-icons';
+import { MapPin, Gauge, RefreshCw, AlertTriangle, ArrowLeft, ArrowRight } from "lucide-react";
 import { getStatusColor, getStatusBgColor, getStatusText } from "@/utils/statusUtils";
 import { fetchDataActualsBySensor } from "../services/dataActuals";
 import { fetchDevice } from "../services/devices";
@@ -91,7 +90,8 @@ const StationDetail = ({
                 if (!sensorCode) return { ...sensor, name: foundStation.name };
 
                 try {
-                    const resp = await fetchDataActualsBySensor(sensorCode, { per_page: 1, sort_by: 'created_at', sort_order: 'desc' });
+                    // Fix: gunakan received_at untuk sorting, bukan created_at
+                    const resp = await fetchDataActualsBySensor(sensorCode, { per_page: 1, sort_by: 'received_at', sort_order: 'desc' });
                     if (signal?.aborted) throw new Error('aborted');
                     const list = resp?.data || resp || [];
                     const latest = Array.isArray(list) ? list[0] : list;
@@ -99,10 +99,18 @@ const StationDetail = ({
                         return {
                             ...sensor,
                             name: foundStation.name,
+                            // Tambahkan informasi sensor lengkap
+                            code: sensorCode,
+                            sensor_code: sensorCode,
+                            parameter: sensor.parameter || latest.parameter || 'water_level',
+                            type: sensor.type || latest.type || sensor.parameter || 'water_level',
+                            description: sensor.description || latest.description,
                             value: latest.value ?? latest.nilai ?? sensor.value,
                             unit: latest.unit ?? sensor.unit,
-                            lastUpdate: latest.created_at ?? latest.updated_at ?? sensor.lastUpdate,
-                            status: latest.status ?? sensor.status,
+                            lastUpdate: latest.created_at ?? latest.updated_at ?? latest.received_at ?? sensor.lastUpdate,
+                            // Fix: Gunakan threshold_status dari API, fallback ke status atau sensor.status
+                            status: latest.threshold_status ?? latest.status ?? sensor.status,
+                            threshold_status: latest.threshold_status ?? sensor.threshold_status,
                         };
                     }
                 } catch (err) {
@@ -147,11 +155,16 @@ const StationDetail = ({
             // For ARR stations the elevation/value should be zero and unit mm
             const valueNum = isARRStation ? 0 : (waterSensor ? parseFloat(waterSensor.value) : parseFloat(foundStation.value));
 
+            // Fix: Gunakan status dari sensor terbaru, bukan hardcoded
+            const mainStatus = waterSensor?.status || waterSensor?.threshold_status || foundStation.status || 'safe';
+
             const newStation = {
                 ...foundStation,
                 sensors: sensorsUpdated,
                 value: Number.isFinite(valueNum) ? valueNum : (foundStation.value ?? null),
                 unit: isARRStation ? 'mm' : (waterSensor?.unit || foundStation.unit),
+                status: mainStatus, // Fix: Set status dari data actual
+                threshold_status: waterSensor?.threshold_status || foundStation.threshold_status,
             };
 
             setStationData(newStation);
@@ -337,15 +350,13 @@ const StationDetail = ({
                                 onClick={handleClose}
                                 className="p-2 hover:bg-gray-100 rounded-full transition-colors self-start mt-1"
                             >
-                                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                </svg>
+                                <ArrowLeft className="w-5 h-5 text-gray-600" />
                             </button>
                         )}
                         <div className="flex-1">
 
                             <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                <FontAwesomeIcon icon={faLocationDot} className="text-blue-600 text-sm" />
+                                <MapPin className="text-blue-600 w-4 h-4" />
                                 {stationData.name}
                             </h3>
                             {/* Arrow button untuk membuka detail panel */}
@@ -368,9 +379,7 @@ const StationDetail = ({
 
                                         {/* Ikon panah di sebelah kanan */}
                                         <div className="text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all duration-300">
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                                            </svg>
+                                            <ArrowRight className="h-6 w-6" />
                                         </div>
                                     </button>
                                 </div>
@@ -406,9 +415,7 @@ const StationDetail = ({
                 {/* Address Card */}
                 <div className="p-4 rounded-lg border border-gray-200 bg-white shadow-sm">
                     <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                        </svg>
+                        <MapPin className="h-5 w-5 mr-2 text-gray-600" />
                         Alamat
                     </h3>
                     <p className="text-gray-600">{stationData.address || "Alamat tidak tersedia"}</p>
@@ -418,9 +425,7 @@ const StationDetail = ({
                 <div className="p-4 rounded-lg border border-gray-200 bg-white shadow-sm">
                     <div className="flex items-center justify-between mb-3">
                         <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-                            </svg>
+                            <Gauge className="h-5 w-5 mr-2 text-gray-600" />
                             Informasi Sensor
                         </h3>
                         <div className="flex items-center gap-2">
@@ -428,26 +433,19 @@ const StationDetail = ({
                                 {stationData.sensors ? stationData.sensors.length : 0} Sensor
                             </span>
 
-                            <button
-                                onClick={async () => {
-                                    const foundStation = tickerData.find((s) => s.id === selectedStation.id);
-                                    if (!foundStation) return;
-                                    await fetchStationSensors(foundStation, { showWarnings: true });
-                                }}
-                                title="Refresh data sensor"
-                                className="inline-flex items-center justify-center w-9 h-9 rounded-md border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
-                            >
-                                {isRefreshing ? (
-                                    <svg className="animate-spin h-4 w-4 text-gray-600" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z"></path>
-                                    </svg>
-                                ) : (
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v6h6M20 20v-6h-6" />
-                                    </svg>
-                                )}
-                            </button>
+                                <button
+                                    onClick={async () => {
+                                        const foundStation = tickerData.find((s) => s.id === selectedStation.id);
+                                        if (!foundStation) return;
+                                        await fetchStationSensors(foundStation, { showWarnings: true });
+                                    }}
+                                    title="Refresh data sensor"
+                                    className="inline-flex items-center justify-center w-9 h-9 rounded-md border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
+                                >
+                                    <RefreshCw
+                                        className={`h-4 w-4 text-gray-600 ${isRefreshing ? "animate-spin" : ""}`}
+                                    />
+                                </button>
                         </div>
                     </div>
                     
@@ -457,28 +455,53 @@ const StationDetail = ({
                                 <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
                                     <div className="flex items-center">
                                         <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-                                            </svg>
+                                            <Gauge className="h-6 w-6 text-blue-600" />
                                         </div>
                                         <div>
-                                            <p className="font-medium text-gray-900">{sensor.name}</p>
-                                            <p className="text-sm text-gray-500">{sensor.type}</p>
+                                            <p className="font-medium text-gray-900">{sensor.name || stationData.name}</p>
+                                            <p className="text-sm text-gray-500">
+                                                {sensor.type || sensor.parameter || 'Sensor'}
+                                                {sensor.code && (
+                                                    <span className="ml-2 text-xs text-gray-400">({sensor.code})</span>
+                                                )}
+                                            </p>
+                                            {sensor.description && (
+                                                <p className="text-xs text-gray-400 mt-0.5">{sensor.description}</p>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-medium text-gray-900">{sensor.value} {sensor.unit}</p>
-                                        <p className="text-sm text-gray-500">Update: {sensor.lastUpdate}</p>
+                                        <p className="font-medium text-gray-900">
+                                            {sensor.value !== undefined && sensor.value !== null 
+                                                ? (typeof sensor.value === 'number' 
+                                                    ? sensor.value.toFixed(2) 
+                                                    : sensor.value
+                                                ) 
+                                                : '-'} {sensor.unit || ''}
+                                        </p>
+                                        <p className="text-sm text-gray-500">
+                                            {sensor.lastUpdate 
+                                                ? `Update: ${new Date(sensor.lastUpdate).toLocaleString('id-ID')}`
+                                                : 'Update: Tidak tersedia'}
+                                        </p>
+                                        {sensor.status && (
+                                            <p className={`text-xs mt-1 font-medium ${
+                                                sensor.status === 'safe' || sensor.status === 'normal' ? 'text-green-600' :
+                                                sensor.status === 'warning' ? 'text-yellow-600' :
+                                                sensor.status === 'alert' || sensor.status === 'danger' ? 'text-red-600' :
+                                                'text-gray-600'
+                                            }`}>
+                                                {getStatusText(sensor.status)}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-6">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                            </svg>
-                            <p className="mt-2 text-gray-500">Tidak ada data sensor</p>
+                        <div className="text-center py-6 flex flex-col items-center">
+                            <AlertTriangle className="h-10 w-10 text-gray-400 mb-2" />
+                            <p className="mt-1 text-gray-500">Tidak ada data sensor</p>
                         </div>
                     )}
                 </div>

@@ -18,17 +18,17 @@ export const fetchDevices = async (forceRefresh = false) => {
     
     // Return cache if valid and not forced refresh
     if (!forceRefresh && devicesCache && devicesCacheTime && (now - devicesCacheTime < CACHE_DURATION)) {
-        console.log('📦 Using cached devices data');
+        console.log('Using cached devices data');
         return devicesCache;
     }
     
-    // 🔥 If there's already a pending request, return that promise
+    // If there's already a pending request, return that promise
     if (pendingRequest) {
         console.log('⏳ Waiting for existing API call to complete...');
         return pendingRequest;
     }
     
-    console.log('🔄 Fetching fresh devices data from API');
+    console.log('Fetching fresh devices data from API');
     
     // Create and store the pending request
     pendingRequest = fetchWithAuth("/devices")
@@ -53,7 +53,7 @@ export const fetchDevices = async (forceRefresh = false) => {
 export const clearDevicesCache = () => {
     devicesCache = null;
     devicesCacheTime = null;
-    console.log('🗑️ Devices cache cleared');
+    console.log('Devices cache cleared');
 };
 
 /**

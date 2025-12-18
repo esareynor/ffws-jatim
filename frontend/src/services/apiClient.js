@@ -1,6 +1,6 @@
 import { tokenManager } from './tokenManager.js';
-
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://ffws-backend.rachmanesa.com/api";
+
 
 
 /**
@@ -49,7 +49,7 @@ export const fetchWithAuth = async (endpoint, options = {}) => {
 
         // Handle 401 Unauthorized - token might be expired
         if (response.status === 401 && tokenManager.getToken() && !tokenManager.isRefreshing) {
-            console.log("🔄 Token expired, attempting refresh...");
+            console.log("Token expired, attempting refresh...");
             
             try {
                 await tokenManager.refreshToken();

@@ -4,6 +4,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { fetchDevices } from "../../services/devices";
 import { fetchDeviceGeoJSON } from "/src/services/MapGeo";
 import GoogleMapsSearchbar from "../common/GoogleMapsSearchbar";
+import { useStation, useDevices, useAutoSwitch, useMap, useUI } from "@/hooks/useAppContext";
 import {
   REGION_ID_TO_DEVICE_ID,
   DEVICE_ID_TO_COLOR,
@@ -25,7 +26,13 @@ mapboxgl.accessToken =
 
 const BASE_SIZE = 32;
 
-const MapboxMap = React.forwardRef(({ tickerData, onStationSelect, onAutoSwitch, isAutoSwitchOn, onCloseSidebar }, ref) => {
+const MapboxMap = React.forwardRef((props, ref) => {
+  // Get data from Context
+  const { handleStationSelect, handleAutoSwitch, handleCloseStationDetail } = useStation();
+  const { tickerData } = useDevices();
+  const { isAutoSwitchOn } = useAutoSwitch();
+  const { mapRef: contextMapRef } = useMap();
+  
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
@@ -242,7 +249,7 @@ const MapboxMap = React.forwardRef(({ tickerData, onStationSelect, onAutoSwitch,
 
   const handleShowDetail = (station) => {
     setTooltip((prev) => ({ ...prev, visible: false }));
-    if (onStationSelect) onStationSelect(station);
+    handleStationSelect(station);
   };
 
   const handleCloseTooltip = () => setTooltip((prev) => ({ ...prev, visible: false }));
@@ -681,7 +688,6 @@ const MapboxMap = React.forwardRef(({ tickerData, onStationSelect, onAutoSwitch,
       {mapLoaded && map.current ? (
         <GoogleMapsSearchbar
           mapboxMap={map.current}
-          stationsData={tickerData}
           onSearch={handleSearch}
           isSidebarOpen={showFilterSidebar}
           placeholder="Cari Lokasi di Jawa Timur..."

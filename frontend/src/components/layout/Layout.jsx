@@ -1,4 +1,6 @@
-import React, { useState, useRef, useCallback, memo, lazy, Suspense, useEffect } from "react";
+import React, { memo, lazy, Suspense } from "react";
+import { useStation, useDevices, useUI, useAutoSwitch, useMap, useSearch } from "@/hooks/useAppContext";
+
 const GoogleMapsSearchbar = lazy(() => import("@components/common/GoogleMapsSearchbar"));
 const MapboxMap = lazy(() => import("@/components/devices/MapboxMap"));
 const FloatingLegend = lazy(() => import("@components/common/FloatingLegend"));
@@ -6,143 +8,22 @@ const FloodRunningBar = lazy(() => import("@/components/common/FloodRunningBar")
 const StationDetail = lazy(() => import("@/components/StationDetail"));
 const DetailPanel = lazy(() => import("@components/sensors/DetailPanel"));
 const FilterPanel = lazy(() => import("@components/common/FilterPanel"));
+
 const Layout = ({ children }) => {
-    const [tickerData, setTickerData] = useState(null);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedStation, setSelectedStation] = useState(null);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false);
-    const [currentStationIndex, setCurrentStationIndex] = useState(0);
-    const [isAutoSwitchOn, setIsAutoSwitchOn] = useState(false);
-    const mapRef = useRef(null);
-    const [isFilterOpen, setIsFilterOpen] = useState(false);
-    const [isBackdropVisible, setIsBackdropVisible] = useState(false);
-
-    // Memoize event handlers untuk mencegah re-render yang tidak perlu
-    const handleSearch = useCallback((query) => {
-        setSearchQuery(query);
-    }, []);
-
-    const handleStationSelect = useCallback((station) => {
-        setSelectedStation(station);
-        // Always open the sidebar on station select; do not hide it when the detail panel opens
-        setIsSidebarOpen(true);
-    }, []);
-
-    const handleAutoSwitchToggle = useCallback((isOn) => {
-        console.log('=== LAYOUT: AUTO SWITCH TOGGLE REQUESTED ===');
-        console.log('Requested state:', isOn);
-        console.log('Current isAutoSwitchOn:', isAutoSwitchOn);
-        console.log('Current tickerData length:', tickerData?.length || 0);
-        
-        // Debounce untuk mencegah rapid state changes
-        const timeoutId = setTimeout(() => {
-            console.log('Setting isAutoSwitchOn to:', isOn);
-            setIsAutoSwitchOn(isOn);
-            
-            // If auto switch is turned off, close sidebar
-            if (!isOn) {
-                console.log('Auto switch OFF - closing sidebar');
-                // Use centralized close handler so detail panel also closes
-                handleCloseStationDetail();
-            } else {
-                console.log('Auto switch ON - closing detail panel');
-                // Jika auto switch diaktifkan, tutup detail panel
-                setIsDetailPanelOpen(false);
-            }
-        }, 50);
-        
-        return () => clearTimeout(timeoutId);
-    }, [isAutoSwitchOn, tickerData]);
-
-    const handleCloseStationDetail = useCallback(() => {
-        setSelectedStation(null);
-        setIsSidebarOpen(false);
-        // Also close the right-hand detail panel when the sidebar is closed from the sidebar
-        setIsDetailPanelOpen(false);
-    }, []);
-
-    const handleToggleDetailPanel = useCallback(() => {
-        if (isDetailPanelOpen) {
-            // Jika panel terbuka, tutup dengan animasi
-            handleCloseDetailPanel();
-        } else {
-            // Jika panel tertutup, buka langsung (do not close sidebar)
-            setIsDetailPanelOpen(true);
-        }
-    }, []);
-
-    const handleCloseDetailPanel = useCallback(() => {
-        setIsDetailPanelOpen(false);
-    }, []);
-
-    const handleLayerToggle = useCallback((layerId) => {
-        console.log(`Layer toggle requested: ${layerId}`);
-        // Trigger layer toggle di MapboxMap melalui ref
-        if (mapRef.current?.handleLayerToggle) {
-            mapRef.current.handleLayerToggle(layerId);
-        }
-    }, []);
-
-    const handleAutoSwitch = useCallback((station, index) => {
-        setCurrentStationIndex(index);
-        setSelectedStation(station);
-        // Auto open sidebar when auto switching
-        setIsSidebarOpen(true);
-    }, [isDetailPanelOpen]);
-
-    const handleStationChange = useCallback(
-        (device, index) => {
-            const deviceName = device?.name || device?.device_name || device?.station_name;
-            console.log('Layout: Device change requested:', deviceName, 'index:', index);
-            
-            // Validasi input
-            if (!device || index === undefined) {
-                console.warn('Layout: Invalid device or index provided');
-                return;
-            }
-            
-            // Update state dengan debouncing untuk mencegah rapid changes
-            const timeoutId = setTimeout(() => {
-                setCurrentStationIndex(index);
-                // Buka panel detail saat auto switch
-                setSelectedStation(device);
-                setIsSidebarOpen(true);
-                // Tutup detail panel jika auto switch sedang berjalan
-                if (isAutoSwitchOn) {
-                    setIsDetailPanelOpen(false);
-                }
-            }, 10);
-            
-            // Trigger map auto switch (tidak perlu debounce karena ini external call)
-            if (window.mapboxAutoSwitch) {
-                try {
-                    window.mapboxAutoSwitch(device, index);
-                } catch (error) {
-                    console.error('Layout: Error calling mapboxAutoSwitch:', error);
-                }
-            }
-            
-            return () => clearTimeout(timeoutId);
-        },
-        [isAutoSwitchOn]
-    );
-
-    // Kontrol animasi backdrop fade in/out
-    useEffect(() => {
-        const hasModal = selectedStation || isDetailPanelOpen || isFilterOpen;
-        
-        if (hasModal) {
-            // Fade in backdrop
-            setIsBackdropVisible(true);
-        } else {
-            // Fade out backdrop
-            const timeout = setTimeout(() => {
-                setIsBackdropVisible(false);
-            }, 300); // Sama dengan durasi animasi modal
-            return () => clearTimeout(timeout);
-        }
-    }, [selectedStation, isDetailPanelOpen, isFilterOpen]);
+    // ===== Context Hooks - No more prop drilling! =====
+    const { selectedStation, currentStationIndex, handleStationSelect, handleCloseStationDetail, handleStationChange } = useStation();
+    const { tickerData, setTickerData } = useDevices();
+    const { 
+        isSidebarOpen, 
+        isDetailPanelOpen, 
+        isFilterOpen,
+        handleToggleDetailPanel, 
+        handleCloseDetailPanel,
+        setIsFilterOpen 
+    } = useUI();
+    const { isAutoSwitchOn, handleAutoSwitchToggle, handleAutoSwitch } = useAutoSwitch();
+    const { mapRef, handleLayerToggle } = useMap();
+    const { handleSearch } = useSearch();
 
     return (
         <div className="h-screen bg-gray-50 relative overflow-hidden">
@@ -155,19 +36,7 @@ const Layout = ({ children }) => {
                         </div>
                     }
                 >
-                    <MapboxMap
-                        ref={mapRef}
-                        tickerData={tickerData}
-                        onStationSelect={handleStationSelect}
-                        onAutoSwitch={handleAutoSwitch}
-                        isAutoSwitchOn={isAutoSwitchOn}
-                        onCloseSidebar={() => {
-                            if (!isAutoSwitchOn) {
-                                // use the centralized close handler so it also closes the detail panel
-                                handleCloseStationDetail();
-                            }
-                        }}
-                    />
+                    <MapboxMap ref={mapRef} />
                 </Suspense>
             </div>
 
@@ -182,11 +51,7 @@ const Layout = ({ children }) => {
 
             {/* Flood Running Bar */}
             <Suspense fallback={<div className="h-16 bg-white/80 animate-pulse"></div>}>
-                <FloodRunningBar
-                    onDataUpdate={setTickerData}
-                    onStationSelect={handleStationSelect}
-                    isSidebarOpen={isSidebarOpen}
-                />
+                <FloodRunningBar onDataUpdate={setTickerData} />
             </Suspense>
 
             {/* Bottom-right container for Floating Legend - hidden on mobile */}
@@ -206,44 +71,21 @@ const Layout = ({ children }) => {
                     </div>
                 }
             >
-                                {selectedStation && (
-                                    <StationDetail
-                                            selectedStation={selectedStation}
-                                            onClose={handleCloseStationDetail}
-                                            tickerData={tickerData}
-                                            isAutoSwitchOn={isAutoSwitchOn}
-                                            showArrow={true}
-                                            onArrowToggle={handleToggleDetailPanel}
-                                            isDetailPanelOpen={isDetailPanelOpen}
-                                            onCloseDetailPanel={handleCloseDetailPanel}
-                                    />
-                                )}
+                {selectedStation && <StationDetail />}
             </Suspense>
 
             {/* Detail Panel */}
             <Suspense
                 fallback={<div className="fixed right-0 top-0 h-full w-80 bg-white shadow-lg animate-pulse"></div>}
             >
-                <DetailPanel
-                    isOpen={isDetailPanelOpen}
-                    onClose={handleCloseDetailPanel}
-                    stationData={selectedStation}
-                    chartHistory={selectedStation?.history || []}
-                    isAutoSwitchOn={isAutoSwitchOn}
-                />
+                <DetailPanel />
             </Suspense>
 
             {/* Right-side Filter Panel */}
             <Suspense fallback={<div className="fixed right-0 top-0 h-full w-80 bg-white shadow-lg animate-pulse"></div>}>
                 <FilterPanel
-                    isOpen={isFilterOpen}
                     onOpen={() => setIsFilterOpen(true)}
                     onClose={() => setIsFilterOpen(false)}
-                    tickerData={tickerData}
-                    handleStationChange={handleStationChange}
-                    currentStationIndex={currentStationIndex}
-                    handleAutoSwitchToggle={handleAutoSwitchToggle}
-                    onLayerToggle={handleLayerToggle}
                 />
             </Suspense>
 

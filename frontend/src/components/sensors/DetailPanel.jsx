@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { getStatusText } from "@/utils/statusUtils";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLocationDot } from '@fortawesome/free-solid-svg-icons';
+import { useStation, useUI, useAutoSwitch } from "@/hooks/useAppContext";
 
 // Lazy load komponen chart yang berat untuk optimasi bundle
 const MonitoringChart = lazy(() => import("@/components/common/MonitoringDualLinet"));
@@ -20,7 +21,16 @@ const DETAIL_TABS = [
  * Komponen panel detail dengan layout two column
  * Menampilkan informasi lengkap tentang stasiun monitoring banjir
  */
-const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchOn = false }) => {
+const DetailPanel = () => {
+    // Get data from Context
+    const { selectedStation } = useStation();
+    const { isDetailPanelOpen, handleCloseDetailPanel } = useUI();
+    const { isAutoSwitchOn } = useAutoSwitch();
+    
+    const stationData = selectedStation;
+    const chartHistory = selectedStation?.history || [];
+    const isOpen = isDetailPanelOpen;
+    const onClose = handleCloseDetailPanel;
     const [isVisible, setIsVisible] = useState(false);
     const [isNavbarVisible, setIsNavbarVisible] = useState(false);
     const [activeTab, setActiveTab] = useState("sensor"); // 'sensor' | 'cuaca' | 'monitoring' | 'riwayat'

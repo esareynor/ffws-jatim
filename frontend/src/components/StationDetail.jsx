@@ -6,16 +6,15 @@ import { faLocationDot } from '@fortawesome/free-solid-svg-icons';
 import { getStatusColor, getStatusBgColor, getStatusText } from "@/utils/statusUtils";
 import { fetchDataActualsBySensor } from "../services/dataActuals";
 import { fetchDevice } from "../services/devices";
+import { useStation, useDevices, useUI } from "@/hooks/useAppContext";
 
-const StationDetail = ({
-    selectedStation,
-    onClose,
-    tickerData,
-    showArrow = false,
-    onArrowToggle,
-    isDetailPanelOpen = false,
-    onCloseDetailPanel,
-}) => {
+const StationDetail = () => {
+    // Get data from Context
+    const { selectedStation, handleCloseStationDetail } = useStation();
+    const { tickerData } = useDevices();
+    const { isDetailPanelOpen, handleToggleDetailPanel, handleCloseDetailPanel } = useUI();
+    
+    const showArrow = true;
     const [stationData, setStationData] = useState(null);
     const [isVisible, setIsVisible] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
@@ -352,7 +351,7 @@ const StationDetail = ({
                             {showArrow && !isDetailPanelOpen && (
                                 <div className="mt-4 pt-4 border-t border-gray-200">
                                     <button
-                                        onClick={onArrowToggle}
+                                        onClick={handleToggleDetailPanel}
                                         className="group w-full flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200 hover:border-blue-500 hover:bg-blue-50 hover:shadow-lg transition-all duration-300 ease-in-out"
                                         title="Buka Detail Panel"
                                     >

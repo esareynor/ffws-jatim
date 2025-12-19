@@ -1,10 +1,15 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { fetchDevices } from "@/services/devices";
+import { useStation, useUI } from "@/hooks/useAppContext";
 
 // Lazy load Chart component untuk optimasi bundle
 const Chart = lazy(() => import("@/components/common/Chart"));
 
-const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarOpen = false }) => {
+const FloodRunningBar = ({ onDataUpdate }) => {
+    // Get data from Context
+    const { handleStationSelect } = useStation();
+    const { isSidebarOpen } = useUI();
+    
     const [tickerData, setTickerData] = useState([]);
 
     const generateDetailedHistory = (currentValue) => {

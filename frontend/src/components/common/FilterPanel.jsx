@@ -8,24 +8,25 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { useDevices, useStation, useAutoSwitch, useUI, useMap } from "@/hooks/useAppContext";
 
 const FilterPanel = ({
-  isOpen,
   onOpen,
   onClose,
   subtitle,
   widthClass = "w-80",
-  tickerData,
-  handleStationChange,
   handleRegionChange,
-  currentStationIndex,
   currentRegionIndex,
-  handleAutoSwitchToggle,
-  onLayerToggle = () => {},
-  activeLayers = {},
   administrativeRegions = [],
   autoSwitchMode = "station",
 }) => {
+  // Get data from Context
+  const { tickerData } = useDevices();
+  const { currentStationIndex, handleStationChange } = useStation();
+  const { handleAutoSwitchToggle } = useAutoSwitch();
+  const { isFilterOpen, handleLayerToggle: onLayerToggle, activeLayers } = useMap();
+  
+  const isOpen = isFilterOpen;
   const [isVisible, setIsVisible] = useState(false);
   const [showLayers, setShowLayers] = useState(false);
   const [showLegend, setShowLegend] = useState(false);

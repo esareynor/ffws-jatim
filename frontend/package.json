@@ -37,6 +37,7 @@
         "@fortawesome/fontawesome-svg-core": "^7.1.0",
         "@fortawesome/free-solid-svg-icons": "^7.1.0",
         "@fortawesome/react-fontawesome": "^3.1.0",
+        "axios": "^1.13.2",
         "chart.js": "^4.5.0",
         "lucide-react": "^0.544.0",
         "mapbox-gl": "^3.14.0",

@@ -1,4 +1,4 @@
-import { fetchWithAuth } from './apiClient.js';
+import axiosClient from './axiosClient.js';
 
 /**
  * Fetches a river basin by ID.
@@ -6,7 +6,7 @@ import { fetchWithAuth } from './apiClient.js';
  * @returns {Promise<Object>} A promise that resolves to a river basin object.
  */
 export const fetchRiverBasin = async (id) => {
-    const data = await fetchWithAuth(`/river-basins/${id}`);
-    return data.data;
+    const response = await axiosClient.get(`/river-basins/${id}`);
+    return response.data.data;
 };
 

@@ -681,7 +681,6 @@ const MapboxMap = React.forwardRef(({ tickerData, onStationSelect, onAutoSwitch,
       {mapLoaded && map.current ? (
         <GoogleMapsSearchbar
           mapboxMap={map.current}
-          stationsData={tickerData}
           onSearch={handleSearch}
           isSidebarOpen={showFilterSidebar}
           placeholder="Cari Lokasi di Jawa Timur..."

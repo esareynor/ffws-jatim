@@ -1,4 +1,4 @@
-import { fetchWithAuth } from './apiClient.js';
+import axiosClient from './axiosClient.js';
 
 /**
  * Fetch data actuals (actual sensor readings)
@@ -12,16 +12,16 @@ import { fetchWithAuth } from './apiClient.js';
  * @param {string} params.sort_order - Sort order (asc/desc)
  */
 export const fetchDataActuals = async (params = {}) => {
-    const queryString = new URLSearchParams(params).toString();
-    const endpoint = `/data-actuals${queryString ? `?${queryString}` : ''}`;
-    return await fetchWithAuth(endpoint);
+    const response = await axiosClient.get('/data-actuals', { params });
+    return response.data;
 };
 
 /**
  * Fetch latest data actuals for all sensors
  */
 export const fetchLatestDataActuals = async () => {
-    return await fetchWithAuth('/data-actuals/latest');
+    const response = await axiosClient.get('/data-actuals/latest');
+    return response.data;
 };
 
 /**
@@ -30,9 +30,8 @@ export const fetchLatestDataActuals = async () => {
  * @param {object} params - Query parameters
  */
 export const fetchDataActualsBySensor = async (sensorCode, params = {}) => {
-    const queryString = new URLSearchParams(params).toString();
-    const endpoint = `/data-actuals/by-sensor/${sensorCode}${queryString ? `?${queryString}` : ''}`;
-    return await fetchWithAuth(endpoint);
+    const response = await axiosClient.get(`/data-actuals/by-sensor/${sensorCode}`, { params });
+    return response.data;
 };
 
 /**
@@ -41,9 +40,8 @@ export const fetchDataActualsBySensor = async (sensorCode, params = {}) => {
  * @param {object} params - Query parameters
  */
 export const fetchSensorStatistics = async (sensorCode, params = {}) => {
-    const queryString = new URLSearchParams(params).toString();
-    const endpoint = `/data-actuals/statistics/${sensorCode}${queryString ? `?${queryString}` : ''}`;
-    return await fetchWithAuth(endpoint);
+    const response = await axiosClient.get(`/data-actuals/statistics/${sensorCode}`, { params });
+    return response.data;
 };
 
 /**
@@ -51,7 +49,8 @@ export const fetchSensorStatistics = async (sensorCode, params = {}) => {
  * @param {number} id - Data actual ID
  */
 export const fetchDataActual = async (id) => {
-    return await fetchWithAuth(`/data-actuals/${id}`);
+    const response = await axiosClient.get(`/data-actuals/${id}`);
+    return response.data;
 };
 
 /**
@@ -59,10 +58,8 @@ export const fetchDataActual = async (id) => {
  * @param {object} data - Data actual data
  */
 export const storeDataActual = async (data) => {
-    return await fetchWithAuth('/data-actuals', {
-        method: 'POST',
-        body: JSON.stringify(data),
-    });
+    const response = await axiosClient.post('/data-actuals', data);
+    return response.data;
 };
 
 /**
@@ -70,9 +67,7 @@ export const storeDataActual = async (data) => {
  * @param {array} data - Array of data actual objects
  */
 export const bulkStoreDataActuals = async (data) => {
-    return await fetchWithAuth('/data-actuals/bulk', {
-        method: 'POST',
-        body: JSON.stringify({ data }),
-    });
+    const response = await axiosClient.post('/data-actuals/bulk', { data });
+    return response.data;
 };
 

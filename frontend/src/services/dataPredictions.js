@@ -1,4 +1,4 @@
-import { fetchWithAuth } from './apiClient.js';
+import axiosClient from './axiosClient.js';
 
 /**
  * Fetch data predictions (predicted sensor readings)
@@ -13,9 +13,8 @@ import { fetchWithAuth } from './apiClient.js';
  * @param {string} params.sort_order - Sort order (asc/desc)
  */
 export const fetchDataPredictions = async (params = {}) => {
-    const queryString = new URLSearchParams(params).toString();
-    const endpoint = `/data-predictions${queryString ? `?${queryString}` : ''}`;
-    return await fetchWithAuth(endpoint);
+    const response = await axiosClient.get('/data-predictions', { params });
+    return response.data;
 };
 
 /**
@@ -26,7 +25,8 @@ export const fetchLatestDataPredictions = async (sensorCode = null) => {
     const endpoint = sensorCode 
         ? `/data-predictions/latest/${sensorCode}` 
         : '/data-predictions/latest';
-    return await fetchWithAuth(endpoint);
+    const response = await axiosClient.get(endpoint);
+    return response.data;
 };
 
 /**
@@ -35,9 +35,8 @@ export const fetchLatestDataPredictions = async (sensorCode = null) => {
  * @param {object} params - Query parameters
  */
 export const fetchDataPredictionsBySensor = async (sensorCode, params = {}) => {
-    const queryString = new URLSearchParams(params).toString();
-    const endpoint = `/data-predictions/by-sensor/${sensorCode}${queryString ? `?${queryString}` : ''}`;
-    return await fetchWithAuth(endpoint);
+    const response = await axiosClient.get(`/data-predictions/by-sensor/${sensorCode}`, { params });
+    return response.data;
 };
 
 /**
@@ -45,7 +44,8 @@ export const fetchDataPredictionsBySensor = async (sensorCode, params = {}) => {
  * @param {number} id - Data prediction ID
  */
 export const fetchDataPrediction = async (id) => {
-    return await fetchWithAuth(`/data-predictions/${id}`);
+    const response = await axiosClient.get(`/data-predictions/${id}`);
+    return response.data;
 };
 
 /**
@@ -53,9 +53,7 @@ export const fetchDataPrediction = async (id) => {
  * @param {object} data - Data prediction data
  */
 export const storeDataPrediction = async (data) => {
-    return await fetchWithAuth('/data-predictions', {
-        method: 'POST',
-        body: JSON.stringify(data),
-    });
+    const response = await axiosClient.post('/data-predictions', data);
+    return response.data;
 };
 

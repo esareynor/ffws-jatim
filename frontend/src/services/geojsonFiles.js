@@ -1,7 +1,4 @@
-import { fetchWithAuth } from './apiClient.js';
-import { tokenManager } from './tokenManager.js';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://ffws-backend.rachmanesa.com/api";
+import axiosClient from './axiosClient.js';
 
 /**
  * Fetches list of GeoJSON files from the API.
@@ -9,26 +6,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://ffws-backend.
  * @returns {Promise<Array>} A promise that resolves to an array of GeoJSON file metadata.
  */
 export const fetchGeoJsonFiles = async () => {
-    // Wait for token manager initialization
-    await tokenManager.waitForInitialization();
-    
-    // This endpoint returns a direct array, not wrapped in {success, data}
-    const response = await fetch(
-        `${API_BASE_URL}/geojson-files`,
-        {
-            headers: {
-                'Authorization': tokenManager.getAuthHeader(),
-                'Content-Type': 'application/json',
-            },
-        }
-    );
-    
-    if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to fetch GeoJSON files: ${response.status} - ${errorText}`);
-    }
-    
-    return await response.json();
+    const response = await axiosClient.get('/geojson-files');
+    return response.data;
 };
 
 /**
@@ -38,24 +17,7 @@ export const fetchGeoJsonFiles = async () => {
  * @returns {Promise<Object>} A promise that resolves to GeoJSON content.
  */
 export const fetchGeoJsonContent = async (id) => {
-    // Wait for token manager initialization
-    await tokenManager.waitForInitialization();
-    
-    const response = await fetch(
-        `${API_BASE_URL}/geojson-files/${id}/content`,
-        {
-            headers: {
-                'Authorization': tokenManager.getAuthHeader(),
-                'Content-Type': 'application/json',
-            },
-        }
-    );
-    
-    if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to fetch GeoJSON content: ${response.status} - ${errorText}`);
-    }
-    
-    return await response.json();
+    const response = await axiosClient.get(`/geojson-files/${id}/content`);
+    return response.data;
 };
 

@@ -1,12 +1,12 @@
-import { fetchWithAuth } from './apiClient.js';
+import axiosClient from './axiosClient.js';
 
 /**
  * Fetches all sensors from the API.
  * @returns {Promise<Array>} A promise that resolves to an array of sensor objects.
  */
 export const fetchSensors = async () => {
-    const data = await fetchWithAuth('/sensors');
-    return data.data;
+    const response = await axiosClient.get('/sensors');
+    return response.data.data;
 };
 
 /**
@@ -15,8 +15,8 @@ export const fetchSensors = async () => {
  * @returns {Promise<Object>} A promise that resolves to a sensor object.
  */
 export const fetchSensor = async (id) => {
-    const data = await fetchWithAuth(`/sensors/${id}`);
-    return data.data;
+    const response = await axiosClient.get(`/sensors/${id}`);
+    return response.data.data;
 };
 
 /**
@@ -25,8 +25,8 @@ export const fetchSensor = async (id) => {
  * @returns {Promise<Array>} A promise that resolves to an array of sensor objects.
  */
 export const fetchSensorsByDevice = async (deviceId) => {
-    const data = await fetchWithAuth(`/sensors/device/${deviceId}`);
-    return data.data;
+    const response = await axiosClient.get(`/sensors/device/${deviceId}`);
+    return response.data.data;
 };
 
 /**
@@ -35,8 +35,8 @@ export const fetchSensorsByDevice = async (deviceId) => {
  * @returns {Promise<Array>} A promise that resolves to an array of sensor objects.
  */
 export const fetchSensorsByParameter = async (parameter) => {
-    const data = await fetchWithAuth(`/sensors/parameter/${parameter}`);
-    return data.data;
+    const response = await axiosClient.get(`/sensors/parameter/${parameter}`);
+    return response.data.data;
 };
 
 /**
@@ -45,6 +45,6 @@ export const fetchSensorsByParameter = async (parameter) => {
  * @returns {Promise<Array>} A promise that resolves to an array of sensor objects.
  */
 export const fetchSensorsByStatus = async (status) => {
-    const data = await fetchWithAuth(`/sensors/status/${status}`);
-    return data.data;
+    const response = await axiosClient.get(`/sensors/status/${status}`);
+    return response.data.data;
 };

@@ -1,6 +1,6 @@
 // src/services/MapGeo.js
 
-import { fetchWithAuth } from "./apiClient";
+import axiosClient from "./axiosClient";
 
 // Mapping antara Device ID dan nama wilayah sungai
 const DEVICE_ID_TO_WS_NAME = {
@@ -68,7 +68,8 @@ export const fetchDeviceGeoJSON = async (id) => {
 
     // Coba fetch dari API dulu
     try {
-      const geojson = await fetchWithAuth(`/geojson-files/${id}/content`);
+      const response = await axiosClient.get(`/geojson-files/${id}/content`);
+      const geojson = response.data;
 
       // Validate minimal GeoJSON structure
       if (!geojson || typeof geojson !== 'object') {

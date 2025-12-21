@@ -1,4 +1,4 @@
-import { fetchWithAuth } from "./apiClient";
+import axiosClient from "./axiosClient";
 
 // Cache untuk devices data
 let devicesCache = null;
@@ -31,13 +31,13 @@ export const fetchDevices = async (forceRefresh = false) => {
     console.log('Fetching fresh devices data from API');
     
     // Create and store the pending request
-    pendingRequest = fetchWithAuth("/devices")
-        .then(data => {
+    pendingRequest = axiosClient.get("/devices")
+        .then(response => {
             // Update cache
-            devicesCache = data.data;
+            devicesCache = response.data.data;
             devicesCacheTime = Date.now();
             pendingRequest = null; // Clear pending request
-            return data.data;
+            return response.data.data;
         })
         .catch(error => {
             pendingRequest = null; // Clear pending request on error
@@ -62,6 +62,6 @@ export const clearDevicesCache = () => {
  * @returns {Promise<Object>} A promise that resolves to a device object.
  */
 export const fetchDevice = async (id) => {
-    const data = await fetchWithAuth(`/devices/${id}`);
-    return data.data;
+    const response = await axiosClient.get(`/devices/${id}`);
+    return response.data.data;
 };

@@ -266,6 +266,9 @@ const MapboxMap = React.forwardRef(({ tickerData, onStationSelect, onAutoSwitch,
         memoizedHandleRegionLayerToggle(layerId, newState[layerId]);
         return newState;
       });
+    } else if (layerId.startsWith("device-")) {
+      // Toggle untuk device marker individual
+      setActiveLayers((prev) => ({ ...prev, [layerId]: !prev[layerId] }));
     } else {
       setActiveLayers((prev) => ({ ...prev, [layerId]: !prev[layerId] }));
     }
@@ -310,10 +313,101 @@ const MapboxMap = React.forwardRef(({ tickerData, onStationSelect, onAutoSwitch,
 
   // ✅ Buat/refresh markers saat data atau activeLayers berubah
   useEffect(() => {
-    if (!map.current || !tickerData?.length || !devices?.length) return;
+    if (!map.current || !mapLoaded) return;
+    if (!devices?.length) return;
 
     markersRef.current.forEach((m) => m?.remove?.());
     markersRef.current = [];
+
+    let debugInfo = [];
+
+    // Tampilkan marker device yang aktif secara individual
+    if (devices && devices.length > 0) {
+      devices.forEach((device) => {
+        if (!device.latitude || !device.longitude) return;
+        
+        const deviceId = device.id || device.device_id;
+        if (!deviceId) return;
+        
+        const layerId = `device-${deviceId}`;
+        const isDeviceActive = activeLayers[layerId];
+        
+        // Hanya tampilkan marker jika device ini aktif
+        if (!isDeviceActive) return;
+        
+        const lat = parseFloat(device.latitude);
+        const lng = parseFloat(device.longitude);
+        
+        if (isNaN(lat) || isNaN(lng)) return;
+        
+        const coordinates = [lng, lat];
+        const validation = validateCoordinates(lng, lat);
+        const deviceName = device.name || device.device_name || device.station_name || `Device ${deviceId}`;
+        debugInfo.push({ name: deviceName, coordinates, validation });
+
+        try {
+          const markerEl = document.createElement("div");
+          markerEl.className = "custom-marker";
+
+          // Warna hijau terang untuk marker device
+          const iconColor = "#4ade80"; // green-400 dari Tailwind, hijau terang
+
+          // Icon pin point saja tanpa background
+          const iconToUse = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${iconColor}" stroke="white" stroke-width="1.5">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+          `;
+
+          markerEl.style.cssText = `
+            width: 24px;
+            height: 24px;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            transform: translate(-50%, -100%);
+          `;
+
+          markerEl.innerHTML = iconToUse;
+
+          const marker = new mapboxgl.Marker({
+            element: markerEl,
+            anchor: "center",
+          })
+            .setLngLat(coordinates)
+            .addTo(map.current);
+
+          markersRef.current.push(marker);
+
+          markerEl.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (autoSwitchActive) setAutoSwitchActive(false);
+            handleMarkerClick({ ...device, name: deviceName }, coordinates);
+          });
+        } catch (error) {
+          console.error("Error creating device marker:", error);
+        }
+      });
+    }
+
+    // Logika marker untuk tickerData (existing logic)
+    // Hanya jalankan jika tidak ada device marker yang aktif
+    const hasActiveDeviceMarker = devices && devices.some((device) => {
+      const deviceId = device.id || device.device_id;
+      if (!deviceId) return false;
+      return activeLayers[`device-${deviceId}`];
+    });
+
+    if (!tickerData?.length || hasActiveDeviceMarker) {
+      setMarkerDebugInfo(debugInfo);
+      return;
+    }
 
     const awlrBrantasList = [
       "AWLR Gubeng", "AWLR Gunungsari", "AWLR Jagir", "AWLR Lohor", "AWLR Lodoyo",
@@ -337,7 +431,8 @@ const MapboxMap = React.forwardRef(({ tickerData, onStationSelect, onAutoSwitch,
     const bengawanKeywords = extractKeywords(awlrBengawanSoloList);
     const arrBrantasListKeywords = extractKeywords(arrBrantasList);
 
-    const debugInfo = [];
+    // Reset debugInfo untuk tickerData markers
+    debugInfo = [];
 
     tickerData.forEach((station) => {
       const coordinates = getStationCoordinates(station.name);
@@ -519,7 +614,7 @@ const MapboxMap = React.forwardRef(({ tickerData, onStationSelect, onAutoSwitch,
     });
 
     setMarkerDebugInfo(debugInfo);
-  }, [tickerData, devices, activeLayers, mapLoaded]);
+  }, [tickerData, devices, activeLayers, mapLoaded, autoSwitchActive]);
 
   // Rivers layer
   useEffect(() => {
@@ -686,8 +781,8 @@ const MapboxMap = React.forwardRef(({ tickerData, onStationSelect, onAutoSwitch,
           placeholder="Cari Lokasi di Jawa Timur..."
         />
       ) : (
-        <div className="fixed top-4 left-4 z-[70] bg-white rounded-lg shadow-lg p-2">
-          <span className="text-sm text-gray-500">Memuat peta...</span>
+        <div className="fixed top-2 sm:top-4 left-2 sm:left-4 z-[70] bg-white rounded-lg shadow-lg p-2">
+          <span className="text-xs sm:text-sm text-gray-500">Memuat peta...</span>
         </div>
       )}
 
@@ -703,6 +798,7 @@ const MapboxMap = React.forwardRef(({ tickerData, onStationSelect, onAutoSwitch,
             handleAutoSwitchToggle={handleAutoSwitchToggle}
             onLayerToggle={handleLayerToggle}
             activeLayers={activeLayers}
+            deviceList={devices}
           />
         </Suspense>
       )}
@@ -728,14 +824,14 @@ const MapboxMap = React.forwardRef(({ tickerData, onStationSelect, onAutoSwitch,
         />
       </Suspense>
 
-      <div className="absolute top-5 right-4 z-[80] flex gap-2">
+      <div className="absolute top-2 sm:top-4 right-2 sm:right-4 z-[80] h-12">
         <button
           onClick={() => setShowFilterSidebar((s) => !s)}
-          className="relative inline-flex items-center justify-center w-12 h-12 rounded-full bg-white hover:bg-blue-50 transition-colors shadow-md"
+          className="relative inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white hover:bg-blue-50 transition-colors shadow-lg"
           title={showFilterSidebar ? "Tutup Filter" : "Buka Filter"}
           aria-label={showFilterSidebar ? "Tutup Filter" : "Buka Filter"}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="relative z-10 w-6 h-6 text-blue-600">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="relative z-10 w-6 h-6 text-blue-600 mix-blend-normal pointer-events-none">
             <path d="M22 3H2l8 9v7l4 2v-9l8-9z"></path>
           </svg>
         </button>

@@ -156,11 +156,17 @@ const GoogleMapsSearchbar = ({
 
   return (
     <div
-      className={`fixed top-5 z-[70] transition-all duration-300 ease-in-out ${
-        isSidebarOpen ? 'left-4' : 'left-4'
+      className={`fixed top-2 sm:top-4 sm:top-5 z-[70] transition-all duration-300 ease-in-out ${
+        isSidebarOpen 
+          ? 'left-2 sm:left-4' 
+          : 'left-2 sm:left-4'
       }`}
+      style={{
+        right: isSidebarOpen ? undefined : '3.5rem',
+        maxWidth: isSidebarOpen ? undefined : 'calc(100vw - 3.5rem - 0.5rem)',
+      }}
     >
-      <div className="w-92">
+      <div className="w-full sm:w-80 md:w-96 max-w-full sm:max-w-none">
         <form onSubmit={handleSearch} className="relative">
           <div
             className={`bg-white rounded-lg shadow-lg transition-all duration-200 p-1.5 sm:p-2 ${
@@ -170,7 +176,7 @@ const GoogleMapsSearchbar = ({
             <div className="flex items-center py-1 sm:py-1.5">
               <div className="flex-shrink-0 mr-2">
                 <svg
-                  className="w-4 h-4 text-gray-400"
+                  className="w-4 h-5 text-gray-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -190,7 +196,7 @@ const GoogleMapsSearchbar = ({
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setTimeout(() => setIsFocused(false), 200)}
                 placeholder={placeholder}
-                className="flex-1 text-gray-900 placeholder-gray-500 bg-transparent border-none outline-none text-sm leading-none"
+                className="flex-1 text-gray-900 placeholder-gray-500 bg-transparent border-none outline-none text-xs sm:text-sm leading-none"
               />
               {searchValue && (
                 <div className="flex-shrink-0 ml-2">
@@ -219,15 +225,15 @@ const GoogleMapsSearchbar = ({
             </div>
           </div>
           {isFocused && suggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg z-10 overflow-hidden">
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg z-10 overflow-hidden max-h-60 overflow-y-auto">
               {suggestions.map((suggestion, index) => (
                 <div
                   key={index}
-                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer transition-colors text-sm flex items-center"
+                  className="px-3 sm:px-4 py-2 hover:bg-gray-100 cursor-pointer transition-colors text-xs sm:text-sm flex items-center"
                   onClick={() => handleSuggestionClick(suggestion)}
                 >
                   <svg
-                    className="w-4 h-4 text-gray-400 mr-2"
+                    className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 mr-2 shrink-0"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -245,7 +251,7 @@ const GoogleMapsSearchbar = ({
                       d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                     />
                   </svg>
-                  {suggestion.charAt(0).toUpperCase() + suggestion.slice(1)}
+                  <span className="truncate">{suggestion.charAt(0).toUpperCase() + suggestion.slice(1)}</span>
                 </div>
               ))}
             </div>

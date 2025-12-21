@@ -200,24 +200,20 @@ const Layout = ({ children }) => {
 
             {/* Station Detail Modal */}
             <Suspense
-                fallback={
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-                        <div className="bg-white rounded-lg p-8 animate-pulse">Loading...</div>
-                    </div>
-                }
+                fallback={<div className="fixed inset-0 bg-black/50 flex items-center justify-center"> <div className="bg-white rounded-lg p-8 animate-pulse">Loading...</div></div>}
             >
-                                {selectedStation && (
-                                    <StationDetail
-                                            selectedStation={selectedStation}
-                                            onClose={handleCloseStationDetail}
-                                            tickerData={tickerData}
-                                            isAutoSwitchOn={isAutoSwitchOn}
-                                            showArrow={true}
-                                            onArrowToggle={handleToggleDetailPanel}
-                                            isDetailPanelOpen={isDetailPanelOpen}
-                                            onCloseDetailPanel={handleCloseDetailPanel}
-                                    />
-                                )}
+                {selectedStation && (
+                    <StationDetail
+                    selectedStation={selectedStation}
+                    onClose={handleCloseStationDetail}
+                    tickerData={tickerData}
+                    isAutoSwitchOn={isAutoSwitchOn}
+                    showArrow={true}
+                    onArrowToggle={handleToggleDetailPanel}
+                    isDetailPanelOpen={isDetailPanelOpen}
+                    onCloseDetailPanel={handleCloseDetailPanel}
+                    />
+                )}
             </Suspense>
 
             {/* Detail Panel */}

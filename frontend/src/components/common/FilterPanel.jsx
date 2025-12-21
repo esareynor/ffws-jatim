@@ -25,8 +25,12 @@ const FilterPanel = ({
   activeLayers = {},
   administrativeRegions = [],
   autoSwitchMode = "station",
+  deviceList = [],
 }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
   const [showLayers, setShowLayers] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
   const [showPetaGenangan, setShowPetaGenangan] = useState(false);
@@ -38,6 +42,19 @@ const FilterPanel = ({
   const [showPosTinggiMukaAir, setShowPosTinggiMukaAir] = useState(false);
   const [showPosHujan, setShowPosHujan] = useState(false);
   const [showPosDugaAir, setShowPosDugaAir] = useState(false);
+  const [showDeviceMarker, setShowDeviceMarker] = useState(false);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -47,6 +64,87 @@ const FilterPanel = ({
       setIsVisible(false);
     }
   }, [isOpen]);
+
+  // Handle swipe down to close on mobile
+  const handleTouchStart = (e) => {
+    if (!isMobile) return;
+    
+    e.preventDefault();
+    setIsDragging(true);
+    setDragOffset(0);
+    
+    const touch = e.touches ? e.touches[0] : e;
+    const startY = touch.clientY;
+    const startTime = Date.now();
+    
+    const handleTouchMove = (e) => {
+      e.preventDefault();
+      const currentTouch = e.touches ? e.touches[0] : e;
+      const currentY = currentTouch.clientY;
+      const deltaY = currentY - startY;
+      
+      // Only allow downward movement
+      if (deltaY > 0) {
+        setDragOffset(deltaY);
+      }
+    };
+    
+    const handleTouchEnd = (e) => {
+      const currentTouch = e.changedTouches ? e.changedTouches[0] : e;
+      const currentY = currentTouch.clientY;
+      const deltaY = currentY - startY;
+      const deltaTime = Date.now() - startTime;
+      const velocity = deltaY / deltaTime;
+      
+      // Close thresholds
+      const shouldClose = 
+        deltaY > 120 || 
+        (velocity > 0.5 && deltaY > 60) || 
+        (velocity > 1 && deltaY > 30);
+      
+      if (shouldClose) {
+        setIsVisible(false);
+        setTimeout(() => {
+          onClose && onClose();
+        }, 300);
+      }
+      
+      setIsDragging(false);
+      setDragOffset(0);
+      cleanup();
+    };
+    
+    const cleanup = () => {
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('mousemove', handleTouchMove);
+      document.removeEventListener('mouseup', handleTouchEnd);
+    };
+    
+    if (e.type === 'touchstart') {
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('touchend', handleTouchEnd);
+    } else {
+      document.addEventListener('mousemove', handleTouchMove);
+      document.addEventListener('mouseup', handleTouchEnd);
+    }
+  };
+
+  // Prevent body scroll when mobile panel is open
+  useEffect(() => {
+    if (isMobile && isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = 'unset';
+      document.body.style.touchAction = 'auto';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+      document.body.style.touchAction = 'auto';
+    };
+  }, [isMobile, isOpen]);
 
   const handleLayerToggle = (layerId) => {
     console.log("🖱️ Klik layer di FilterPanel:", layerId);
@@ -59,44 +157,50 @@ const FilterPanel = ({
 
   return (
     <>
-      {/* Tombol buka filter (opsional, biasanya sudah di luar) */}
-      {/* <div className="absolute top-4 right-4 z-[80]">
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onOpen();
-          }}
-          className="relative inline-flex items-center justify-center w-12 h-12 rounded-full bg-white hover:bg-blue-50 transition-colors shadow-md"
-          title="Buka Filter"
-          aria-label="Buka Filter"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="relative z-10 w-6 h-6 text-blue-600"
-          >
-            <path d="M22 3H2l8 9v7l4 2v-9l8-9z"></path>
-          </svg>
-        </button>
-      </div> */}
-
       <div
-        className={`fixed rounded-tl-lg rounded-bl-lg top-20 right-0 h-[calc(80%-8%)] ${widthClass} bg-white shadow-2xl z-[1000] transform transition-all duration-300 ease-in-out flex flex-col ${
-          isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
+        className={`fixed bg-white shadow-2xl z-[1000] transform flex flex-col ${
+          isMobile 
+            ? `bottom-0 left-0 right-0 h-[70vh] rounded-t-2xl ${
+                isVisible ? "opacity-100" : "opacity-0"
+              }`
+            : `top-16 sm:top-20 right-2 sm:right-0 h-[calc(100vh-2rem)] sm:h-[calc(80%-8%)] ${widthClass} max-w-[300px] sm:max-w-none rounded-tl-lg rounded-bl-lg transition-all duration-300 ease-in-out ${
+                isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
+              }`
         }`}
-        style={{
-          pointerEvents: isVisible ? "auto" : "none",
+        style={{ 
           willChange: "transform, opacity",
+          transform: isMobile 
+            ? isDragging 
+              ? `translateY(${dragOffset}px)` 
+              : isVisible 
+                ? "translateY(0)" 
+                : "translateY(100%)"
+            : undefined,
+          transition: isMobile && !isDragging 
+            ? "transform 300ms ease-in-out, opacity 300ms ease-in-out" 
+            : undefined,
+          pointerEvents: isVisible ? "auto" : "none",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="rounded-tl-lg flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50/50">
+        {/* Header */}
+        <div 
+          className={`flex items-center justify-between p-4 border-b border-gray-200 transition-colors ${
+            isMobile ? 'rounded-t-2xl cursor-grab active:cursor-grabbing' : 'rounded-tl-lg'
+          } ${
+            isMobile && isDragging ? 'bg-gray-100' : 'bg-gray-50/50'
+          }`}
+          onTouchStart={isMobile ? handleTouchStart : undefined}
+          onMouseDown={isMobile ? handleTouchStart : undefined}
+        >
+          {/* Mobile drag handle */}
+          {isMobile && (
+            <div className={`absolute top-2 left-1/2 transform -translate-x-1/2 w-10 h-1.5 rounded-full transition-all duration-200 ${
+              isDragging 
+                ? 'bg-gray-600 w-12' 
+                : 'bg-gray-400 hover:bg-gray-500'
+            }`}></div>
+          )}
           <div className="flex items-center gap-2">
             <Sliders className="w-5 h-5 text-blue-600" />
             <div>
@@ -104,34 +208,40 @@ const FilterPanel = ({
               {subtitle && <p className="text-gray-500 text-sm">{subtitle}</p>}
             </div>
           </div>
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsVisible(false);
-              setTimeout(onClose, 300);
-            }}
-            className="p-1.5 hover:bg-gray-200 rounded-md transition-colors"
-            title="Tutup"
-            aria-label="Tutup panel filter"
-          >
-            <svg
-              className="w-5 h-5 text-gray-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          {/* Desktop close button */}
+          {!isMobile && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsVisible(false);
+                setTimeout(onClose, 300);
+              }}
+              className="p-1.5 hover:bg-gray-200 rounded-md transition-colors"
+              title="Tutup"
+              aria-label="Tutup panel filter"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+              <svg
+                className="w-5 h-5 text-gray-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          )}
         </div>
 
-        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4">
+        {/* Content */}
+        <div className={`flex-1 overflow-y-auto overflow-x-hidden p-4 scrollbar-thin ${
+          isMobile ? 'pb-6' : ''
+        }`}>
           {/* Map Layers */}
           <section className="mt-4 space-y-4">
             <div
@@ -255,6 +365,75 @@ const FilterPanel = ({
                       </div>
                     ))}
                   </div>
+                </div>
+                {/* Device Marker */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="font-medium text-xs text-gray-600">Marker Device</div>
+                    <button
+                      onClick={() => setShowDeviceMarker(!showDeviceMarker)}
+                      className="text-xs text-blue-600 hover:text-blue-700"
+                    >
+                      {showDeviceMarker ? "Sembunyikan" : "Tampilkan"}
+                    </button>
+                  </div>
+                  {showDeviceMarker && deviceList && deviceList.length > 0 && (
+                    <div className="space-y-1 pl-2 max-h-60 overflow-y-auto">
+                      {deviceList
+                        .filter((device) => device.latitude && device.longitude)
+                        .map((device) => {
+                          const deviceId = device.id || device.device_id;
+                          const deviceName = device.name || device.device_name || device.station_name || `Device ${deviceId}`;
+                          const layerId = `device-${deviceId}`;
+                          const isActive = activeLayers[layerId] || false;
+                          
+                          return (
+                            <div
+                              key={deviceId}
+                              className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                            >
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 24 24"
+                                  className="w-3 h-3 text-blue-600 shrink-0"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                  <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                                <span className="text-xs text-gray-700 truncate" title={deviceName}>
+                                  {deviceName}
+                                </span>
+                              </div>
+                              <button
+                                onClick={() => handleLayerToggle(layerId)}
+                                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shrink-0 ${
+                                  isActive ? "bg-blue-600" : "bg-gray-300"
+                                }`}
+                                type="button"
+                                aria-pressed={isActive}
+                              >
+                                <span
+                                  className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                                    isActive ? "translate-x-5" : "translate-x-1"
+                                  }`}
+                                />
+                              </button>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  )}
+                  {showDeviceMarker && (!deviceList || deviceList.length === 0) && (
+                    <div className="pl-2 text-xs text-gray-500 italic">
+                      Tidak ada device tersedia
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -445,7 +624,9 @@ const FilterPanel = ({
         </div>
 
         {/* Footer */}
-        <div className="rounded-bl-lg border-t border-gray-200 p-4 bg-gray-50/50">
+        <div className={`border-t border-gray-200 p-4 bg-gray-50/50 ${
+          isMobile ? 'rounded-b-2xl pb-6' : 'rounded-bl-lg'
+        }`}>
           <div className="flex items-center justify-between text-xs text-gray-500">
             <span>Map Layer Control</span>
             <div className="text-gray-400">Filter v1.0</div>

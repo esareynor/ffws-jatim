@@ -172,7 +172,7 @@ const Layout = ({ children }) => {
             </div>
 
             {/* Google Maps Style Searchbar - fixed position */}
-            <div className="absolute top-2 sm:top-4 left-2 sm:left-4 z-[70] mobile-searchbar">
+            <div className="absolute top-2 sm:top-4 left-2 sm:left-4 z-[90] mobile-searchbar">
                 <div className="w-auto sm:w-80 h-12">
                     <Suspense fallback={<div className="h-12 bg-white/80 rounded-lg animate-pulse"></div>}>
                         <GoogleMapsSearchbar onSearch={handleSearch} placeholder="Cari stasiun monitoring banjir..." />
@@ -248,7 +248,7 @@ const Layout = ({ children }) => {
                 @media (max-width: 640px) {
                     /* Mobile layout adjustments */
                     .mobile-flood-bar {
-                        top: 4rem !important;
+                        top: 3.5rem !important;
                         left: 0.5rem !important;
                         right: 0.5rem !important;
                     }

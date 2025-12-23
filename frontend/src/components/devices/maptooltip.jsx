@@ -1,6 +1,6 @@
 // src/components/devices/MapTooltip.jsx
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import mapboxgl from 'mapbox-gl';
 
 const injectPopupStyles = () => {
@@ -96,13 +96,51 @@ const injectPopupStyles = () => {
   document.head.appendChild(style);
 };
 
-const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClose }) => {
+const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClose, tickerData }) => {
   const popupRef = useRef(null);
+  const [enrichedStation, setEnrichedStation] = useState(null);
+
+  // Auto-enrich station data dengan data terbaru dari tickerData
+  useEffect(() => {
+    if (!station) {
+      setEnrichedStation(null);
+      return;
+    }
+
+    let updated = station;
+
+    // Cari data terbaru dari tickerData untuk sync real-time
+    if (tickerData?.length > 0) {
+      const tickerStation = tickerData.find(s => 
+        s.id === station.id || s.name === station.name
+      );
+      
+      if (tickerStation) {
+        // Merge dengan data terbaru, prioritas pada tickerData
+        updated = { 
+          ...station, 
+          value: tickerStation.value ?? station.value,
+          status: tickerStation.status ?? station.status,
+          unit: tickerStation.unit ?? station.unit,
+          location: tickerStation.location ?? station.location,
+        };
+      }
+    }
+
+    // Fallback untuk field yang masih kosong
+    if (updated.value === undefined || updated.value === null) updated.value = '-';
+    if (!updated.unit) updated.unit = 'm';
+    if (!updated.status) updated.status = 'safe';
+    if (!updated.location) updated.location = 'Lokasi tidak tersedia';
+    if (!updated.id) updated.id = station.id || 'N/A';
+
+    setEnrichedStation(updated);
+  }, [station, tickerData]);
 
   useEffect(() => {
     injectPopupStyles();
 
-    if (!map || !isVisible || !station || !coordinates) {
+    if (!map || !isVisible || !enrichedStation || !coordinates) {
       if (popupRef.current) {
         popupRef.current.remove();
         popupRef.current = null;
@@ -132,13 +170,13 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
       }
     };
 
-    const isARR = (station.name || '').toUpperCase().startsWith('ARR') || (station.name || '').toUpperCase().includes(' ARR');
-    const isAWLR = (station.name || '').toUpperCase().includes('AWLR');
+    const isARR = (enrichedStation.name || '').toUpperCase().startsWith('ARR') || (enrichedStation.name || '').toUpperCase().includes(' ARR');
+    const isAWLR = (enrichedStation.name || '').toUpperCase().includes('AWLR');
 
     const tooltipInfoHTML = (isARR || isAWLR) ? '' : `
       <div class="tooltip-info">
-        <div class="text-xs text-gray-500 mb-1">ID: ${station.id}</div>
-        <div class="text-xs text-gray-500 truncate">${station.location}</div>
+        <div class="text-xs text-gray-500 mb-1">ID: ${enrichedStation.id}</div>
+        <div class="text-xs text-gray-500 truncate">${enrichedStation.location}</div>
       </div>
     `;
 
@@ -147,8 +185,8 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
     popupContent.innerHTML = `
       <div class="tooltip-header">
         <div class="flex items-center">
-          <div class="w-3 h-3 rounded-full ${getStatusColor(station.status)} mr-2"></div>
-          <h3 class="font-bold text-gray-900">${station.name.replace('Stasiun ', '')}</h3>
+          <div class="w-3 h-3 rounded-full ${getStatusColor(enrichedStation.status)} mr-2"></div>
+          <h3 class="font-bold text-gray-900">${enrichedStation.name.replace('Stasiun ', '')}</h3>
         </div>
         <button class="tooltip-close-btn">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -159,18 +197,18 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
       
       <div class="tooltip-level">
         <div class="flex justify-between items-center">
-          <span class="text-sm text-gray-600">${( (station.unit === 'mm' || (station.name||'').toUpperCase().startsWith('ARR')) ? 'Curah Hujan' : 'Level Air') }:</span>
+          <span class="text-sm text-gray-600">${( (enrichedStation.unit === 'mm' || (enrichedStation.name||'').toUpperCase().startsWith('ARR')) ? 'Curah Hujan' : 'Level Air') }:</span>
           <div class="text-right">
             <span class="font-semibold text-lg block">${(() => {
-              const v = Number(station.value);
-              if (!Number.isFinite(v)) return station.value ?? '-';
-              return station.unit === 'mm' ? v.toFixed(0) : v.toFixed(1);
+              const v = Number(enrichedStation.value);
+              if (!Number.isFinite(v)) return enrichedStation.value ?? '-';
+              return enrichedStation.unit === 'mm' ? v.toFixed(0) : v.toFixed(1);
             })()}</span>
-            <span class="text-xs text-gray-500">${station.unit}</span>
+            <span class="text-xs text-gray-500">${enrichedStation.unit}</span>
           </div>
         </div>
         <div class="text-xs text-gray-500 mt-1">
-          Status: ${getStatusText(station.status)}
+          Status: ${getStatusText(enrichedStation.status)}
         </div>
       </div>
       
@@ -209,7 +247,7 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
 
       const handleDetailClick = () => {
         onClose();
-        onShowDetail(station);
+        onShowDetail(enrichedStation);
       };
 
       // ✅ Fungsi untuk membuka Google Maps
@@ -255,7 +293,7 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
         popupRef.current = null;
       }
     };
-  }, [map, isVisible, station, coordinates, onShowDetail, onClose]);
+  }, [map, isVisible, enrichedStation, coordinates, onShowDetail, onClose]);
 
   return null;
 };

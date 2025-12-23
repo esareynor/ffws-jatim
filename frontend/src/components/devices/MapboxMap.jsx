@@ -230,9 +230,25 @@ const MapboxMap = React.forwardRef(({ tickerData, onStationSelect, onAutoSwitch,
     const stationNameUpper = (station?.name || "").trim().toUpperCase();
     const isARRStation = stationNameUpper.startsWith("ARR") || stationNameUpper.includes(" ARR");
 
+    // Enriching station data dengan mencari di tickerData jika tidak ada value/status
+    let enrichedStation = station;
+    if ((!station.value || !station.status) && tickerData?.length > 0) {
+      const tickerStation = tickerData.find(s => s.id === station.id || s.name === station.name);
+      if (tickerStation) {
+        enrichedStation = { ...station, ...tickerStation };
+      }
+    }
+
+    // Fallback values jika masih undefined
+    if (!enrichedStation.value) enrichedStation.value = '-';
+    if (!enrichedStation.unit) enrichedStation.unit = 'm';
+    if (!enrichedStation.status) enrichedStation.status = 'safe';
+    if (!enrichedStation.location) enrichedStation.location = 'Lokasi tidak tersedia';
+    if (!enrichedStation.id) enrichedStation.id = station.id || 'N/A';
+
     const tooltipStation = isARRStation
-      ? { ...station, value: 0, unit: 'mm' }
-      : station;
+      ? { ...enrichedStation, value: enrichedStation.value === '-' ? 0 : enrichedStation.value, unit: 'mm' }
+      : enrichedStation;
 
     setSelectedStation(station);
     setSelectedStationCoords(coordinates);
@@ -821,6 +837,7 @@ const MapboxMap = React.forwardRef(({ tickerData, onStationSelect, onAutoSwitch,
           coordinates={tooltip.coordinates}
           onShowDetail={handleShowDetail}
           onClose={handleCloseTooltip}
+          tickerData={tickerData}
         />
       </Suspense>
 

@@ -42,7 +42,6 @@ const FilterPanel = ({
   const [showPosTinggiMukaAir, setShowPosTinggiMukaAir] = useState(false);
   const [showPosHujan, setShowPosHujan] = useState(false);
   const [showPosDugaAir, setShowPosDugaAir] = useState(false);
-  const [showDeviceMarker, setShowDeviceMarker] = useState(false);
 
   // Detect mobile screen size
   useEffect(() => {
@@ -368,16 +367,10 @@ const FilterPanel = ({
                 </div>
                 {/* Device Marker */}
                 <div>
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="mb-2">
                     <div className="font-medium text-xs text-gray-600">Marker Device</div>
-                    <button
-                      onClick={() => setShowDeviceMarker(!showDeviceMarker)}
-                      className="text-xs text-blue-600 hover:text-blue-700"
-                    >
-                      {showDeviceMarker ? "Sembunyikan" : "Tampilkan"}
-                    </button>
                   </div>
-                  {showDeviceMarker && deviceList && deviceList.length > 0 && (
+                  {showLegend && deviceList && deviceList.length > 0 && (
                     <div className="space-y-1 pl-2 max-h-60 overflow-y-auto">
                       {deviceList
                         .filter((device) => device.latitude && device.longitude)
@@ -429,7 +422,7 @@ const FilterPanel = ({
                         })}
                     </div>
                   )}
-                  {showDeviceMarker && (!deviceList || deviceList.length === 0) && (
+                  {showLegend && (!deviceList || deviceList.length === 0) && (
                     <div className="pl-2 text-xs text-gray-500 italic">
                       Tidak ada device tersedia
                     </div>

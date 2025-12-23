@@ -153,23 +153,9 @@ function parameterManager(type) {
         },
 
         async deleteParameter(id) {
-<<<<<<< HEAD
             const confirmed = await window.AdminUtils?.confirmDelete('Parameter ini akan dihapus. Lanjutkan?');
             
             if (confirmed) {
-=======
-            const result = await Swal.fire({
-                title: 'Are you sure?',
-                text: "This will delete the parameter",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
-            });
-
-            if (result.isConfirmed) {
->>>>>>> 39c60f841fa3c86ec38e34b2fd05b744dec26bb5
                 try {
                     const response = await fetch(`/admin/${this.type}-parameters/${id}`, {
                         method: 'DELETE',

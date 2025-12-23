@@ -72,3 +72,4 @@ verify_system.py
 frontend/src/data/welang_debit_10.json
 frontend/src/data/welang_debit_100.json
 frontend/src/data/welang_debit_18.json
+docker-compose.production.yml

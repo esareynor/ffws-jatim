@@ -1,57 +1,32 @@
-version: '3.8'
-
 services:
-  backend:
-    image: ghcr.io/fisabilimf/ffws-jatim/backend:latest
-    restart: always
-    env_file: .env
-    volumes:
-      - backend_storage:/var/www/html/storage
-    networks:
-      - app_network
-    depends_on:
-      - db
+    backend:
+        image: ghcr.io/esareynor/ffws-jatim-backend:latest
+        container_name: ffws-backend
+        restart: always
+        ports:
+            - "9000:9000"
+        environment:
+            APP_ENV: production
+            APP_DEBUG: false
+            APP_KEY: ${APP_KEY}
+            DB_CONNECTION: mysql
+            DB_HOST: ${DB_HOST}
+            DB_PORT: ${DB_PORT:-3306}
+            DB_DATABASE: ${DB_DATABASE}
+            DB_USERNAME: ${DB_USERNAME}
+            DB_PASSWORD: ${DB_PASSWORD}
+        volumes:
+            - ./backend-storage:/var/www/storage
 
-  frontend:
-    image: ghcr.io/fisabilimf/ffws-jatim/frontend:latest
-    restart: always
-    ports:
-      - "80:80"
-    networks:
-      - app_network
-    depends_on:
-      - backend
-
-  forecasting:
-    image: ghcr.io/fisabilimf/ffws-jatim/forecasting:latest
-    restart: always
-    env_file: .env
-    volumes:
-      - forecasting_storage:/app/storage
-    networks:
-      - app_network
-    depends_on:
-      - db
-
-  db:
-    image: mysql:8.0
-    restart: always
-    env_file: .env
-    environment:
-      MYSQL_DATABASE: ${DB_DATABASE:-ffws_v2}
-      MYSQL_USER: ${DB_USERNAME:-laravel}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
-    volumes:
-      - db_data:/var/lib/mysql
-    networks:
-      - app_network
-
-networks:
-  app_network:
-    driver: bridge
-
-volumes:
-  backend_storage:
-  forecasting_storage:
-  db_data:
+    frontend:
+        image: ghcr.io/esareynor/ffws-jatim-frontend:latest
+        container_name: ffws-frontend
+        restart: always
+        ports:
+            - "80:80"
+        depends_on:
+            - backend
+# Optional: Add a database service if you want it managed by Docker
+# db:
+#   image: mysql:8.0
+#   ...

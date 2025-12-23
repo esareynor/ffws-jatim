@@ -115,17 +115,6 @@ const FilterPanel = ({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-4">
-          {/* Auto Switch */}
-          <section className="space-y-3">
-            <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-              <ToggleRight className="w-4 h-4 text-blue-600" />
-              Device Auto Switch
-            </h3>
-            <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-              {/* AutoSwitchToggle komponen bisa ditambahkan di sini jika dibutuhkan */}
-            </div>
-          </section>
-
           {/* SECTION 1: MAP LAYERS */}
           <section className="mt-4 space-y-4">
             {/* Header Map Layers + Panah */}
@@ -149,9 +138,7 @@ const FilterPanel = ({
               <div className="pl-4 pt-2 pb-4 space-y-3">
                 {[
                   { id: "rivers", name: "Sungai", color: "#06B6D4" },
-                  { id: "flood-risk", name: "Area Risiko Banjir", color: "#F59E0B" },
-                  { id: "rainfall", name: "Data Curah Hujan", color: "#10B981" },
-                  { id: "administrative", name: "Batas Administrasi", color: "#6B7280" }
+                  { id: "administrative", name: "Batas Administrasi", color: "#6B7280" },
                 ].map((layer) => (
                   <div
                     key={layer.id}
@@ -192,9 +179,11 @@ const FilterPanel = ({
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
             >
               <div className="flex items-center gap-2">
-                {/* Ikon legenda — bisa gunakan Layers atau custom */}
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
-                  <path d="M12 2L2 7l10 5 10-5M2 12l10 5 10-5M2 7v10l10 5m0 0v-10M12 12v10l10-5M12 12L2 7m10 5v10"/>
+                {/* Ikon legenda (distinct) */}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <rect x="3" y="4" width="18" height="3" rx="1" stroke="currentColor" />
+                  <rect x="3" y="10.5" width="14" height="3" rx="1" stroke="currentColor" />
+                  <rect x="3" y="17" width="10" height="3" rx="1" stroke="currentColor" />
                 </svg>
                 <span className="font-semibold text-gray-700">Legenda Peta</span>
               </div>
@@ -219,13 +208,13 @@ const FilterPanel = ({
                       { id: "upt-bengawan-solo", name: "UPT PSDA Bengawan Solo Bojonegoro", color: "#00008B" },
                       { id: "upt-brantas", name: "UPT PSDA Brantas Kediri", color: "#00008B" },
                       { id: "upt-sampean", name: "UPT PSDA Sampean Setail Bondowoso", color: "#00008B" },
-                      { id: "ws-baru-bajul-mati", name: "WS Baru Bajul Mati", color: "#8A2BE2" },
-                      { id: "ws-bondoyudo-bedadung", name: "WS Bondoyudo Bedadung", color: "#00CED1" },
-                      { id: "ws-bengawan-solo", name: "WS Bengawan Solo", color: "#FF7F50" },
                       { id: "ws-brantas", name: "WS Brantas", color: "#FF4500" },
-                      { id: "ws-madura-bawean", name: "WS Madura Bawean", color: "#FFD700" },
+                      { id: "ws-bengawan-solo", name: "WS Bengawan Solo", color: "#FF7F50" },
+                      { id: "ws-bondoyudo-bedadung", name: "WS Bondoyudo Bedadung", color: "#00CED1" },
+                      { id: "ws-baru-bajul-mati", name: "WS Baru Bajul Mati", color: "#8A2BE2" },
                       { id: "ws-welang-rejoso", name: "WS Welang Rejoso", color: "#FF00FF" },
                       { id: "ws-pekalen-sampean", name: "WS Pekalen Sampean", color: "#FF69B4" },
+                      { id: "ws-madura-bawean", name: "WS Madura Bawean", color: "#FFD700" },
                     ].map((item) => (
                       <div
                         key={item.id}
@@ -256,6 +245,7 @@ const FilterPanel = ({
                     ))}
                   </div>
                 </div>
+<<<<<<< HEAD
 
                 {/* SIH3 */}
                 <div>
@@ -335,6 +325,56 @@ const FilterPanel = ({
             )}
           </section>
 
+<<<<<<< HEAD
+=======
+          {/* SECTION X: PETA DEBIT 100 (AUTO-LOAD) */}
+          <section className="mt-4 space-y-4">
+            <div
+              onClick={() => setShowPetaGenangan(!showPetaGenangan)}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                </svg>
+                <span className="font-semibold text-gray-700">Peta Debit 100 Welang</span>
+              </div>
+              {showPetaGenangan ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </div>
+
+            {showPetaGenangan && (
+              <div className="pl-4 pt-2 pb-4 space-y-2">
+                <div
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-3 h-3 rounded-full bg-cyan-500"></span>
+                    <span className="text-xs text-gray-700">Debit 100 Welang (Auto)</span>
+                  </div>
+                  <button
+                    onClick={() => handleLayerToggle('test-map-debit-100')}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      activeLayers['test-map-debit-100'] ? "bg-blue-600" : "bg-gray-300"
+                    }`}
+                    type="button"
+                    aria-pressed={!!activeLayers['test-map-debit-100']}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                        activeLayers['test-map-debit-100'] ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+
+>>>>>>> 39c60f841fa3c86ec38e34b2fd05b744dec26bb5
           {/* SECTION 3: PETA GENANGAN WELANG #1 */}
           <section className="mt-4 space-y-4">
             <div
@@ -660,6 +700,8 @@ const FilterPanel = ({
                     />
                   </button>
                 </div>
+=======
+>>>>>>> 04957d1903dd26bccf0cfb2e09a31dcd0e49dcf0
               </div>
             )}
           </section>
@@ -671,8 +713,10 @@ const FilterPanel = ({
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
             >
               <div className="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                {/* Icon: cloud + rain */}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" strokeWidth="1.6">
+                  <path d="M20 16.58A4 4 0 0 0 16 12h-1.26A6 6 0 1 0 6 17" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M8 19v2M12 19v2M16 19v2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 <span className="font-semibold text-gray-700">Pos Hujan</span>
               </div>
@@ -686,20 +730,19 @@ const FilterPanel = ({
             {showPosHujan && (
               <div className="pl-4 pt-2 pb-4 space-y-2">
                 {[
-                  { id: "pos-hujan-ws-brantas", name: "Pos Hujan WS Brantas PJT 1", color: "#FF6347" },
+                  { id: "pos-hujan-ws-brantas-pjt1", name: "Pos Hujan WS Brantas PJT 1", color: "#FF6347" },
                   { id: "pos-hujan-ws-bengawan-solo", name: "Pos Hujan WS Bengawan Solo PJT 1", color: "#FFA500" },
-                  { id: "pos-hujan-ws-bbws-solo", name: "Pos Hujan WS BBWS Solo", color: "#4682B4" },
-                  { id: "pos-hujan-ws-bbws-brantas", name: "Pos Hujan BBWS Brantas", color: "#008080" },
+                  { id: "Hujan Jam-Jam an PU SDA", name: "Hujan Jam-Jam an PU SDA", color: "#FF6347" },
                 ].map((item) => (
                   <div
                     key={item.id}
                     className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <span
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: item.color }}
-                      ></span>
+                      {/* droplet icon per-item */}
+                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2C12 2 7 8 7 12.5C7 16.6421 9.85786 19.5 14 19.5C18.1421 19.5 21 16.6421 21 12.5C21 8 16.001 2 16.001 2H12Z" fill={item.color}/>
+                      </svg>
                       <span className="text-xs text-gray-700">{item.name}</span>
                     </div>
                     <button
@@ -729,8 +772,10 @@ const FilterPanel = ({
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
             >
               <div className="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
+                {/* Icon: water gauge / beaker-like */}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" strokeWidth="1.6">
+                  <path d="M8 2h8l-1 6a4 4 0 0 1-6 0L8 2z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M6 9v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 <span className="font-semibold text-gray-700">Pos Duga Air</span>
               </div>
@@ -744,141 +789,17 @@ const FilterPanel = ({
             {showPosDugaAir && (
               <div className="pl-4 pt-2 pb-4 space-y-2">
                 {[
-                  { id: "pos-duga-air-ws-brantas", name: "Pos Duga Air WS Brantas PJT 1", color: "#FF6347" },
+                  { id: "pos-duga-air-ws-brantas-pjt1", name: "Pos Duga Air WS Brantas PJT 1", color: "#FF6347" },
                   { id: "pos-duga-air-ws-bengawan-solo", name: "Pos Duga Air WS Bengawan Solo PJT 1", color: "#FFA500" },
-                  { id: "pos-duga-air-pu-sda", name: "Pos Duga Air PU SDA", color: "#4682B4" },
                   { id: "pos-duga-air-jam-jam-an", name: "Pos Duga Air Jam-jam an PU SDA", color: "#008080" },
-                  { id: "pos-duga-air-bbws-solo", name: "Pos Duga Air BBWS Solo", color: "#8A2BE2" },
-                  { id: "pos-duga-air-bbws-brantas", name: "Pos Duga Air BBWS Brantas", color: "#FF1493" },
                 ].map((item) => (
                   <div
                     key={item.id}
                     className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <span
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: item.color }}
-                      ></span>
-                      <span className="text-xs text-gray-700">{item.name}</span>
-                    </div>
-                    <button
-                      onClick={() => handleLayerToggle(item.id)}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                        activeLayers[item.id] ? "bg-blue-600" : "bg-gray-300"
-                      }`}
-                      type="button"
-                      aria-pressed={!!activeLayers[item.id]}
-                    >
-                      <span
-                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                          activeLayers[item.id] ? "translate-x-5" : "translate-x-1"
-                        }`}
-                      />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* SECTION 12: HUJAN HARIA N */}
-          <section className="mt-4 space-y-4">
-            <div
-              onClick={() => setShowHujanHarian(!showHujanHarian)}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
-            >
-              <div className="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
-                </svg>
-                <span className="font-semibold text-gray-700">Hujan Harian</span>
-              </div>
-              {showHujanHarian ? (
-                <ChevronUp className="w-4 h-4 text-gray-600" />
-              ) : (
-                <ChevronDown className="w-4 h-4 text-gray-600" />
-              )}
-            </div>
-
-            {showHujanHarian && (
-              <div className="pl-4 pt-2 pb-4 space-y-2">
-                {[
-                  { id: "hujan-harian-ws-welang-rejoso", name: "Hujan Harian WS Welang Rejoso (PU SDA)", color: "#FF6347" },
-                  { id: "hujan-harian-ws-pekalen-sampean", name: "Hujan Harian WS Pekalen Sampean (PU SDA)", color: "#FFA500" },
-                  { id: "hujan-harian-ws-madura-bawean", name: "Hujan Harian WS Madura Bawean (PU SDA)", color: "#4682B4" },
-                  { id: "hujan-harian-ws-brantas", name: "Hujan Harian WS Brantas (PU SDA)", color: "#008080" },
-                  { id: "hujan-harian-ws-bondoyudo-bedadung", name: "Hujan Harian WS Bondoyudo Bedadung (PU SDA)", color: "#8A2BE2" },
-                  { id: "hujan-harian-ws-bengawan-solo", name: "Hujan Harian WS Bengawan Solo (PU SDA)", color: "#FF1493" },
-                  { id: "hujan-harian-ws-baru-bajulmati", name: "Hujan Harian WS Baru Bajulmati (PU SDA)", color: "#228B22" },
-                ].map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: item.color }}
-                      ></span>
-                      <span className="text-xs text-gray-700">{item.name}</span>
-                    </div>
-                    <button
-                      onClick={() => handleLayerToggle(item.id)}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                        activeLayers[item.id] ? "bg-blue-600" : "bg-gray-300"
-                      }`}
-                      type="button"
-                      aria-pressed={!!activeLayers[item.id]}
-                    >
-                      <span
-                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                          activeLayers[item.id] ? "translate-x-5" : "translate-x-1"
-                        }`}
-                      />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* SECTION 13: DATA LAINNYA */}
-          <section className="mt-4 space-y-4">
-            <div
-              onClick={() => setShowLainnya(!showLainnya)}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
-            >
-              <div className="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-2-2 2-2m2 4l2-2-2-2m2 4l2-2 2 2"/>
-                </svg>
-                <span className="font-semibold text-gray-700">Data Lainnya</span>
-              </div>
-              {showLainnya ? (
-                <ChevronUp className="w-4 h-4 text-gray-600" />
-              ) : (
-                <ChevronDown className="w-4 h-4 text-gray-600" />
-              )}
-            </div>
-
-            {showLainnya && (
-              <div className="pl-4 pt-2 pb-4 space-y-2">
-                {[
-                  { id: "data-tinggi-muka-air-harian-pamekasan", name: "Data Tinggi Muka Air Harian Dinas PUPR Pamekasan", color: "#FF6347" },
-                  { id: "data-meteorologi-juanda", name: "Data Meteorologi Juanda", color: "#FFA500" },
-                  { id: "data-hujan-harian-pamekasan", name: "Data Hujan Harian Dinas PUPR Pamekasan", color: "#4682B4" },
-                  { id: "awlr-bidang-sungai-waduk", name: "AWLR Bidang Sungai Waduk dan Pantai Dinas PU SDA Jatim", color: "#008080" },
-                ].map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: item.color }}
-                      ></span>
+                      {/* small square indicator */}
+                      <span className="w-3 h-3" style={{ backgroundColor: item.color, borderRadius: 4 }}></span>
                       <span className="text-xs text-gray-700">{item.name}</span>
                     </div>
                     <button

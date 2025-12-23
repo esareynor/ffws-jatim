@@ -23,7 +23,7 @@ class MasSensorController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('sensor_code', 'like', "%{$search}%")
+                $q->where('code', 'like', "%{$search}%")
                     ->orWhere('description', 'like', "%{$search}%")
                     ->orWhereHas('device', function ($deviceQuery) use ($search) {
                         $deviceQuery->where('name', 'like', "%{$search}%");
@@ -46,7 +46,7 @@ class MasSensorController extends Controller
 
         // Prepare table headers
         $tableHeaders = [
-            ['key' => 'sensor_code', 'label' => 'Kode Sensor', 'sortable' => true],
+            ['key' => 'code', 'label' => 'Kode Sensor', 'sortable' => true],
             ['key' => 'formatted_device_name', 'label' => 'Device'],
             ['key' => 'formatted_parameter', 'label' => 'Parameter'],
             ['key' => 'unit', 'label' => 'Unit'],
@@ -128,18 +128,38 @@ class MasSensorController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'device_id' => 'required|exists:mas_devices,id',
-            'sensor_code' => 'required|string|max:255|unique:mas_sensors,sensor_code',
+            'mas_device_code' => 'required|string|max:100|exists:mas_devices,code',
+            'code' => 'required|string|max:100|unique:mas_sensors,code',
             'parameter' => 'required|in:water_level,rainfall',
             'unit' => 'required|string|max:50',
             'description' => 'nullable|string|max:500',
-            'mas_model_id' => 'nullable|exists:mas_models,id',
+            'mas_model_code' => 'nullable|string|max:100|exists:mas_models,code',
             'threshold_safe' => 'nullable|numeric|min:0',
             'threshold_warning' => 'nullable|numeric|min:0',
             'threshold_danger' => 'nullable|numeric|min:0',
             'status' => 'required|in:active,inactive',
+            'forecasting_status' => 'nullable|in:stopped,running,paused',
+            'is_active' => 'nullable|boolean',
             'last_seen' => 'nullable|date',
         ]);
+
+        // Custom validation for threshold ordering
+        $safe = $validated['threshold_safe'] ?? null;
+        $warning = $validated['threshold_warning'] ?? null;
+        $danger = $validated['threshold_danger'] ?? null;
+
+        // If all three thresholds are provided, validate their order
+        if ($safe !== null && $warning !== null && $danger !== null) {
+            if (!($safe < $warning && $warning < $danger)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors([
+                        'threshold_safe' => 'Threshold Safe harus lebih kecil dari Warning.',
+                        'threshold_warning' => 'Threshold Warning harus lebih besar dari Safe dan lebih kecil dari Danger.',
+                        'threshold_danger' => 'Threshold Danger harus lebih besar dari Warning.'
+                    ]);
+            }
+        }
 
         MasSensor::create($validated);
 
@@ -178,18 +198,38 @@ class MasSensorController extends Controller
     public function update(Request $request, MasSensor $sensor): RedirectResponse
     {
         $validated = $request->validate([
-            'device_id' => 'required|exists:mas_devices,id',
-            'sensor_code' => 'required|string|max:255|unique:mas_sensors,sensor_code,' . $sensor->id,
+            'mas_device_code' => 'required|string|max:100|exists:mas_devices,code',
+            'code' => 'required|string|max:100|unique:mas_sensors,code,' . $sensor->id,
             'parameter' => 'required|in:water_level,rainfall',
             'unit' => 'required|string|max:50',
             'description' => 'nullable|string|max:500',
-            'mas_model_id' => 'nullable|exists:mas_models,id',
+            'mas_model_code' => 'nullable|string|max:100|exists:mas_models,code',
             'threshold_safe' => 'nullable|numeric|min:0',
             'threshold_warning' => 'nullable|numeric|min:0',
             'threshold_danger' => 'nullable|numeric|min:0',
             'status' => 'required|in:active,inactive',
+            'forecasting_status' => 'nullable|in:stopped,running,paused',
+            'is_active' => 'nullable|boolean',
             'last_seen' => 'nullable|date',
         ]);
+
+        // Custom validation for threshold ordering
+        $safe = $validated['threshold_safe'] ?? null;
+        $warning = $validated['threshold_warning'] ?? null;
+        $danger = $validated['threshold_danger'] ?? null;
+
+        // If all three thresholds are provided, validate their order
+        if ($safe !== null && $warning !== null && $danger !== null) {
+            if (!($safe < $warning && $warning < $danger)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors([
+                        'threshold_safe' => 'Threshold Safe harus lebih kecil dari Warning.',
+                        'threshold_warning' => 'Threshold Warning harus lebih besar dari Safe dan lebih kecil dari Danger.',
+                        'threshold_danger' => 'Threshold Danger harus lebih besar dari Warning.'
+                    ]);
+            }
+        }
 
         $sensor->update($validated);
 

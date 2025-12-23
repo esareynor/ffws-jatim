@@ -24,15 +24,15 @@ class MasModelController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('model_type', 'like', "%{$search}%")
+                    ->orWhere('type', 'like', "%{$search}%")
                     ->orWhere('description', 'like', "%{$search}%")
                     ->orWhere('version', 'like', "%{$search}%");
             });
         }
 
         // Filter by model type
-        if ($request->filled('model_type')) {
-            $query->where('model_type', $request->model_type);
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
         }
 
         // Filter by status
@@ -57,13 +57,13 @@ class MasModelController extends Controller
         $models->getCollection()->transform(function ($model) {
             // Ensure all fields are strings for display and handle null values
             $model->name = $model->name ? (string) $model->name : '';
-            $model->model_type = $model->model_type ? (string) $model->model_type : 'other';
+            $model->type = $model->type ? (string) $model->type : 'other';
             $model->version = $model->version ? (string) $model->version : '';
             $model->description = $model->description ? (string) $model->description : '';
             $model->file_path = $model->file_path ? (string) $model->file_path : '';
             
             // Format data for display
-            $model->formatted_model_type = $this->formatModelType($model->model_type);
+            $model->formatted_model_type = $this->formatModelType($model->type);
             $model->formatted_is_active = $model->is_active ? 'Aktif' : 'Non-aktif';
             $model->formatted_created_at = $model->created_at ? $model->created_at->format('d/m/Y H:i') : '';
             
@@ -132,7 +132,7 @@ class MasModelController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'model_type' => 'required|string|in:lstm,gru,transformer,cnn,rnn,other',
+            'type' => 'required|string|in:lstm,gru,transformer,cnn,rnn,other',
             'version' => 'nullable|string|max:50',
             'description' => 'nullable|string',
             'file_path' => 'nullable|string|max:500',
@@ -156,13 +156,13 @@ class MasModelController extends Controller
         
         // Ensure all fields are safe for display
         $masModel->name = $masModel->name ? (string) $masModel->name : 'Unknown Model';
-        $masModel->model_type = $masModel->model_type ? (string) $masModel->model_type : 'other';
+        $masModel->type = $masModel->type ? (string) $masModel->type : 'other';
         $masModel->version = $masModel->version ? (string) $masModel->version : '';
         $masModel->description = $masModel->description ? (string) $masModel->description : '';
         $masModel->file_path = $masModel->file_path ? (string) $masModel->file_path : '';
         
         // Format data for display
-        $masModel->formatted_model_type = $this->formatModelType($masModel->model_type);
+        $masModel->formatted_model_type = $this->formatModelType($masModel->type);
         $masModel->formatted_is_active = $masModel->is_active ? 'Aktif' : 'Non-aktif';
         $masModel->formatted_created_at = $masModel->created_at ? $masModel->created_at->format('d/m/Y H:i') : '';
         $masModel->formatted_updated_at = $masModel->updated_at ? $masModel->updated_at->format('d/m/Y H:i') : '';
@@ -186,7 +186,7 @@ class MasModelController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'model_type' => 'required|string|in:lstm,gru,transformer,cnn,rnn,other',
+            'type' => 'required|string|in:lstm,gru,transformer,cnn,rnn,other',
             'version' => 'nullable|string|max:50',
             'description' => 'nullable|string',
             'file_path' => 'nullable|string|max:500',
@@ -246,14 +246,14 @@ class MasModelController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('model_type', 'like', "%{$search}%")
+                    ->orWhere('type', 'like', "%{$search}%")
                     ->orWhere('description', 'like', "%{$search}%")
                     ->orWhere('version', 'like', "%{$search}%");
             });
         }
 
-        if ($request->filled('model_type')) {
-            $query->where('model_type', $request->model_type);
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
         }
 
         if ($request->filled('status')) {
@@ -315,7 +315,7 @@ class MasModelController extends Controller
                 fputcsv($file, [
                     $model->id,
                     $model->name,
-                    $model->model_type,
+                    $model->type,
                     $model->version,
                     $model->description,
                     $model->file_path,

@@ -121,9 +121,9 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
 
     return (
         <div
-            className={`fixed top-16 sm:top-4 z-[70] transition-all duration-300 ease-in-out left-2 sm:left-[calc(1rem+20rem+1rem)] right-2 sm:right-[calc(1rem+3rem+1rem)] flood-running-bar mobile-flood-bar sm:desktop-flood-bar`}
+             className={`fixed top-20 sm:top-4.5 z-[70] transition-all duration-300 ease-in-out left-100 right-100 flood-running-bar mobile-flood-bar sm:desktop-flood-bar`}
         >
-            <div className="w-full h-12">
+            <div className="w-full h-13">
                 <div className="overflow-hidden bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-1.5 sm:p-2 h-full">
                     <div
                         className="flex space-x-2 sm:space-x-2 whitespace-nowrap h-full items-center"

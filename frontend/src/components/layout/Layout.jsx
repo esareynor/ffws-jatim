@@ -25,6 +25,7 @@ const Layout = ({ children }) => {
 
     const handleStationSelect = useCallback((station) => {
         setSelectedStation(station);
+        // Always open the sidebar on station select; do not hide it when the detail panel opens
         setIsSidebarOpen(true);
     }, []);
 
@@ -42,8 +43,8 @@ const Layout = ({ children }) => {
             // If auto switch is turned off, close sidebar
             if (!isOn) {
                 console.log('Auto switch OFF - closing sidebar');
-                setIsSidebarOpen(false);
-                setSelectedStation(null);
+                // Use centralized close handler so detail panel also closes
+                handleCloseStationDetail();
             } else {
                 console.log('Auto switch ON - closing detail panel');
                 // Jika auto switch diaktifkan, tutup detail panel
@@ -57,6 +58,8 @@ const Layout = ({ children }) => {
     const handleCloseStationDetail = useCallback(() => {
         setSelectedStation(null);
         setIsSidebarOpen(false);
+        // Also close the right-hand detail panel when the sidebar is closed from the sidebar
+        setIsDetailPanelOpen(false);
     }, []);
 
     const handleToggleDetailPanel = useCallback(() => {
@@ -64,10 +67,10 @@ const Layout = ({ children }) => {
             // Jika panel terbuka, tutup dengan animasi
             handleCloseDetailPanel();
         } else {
-            // Jika panel tertutup, buka langsung
+            // Jika panel tertutup, buka langsung (do not close sidebar)
             setIsDetailPanelOpen(true);
         }
-    }, [isDetailPanelOpen]);
+    }, []);
 
     const handleCloseDetailPanel = useCallback(() => {
         setIsDetailPanelOpen(false);
@@ -84,7 +87,7 @@ const Layout = ({ children }) => {
         setSelectedStation(station);
         // Auto open sidebar when auto switching
         setIsSidebarOpen(true);
-    }, []);
+    }, [isDetailPanelOpen]);
 
     const handleStationChange = useCallback(
         (device, index) => {
@@ -158,8 +161,8 @@ const Layout = ({ children }) => {
                         isAutoSwitchOn={isAutoSwitchOn}
                         onCloseSidebar={() => {
                             if (!isAutoSwitchOn) {
-                                setIsSidebarOpen(false);
-                                setSelectedStation(null);
+                                // use the centralized close handler so it also closes the detail panel
+                                handleCloseStationDetail();
                             }
                         }}
                     />
@@ -201,16 +204,18 @@ const Layout = ({ children }) => {
                     </div>
                 }
             >
-                <StationDetail
-                    selectedStation={selectedStation}
-                    onClose={handleCloseStationDetail}
-                    tickerData={tickerData}
-                    isAutoSwitchOn={isAutoSwitchOn}
-                    showArrow={true}
-                    onArrowToggle={handleToggleDetailPanel}
-                    isDetailPanelOpen={isDetailPanelOpen}
-                    onCloseDetailPanel={handleCloseDetailPanel}
-                />
+                                {selectedStation && (
+                                    <StationDetail
+                                            selectedStation={selectedStation}
+                                            onClose={handleCloseStationDetail}
+                                            tickerData={tickerData}
+                                            isAutoSwitchOn={isAutoSwitchOn}
+                                            showArrow={true}
+                                            onArrowToggle={handleToggleDetailPanel}
+                                            isDetailPanelOpen={isDetailPanelOpen}
+                                            onCloseDetailPanel={handleCloseDetailPanel}
+                                    />
+                                )}
             </Suspense>
 
             {/* Detail Panel */}
@@ -240,7 +245,7 @@ const Layout = ({ children }) => {
             </Suspense>
 
             {/* Mobile-specific styles */}
-            <style jsx>{`
+            <style>{`
                 @media (max-width: 640px) {
                     /* Mobile layout adjustments */
                     .mobile-flood-bar {

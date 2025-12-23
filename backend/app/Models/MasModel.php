@@ -12,7 +12,8 @@ class MasModel extends Model
 
     protected $fillable = [
         'name',
-        'model_type',
+        'code',
+        'type',
         'version',
         'description',
         'file_path',
@@ -28,11 +29,48 @@ class MasModel extends Model
     ];
 
     /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Auto-generate code when creating a new model
+        static::creating(function ($model) {
+            if (empty($model->code)) {
+                $model->code = static::generateUniqueCode($model);
+            }
+        });
+    }
+
+    /**
+     * Generate a unique code for the model.
+     */
+    protected static function generateUniqueCode($model)
+    {
+        $prefix = strtoupper($model->type ?? 'MODEL');
+        $timestamp = now()->format('YmdHis');
+        $random = strtoupper(substr(md5(uniqid()), 0, 4));
+        
+        $code = "{$prefix}_{$timestamp}_{$random}";
+        
+        // Ensure uniqueness
+        $counter = 1;
+        $originalCode = $code;
+        while (static::where('code', $code)->exists()) {
+            $code = "{$originalCode}_{$counter}";
+            $counter++;
+        }
+        
+        return $code;
+    }
+
+    /**
      * Get the sensors that use this model.
      */
     public function sensors(): HasMany
     {
-        return $this->hasMany(MasSensor::class, 'mas_model_id');
+        return $this->hasMany(MasSensor::class, 'mas_model_code', 'code');
     }
 
     /**

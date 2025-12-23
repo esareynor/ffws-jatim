@@ -1,0 +1,21 @@
+services:
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: ffws_backend
+    restart: always
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    environment:
+      - SSL_MODE=off
+      - PUID=0
+      - PGID=0
+      - WEB_PORT=80
+    networks:
+      - public_net
+
+networks:
+  public_net:
+    external: true

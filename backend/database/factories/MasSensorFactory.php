@@ -21,8 +21,8 @@ class MasSensorFactory extends Factory
         $unit = ($parameter === 'water_level') ? 'm' : 'mm';
 
         return [
-            'device_id' => MasDevice::inRandomOrder()->first()->id,
-            'sensor_code' => $this->faker->unique()->bothify('SENSOR-####'),
+            'mas_device_code' => MasDevice::inRandomOrder()->first()->code,
+            'code' => 'SN-' . strtoupper($this->faker->unique()->bothify('???-####')),
             'parameter' => $parameter,
             'unit' => $unit,
             'description' => $this->faker->sentence,

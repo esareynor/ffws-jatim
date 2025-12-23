@@ -20,9 +20,9 @@ class DataActualController extends Controller
         $query = DataActual::with(['sensor.device.riverBasin'])
             ->orderBy('received_at', 'desc');
 
-        // Filter berdasarkan sensor
-        if ($request->filled('sensor_id')) {
-            $query->where('mas_sensor_id', $request->sensor_id);
+        // Filter berdasarkan sensor (menggunakan sensor code)
+        if ($request->filled('sensor_code')) {
+            $query->where('mas_sensor_code', $request->sensor_code);
         }
 
         // Filter berdasarkan status threshold
@@ -40,18 +40,18 @@ class DataActualController extends Controller
         }
 
         // Filter berdasarkan river basin
-        if ($request->filled('river_basin_id')) {
+        if ($request->filled('river_basin_code')) {
             $query->whereHas('sensor.device', function($q) use ($request) {
-                $q->where('mas_river_basin_id', $request->river_basin_id);
+                $q->where('mas_river_basin_code', $request->river_basin_code);
             });
         }
 
         $dataActuals = $query->paginate(20);
-        
+
         // Data untuk filter
         $sensors = MasSensor::with('device')->get();
         $riverBasins = MasRiverBasin::all();
-        
+
         // Statistik
         $stats = [
             'total_data' => DataActual::count(),
@@ -114,9 +114,9 @@ class DataActualController extends Controller
         });
 
         return view('admin.data_actuals.index', compact(
-            'dataActuals', 
-            'sensors', 
-            'riverBasins', 
+            'dataActuals',
+            'sensors',
+            'riverBasins',
             'stats',
             'tableHeaders'
         ));
@@ -128,13 +128,13 @@ class DataActualController extends Controller
     public function create()
     {
         $sensors = MasSensor::with('device.riverBasin')->get();
-        
+
         return response()->json([
             'success' => true,
             'sensors' => $sensors->map(function($sensor) {
                 return [
                     'id' => $sensor->id,
-                    'sensor_code' => $sensor->sensor_code,
+                    'sensor_code' => $sensor->code,
                     'parameter' => $sensor->parameter,
                     'unit' => $sensor->unit,
                     'device_name' => $sensor->device->name ?? 'N/A',
@@ -158,10 +158,10 @@ class DataActualController extends Controller
 
         try {
             $sensor = MasSensor::findOrFail($request->mas_sensor_id);
-            
+
             $dataActual = DataActual::create([
                 'mas_sensor_id' => $request->mas_sensor_id,
-                'mas_sensor_code' => $sensor->sensor_code,
+                'mas_sensor_code' => $sensor->code,
                 'value' => $request->value,
                 'received_at' => $request->received_at,
                 'threshold_status' => $request->threshold_status
@@ -186,7 +186,7 @@ class DataActualController extends Controller
     public function show(DataActual $dataActual)
     {
         $dataActual->load(['sensor.device.riverBasin']);
-        
+
         // Data terkait dari sensor yang sama
         $relatedData = DataActual::where('mas_sensor_id', $dataActual->mas_sensor_id)
             ->where('id', '!=', $dataActual->id)
@@ -203,7 +203,7 @@ class DataActualController extends Controller
     public function edit(DataActual $dataActual)
     {
         $sensors = MasSensor::with('device.riverBasin')->get();
-        
+
         return response()->json([
             'success' => true,
             'dataActual' => [
@@ -216,7 +216,7 @@ class DataActualController extends Controller
             'sensors' => $sensors->map(function($sensor) {
                 return [
                     'id' => $sensor->id,
-                    'sensor_code' => $sensor->sensor_code,
+                    'sensor_code' => $sensor->code,
                     'parameter' => $sensor->parameter,
                     'unit' => $sensor->unit,
                     'device_name' => $sensor->device->name ?? 'N/A',
@@ -240,7 +240,7 @@ class DataActualController extends Controller
 
         try {
             $sensor = MasSensor::findOrFail($request->mas_sensor_id);
-            
+
             $dataActual->update([
                 'mas_sensor_id' => $request->mas_sensor_id,
                 'mas_sensor_code' => $sensor->sensor_code,
@@ -269,7 +269,7 @@ class DataActualController extends Controller
     {
         try {
             $dataActual->delete();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Data actual berhasil dihapus!'
@@ -289,7 +289,7 @@ class DataActualController extends Controller
     {
         $sensorId = $request->get('sensor_id');
         $days = $request->get('days', 7);
-        
+
         $query = DataActual::select(
                 DB::raw('DATE(received_at) as date'),
                 DB::raw('AVG(value) as avg_value'),
@@ -336,7 +336,7 @@ class DataActualController extends Controller
         $data = $query->orderBy('received_at', 'desc')->get();
 
         $filename = 'data_actuals_' . now()->format('Y-m-d_H-i-s') . '.csv';
-        
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
@@ -344,7 +344,7 @@ class DataActualController extends Controller
 
         $callback = function() use ($data) {
             $file = fopen('php://output', 'w');
-            
+
             // Header CSV
             fputcsv($file, [
                 'ID',

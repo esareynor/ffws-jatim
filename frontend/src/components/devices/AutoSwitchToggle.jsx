@@ -341,7 +341,15 @@
 //         <div className="flex flex-col sm:flex-row items-center justify-between w-full p-3 bg-white rounded-lg shadow-sm border border-gray-200">
 //             <div className="flex items-center gap-3 mb-2 sm:mb-0">
 //                 <span className="text-sm font-semibold text-gray-800">Auto Switch</span>
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+=======
                 
+>>>>>>> b86689dedf9038f83a8013cde8cf1c80a07f3149
+=======
+                
+>>>>>>> 39c60f841fa3c86ec38e34b2fd05b744dec26bb5
 //                 <div className="flex items-center gap-2">
 //                     {isPlaying && !isPendingStop && (
 //                         <div className="flex items-center gap-1">

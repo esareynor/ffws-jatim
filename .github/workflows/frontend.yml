@@ -35,7 +35,7 @@ jobs:
                   images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
                   tags: |
                       type=raw,value=latest
-                      type=sha,format=long
+                      type=raw,value=${{ github.sha }}
 
             - name: Build and push Docker image
               uses: docker/build-push-action@v5
@@ -61,16 +61,13 @@ jobs:
                       # Login to GHCR
                       echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-                      # Pull the latest image
-                      docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+                      # Inject FRONTEND_IMAGE_TAG into .env file
+                      if [ -f .env ]; then
+                        sed -i "s/^FRONTEND_IMAGE_TAG=.*/FRONTEND_IMAGE_TAG=${{ github.sha }}/" .env || echo "FRONTEND_IMAGE_TAG=${{ github.sha }}" >> .env
+                      else
+                        echo "FRONTEND_IMAGE_TAG=${{ github.sha }}" > .env
+                      fi
 
-                      # Stop and remove old container
-                      docker stop frontend-app || true
-                      docker rm frontend-app || true
-
-                      # Run new container
-                      docker run -d \
-                        --name frontend-app \
-                        --restart always \
-                        -p 80:80 \
-                        ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+                      # Pull and Restart
+                      docker compose pull frontend
+                      docker compose up -d frontend --remove-orphans

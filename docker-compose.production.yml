@@ -1,6 +1,6 @@
 services:
     backend:
-        image: ghcr.io/esareynor/ffws-jatim-backend:latest
+        image: ghcr.io/esareynor/ffws-jatim-backend:${BACKEND_IMAGE_TAG:-latest}
         container_name: ffws-backend
         restart: always
         ports:
@@ -19,7 +19,7 @@ services:
             - ./backend-storage:/var/www/storage
 
     frontend:
-        image: ghcr.io/esareynor/ffws-jatim-frontend:latest
+        image: ghcr.io/esareynor/ffws-jatim-frontend:${FRONTEND_IMAGE_TAG:-latest}
         container_name: ffws-frontend
         restart: always
         ports:

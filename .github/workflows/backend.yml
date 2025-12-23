@@ -35,7 +35,7 @@ jobs:
                   images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
                   tags: |
                       type=raw,value=latest
-                      type=sha,format=long
+                      type=raw,value=${{ github.sha }}
 
             - name: Build and push Docker image
               uses: docker/build-push-action@v5
@@ -58,23 +58,19 @@ jobs:
                   key: ${{ secrets.SSH_PRIVATE_KEY }}
                   port: 22
                   script: |
-                      # Login to GHCR (if needed, or use public images if public)
+                      # Login to GHCR
                       echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-                      # Pull the latest image
-                      docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+                      # Inject BACKEND_IMAGE_TAG into .env file
+                      if [ -f .env ]; then
+                        sed -i "s/^BACKEND_IMAGE_TAG=.*/BACKEND_IMAGE_TAG=${{ github.sha }}/" .env || echo "BACKEND_IMAGE_TAG=${{ github.sha }}" >> .env
+                      else
+                        echo "BACKEND_IMAGE_TAG=${{ github.sha }}" > .env
+                      fi
 
-                      # Stop and remove old container
-                      docker stop backend-app || true
-                      docker rm backend-app || true
-
-                      # Run new container
-                      # Adjust environment variables / .env file mounting as needed
-                      docker run -d \
-                        --name backend-app \
-                        --restart always \
-                        -p 9000:9000 \
-                        ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+                      # Pull and Restart
+                      docker compose pull backend
+                      docker compose up -d backend --remove-orphans
 
                       # Optional: Run migrations
-                      # docker exec backend-app php artisan migrate --force
+                      # docker exec ffws-backend php artisan migrate --force

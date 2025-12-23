@@ -2,13 +2,14 @@ name: Frontend CI/CD
 
 on:
     push:
-        branches: ["main"]
+        branches: ["deploy"]
         paths:
             - "frontend/**"
 
 env:
     REGISTRY: ghcr.io
     IMAGE_NAME: ${{ github.repository }}-frontend
+    SERVER_PROJECT_PATH: /var/www/ffws-jatim
 
 jobs:
     build-and-push:
@@ -54,20 +55,14 @@ jobs:
               uses: appleboy/ssh-action@v1.0.3
               with:
                   host: ${{ secrets.SERVER_HOST }}
-                  username: root # TODO: Replace with your actual username if not root
+                  username: root
                   key: ${{ secrets.SSH_PRIVATE_KEY }}
                   port: 22
                   script: |
-                      # Login to GHCR
-                      echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+                      cd ${{ env.SERVER_PROJECT_PATH }}
 
-                      # Inject FRONTEND_IMAGE_TAG into .env file
-                      if [ -f .env ]; then
-                        sed -i "s/^FRONTEND_IMAGE_TAG=.*/FRONTEND_IMAGE_TAG=${{ github.sha }}/" .env || echo "FRONTEND_IMAGE_TAG=${{ github.sha }}" >> .env
-                      else
-                        echo "FRONTEND_IMAGE_TAG=${{ github.sha }}" > .env
-                      fi
+                      # SOP: Image Tag harus spesifik (Git Commit SHA), diambil dari .env
+                      sed -i "s/^FRONTEND_IMAGE_TAG=.*/FRONTEND_IMAGE_TAG=${{ github.sha }}/" .env || echo "FRONTEND_IMAGE_TAG=${{ github.sha }}" >> .env
 
-                      # Pull and Restart
                       docker compose pull frontend
                       docker compose up -d frontend --remove-orphans

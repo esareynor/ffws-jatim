@@ -2,13 +2,14 @@ name: Backend CI/CD
 
 on:
     push:
-        branches: ["main"]
+        branches: ["deploy"]
         paths:
             - "backend/**"
 
 env:
     REGISTRY: ghcr.io
     IMAGE_NAME: ${{ github.repository }}-backend
+    SERVER_PROJECT_PATH: /var/www/pusdajatim_ffws
 
 jobs:
     build-and-push:
@@ -58,19 +59,10 @@ jobs:
                   key: ${{ secrets.SSH_PRIVATE_KEY }}
                   port: 22
                   script: |
-                      # Login to GHCR
-                      echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+                      cd ${{ env.SERVER_PROJECT_PATH }}
 
-                      # Inject BACKEND_IMAGE_TAG into .env file
-                      if [ -f .env ]; then
-                        sed -i "s/^BACKEND_IMAGE_TAG=.*/BACKEND_IMAGE_TAG=${{ github.sha }}/" .env || echo "BACKEND_IMAGE_TAG=${{ github.sha }}" >> .env
-                      else
-                        echo "BACKEND_IMAGE_TAG=${{ github.sha }}" > .env
-                      fi
+                      # SOP: Image Tag harus spesifik (Git Commit SHA), diambil dari .env
+                      sed -i "s/^BACKEND_IMAGE_TAG=.*/BACKEND_IMAGE_TAG=${{ github.sha }}/" .env || echo "BACKEND_IMAGE_TAG=${{ github.sha }}" >> .env
 
-                      # Pull and Restart
                       docker compose pull backend
                       docker compose up -d backend --remove-orphans
-
-                      # Optional: Run migrations
-                      # docker exec ffws-backend php artisan migrate --force

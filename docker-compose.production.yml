@@ -1,32 +1,39 @@
 services:
     backend:
-        image: ghcr.io/esareynor/ffws-jatim-backend:${BACKEND_IMAGE_TAG:-latest}
+        # SOP: Image Tag harus spesifik (Git Commit SHA), diambil dari .env
+        image: ghcr.io/esareynor/ffws-jatim-backend:${BACKEND_IMAGE_TAG}
         container_name: ffws-backend
-        restart: always
+        restart: unless-stopped
+
+        # Load Environment Variables
+        env_file:
+            - .env
+
         ports:
             - "9000:9000"
-        environment:
-            APP_ENV: production
-            APP_DEBUG: false
-            APP_KEY: ${APP_KEY}
-            DB_CONNECTION: mysql
-            DB_HOST: ${DB_HOST}
-            DB_PORT: ${DB_PORT:-3306}
-            DB_DATABASE: ${DB_DATABASE}
-            DB_USERNAME: ${DB_USERNAME}
-            DB_PASSWORD: ${DB_PASSWORD}
+
         volumes:
             - ./backend-storage:/var/www/storage
 
+        networks:
+            - public_net
+
     frontend:
-        image: ghcr.io/esareynor/ffws-jatim-frontend:${FRONTEND_IMAGE_TAG:-latest}
+        # SOP: Image Tag harus spesifik (Git Commit SHA), diambil dari .env
+        image: ghcr.io/esareynor/ffws-jatim-frontend:${FRONTEND_IMAGE_TAG}
         container_name: ffws-frontend
-        restart: always
+        restart: unless-stopped
+
+        # Load Environment Variables
+        env_file:
+            - .env
+
         ports:
             - "80:80"
-        depends_on:
-            - backend
-# Optional: Add a database service if you want it managed by Docker
-# db:
-#   image: mysql:8.0
-#   ...
+
+        networks:
+            - public_net
+
+networks:
+    public_net:
+        external: true

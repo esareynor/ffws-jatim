@@ -10,7 +10,7 @@ on:
 env:
     REGISTRY: ghcr.io
     IMAGE_NAME: ${{ github.repository }}-frontend
-    SERVER_PROJECT_PATH: /var/www/pusdajatim_ffws
+    SERVER_PROJECT_PATH: /root/docker/projects/pusdajatim_ffws
 
 jobs:
     build-and-push:

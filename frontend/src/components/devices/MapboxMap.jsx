@@ -4,6 +4,7 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { fetchDevices } from "../../services/devices";
 import { fetchDeviceGeoJSON } from "/src/services/MapGeo";
+import GoogleMapsSearchbar from "../common/GoogleMapsSearchbar";
 import {
     REGION_ID_TO_DEVICE_ID,
     DEVICE_ID_TO_COLOR,

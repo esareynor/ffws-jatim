@@ -65,5 +65,7 @@ jobs:
                       # SOP: Image Tag harus spesifik (Git Commit SHA), diambil dari .env
                       sed -i "s/^BACKEND_IMAGE_TAG=.*/BACKEND_IMAGE_TAG=${{ github.sha }}/" .env || echo "BACKEND_IMAGE_TAG=${{ github.sha }}" >> .env
 
+                      echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
                       docker compose pull backend
                       docker compose up -d backend --remove-orphans
